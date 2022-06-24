@@ -1,0 +1,19 @@
+[base]
+package_name = "tips"
+package_version = "1.0.1"
+description = "With TIPS, data engineers can build data pipelines using Standard SQL Views and Tables."
+
+[project]
+project_name = "sample"
+last_initialised_at = 2022-06-22 21:21:38.619970
+
+[db_credentials]
+type = "snowflake"
+account = "dtsquaredpartner.eu-west-1"
+user = "ngarg"
+authentication_method = "password"
+password = "Nitin3009"
+role = "SYSADMIN"
+warehouse = "DEMO_WH"
+database = "ELT_FRAMEWORK"
+schema = "BATCH"
