@@ -190,7 +190,62 @@ def _build_init_subparser(subparsers, base_subparser):
         "-s",
         "--sample-metadata",
         dest="insert_sample_metadata",
-        action="store_false",
+        action="store_true",
+        help="""
+        Inserts Sample Metadata 
+        """,
+    )
+    sub.set_defaults(cls=initCommand.InitTask, which="init", rpc_method=None)
+    return sub
+
+def _build_run_subparser(subparsers, base_subparser):
+    sub = subparsers.add_parser(
+        "run",
+        parents=[base_subparser],
+        help="""
+        Runs a pipeline.
+        """,
+    )
+    sub.add_argument(
+        "project_name",
+        nargs="?",
+        # default="$1invalid_",
+        help="""
+        Name of the new TIPS project.
+        """,
+    )
+    sub.add_argument(
+        "-sc",
+        "--skip-connection-setup",
+        dest="skip_connection_setup",
+        action="store_true",
+        help="""
+        Skips database connection setup, when this flag is included
+        """,
+    )
+    sub.add_argument(
+        "-sm",
+        "--skip-metadata-setup",
+        dest="skip_metadata_setup",
+        action="store_true",
+        help="""
+        Skips database metadata setup, when this flag is included
+        """,
+    )
+    sub.add_argument(
+        "-f",
+        "--force-metadata-refresh",
+        dest="force_metadata_refresh",
+        action="store_true",
+        help="""
+        Forces Metadata Refresh, resulting in dropping and recreating metadata schema and tables 
+        """,
+    )
+    sub.add_argument(
+        "-s",
+        "--sample-metadata",
+        dest="insert_sample_metadata",
+        action="store_true",
         help="""
         Inserts Sample Metadata 
         """,
@@ -234,8 +289,6 @@ def parse_args(args, cls=TIPSArgumentParser):
     parsed = p.parse_args(args)
 
     if not hasattr(parsed, "which"):
-        # the user did not provide a valid subcommand. trigger the help message
-        # and exit with a error
         p.print_help()
         p.exit(1)
 
