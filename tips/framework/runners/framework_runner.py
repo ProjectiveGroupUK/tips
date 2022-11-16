@@ -1,13 +1,13 @@
 from argparse import Action
 from typing import Dict, List
-from db.database_connection import DatabaseConnection
-from factories.action_factory import ActionFactory
-from factories.runner_factory import RunnerFactory
-from metadata.action_metadata import ActionMetadata
-from metadata.additional_field import AdditionalField
-from metadata.framework_metadata import FrameworkMetaData
-from metadata.table_metadata import TableMetaData
-from runners.runner import Runner
+from tips.framework.db.database_connection import DatabaseConnection
+from tips.framework.factories.action_factory import ActionFactory
+from tips.framework.factories.runner_factory import RunnerFactory
+from tips.framework.metadata.action_metadata import ActionMetadata
+from tips.framework.metadata.additional_field import AdditionalField
+from tips.framework.metadata.framework_metadata import FrameworkMetaData
+from tips.framework.metadata.table_metadata import TableMetaData
+from tips.framework.runners.runner import Runner
 
 
 class FrameworkRunner:
@@ -110,6 +110,9 @@ class FrameworkRunner:
             )
             action = actionFactory.getAction(actionMetaData, tableMetaData, self)
             runner = runnerFactory.getRunner(action)
-            runner.execute(action, conn, self)
+            ret = runner.execute(action, conn, self)
+            ##If any of the steps failed, then break the loop and exit
+            if ret == 1:
+                break
 
         return self.returnJson

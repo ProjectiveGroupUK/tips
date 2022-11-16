@@ -1,8 +1,8 @@
 from snowflake.connector import DictCursor
 from typing import List, Dict
-from db.database_connection import DatabaseConnection
-from metadata.framework_metadata import FrameworkMetaData
-from utils.sql_template import SQLTemplate
+from tips.framework.db.database_connection import DatabaseConnection
+from tips.framework.metadata.framework_metadata import FrameworkMetaData
+from tips.framework.utils.sql_template import SQLTemplate
 
 
 class SQLFrameworkMetaDataRunner(FrameworkMetaData):

@@ -1,5 +1,5 @@
-from actions.action import Action
-from runners.sql_runner import SQLRunner
+from tips.framework.actions.action import Action
+from tips.framework.runners.sql_runner import SQLRunner
 
 
 class RunnerFactory():

@@ -1,8 +1,8 @@
-from actions.append_action import AppendAction
-from actions.delete_action import DeleteAction
-from actions.sql_action import SqlAction
-from metadata.additional_field import AdditionalField
-from metadata.table_metadata import TableMetaData
+from tips.framework.actions.append_action import AppendAction
+from tips.framework.actions.delete_action import DeleteAction
+from tips.framework.actions.sql_action import SqlAction
+from tips.framework.metadata.additional_field import AdditionalField
+from tips.framework.metadata.table_metadata import TableMetaData
 from typing import List
 
 

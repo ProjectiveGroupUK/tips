@@ -1,13 +1,13 @@
 from typing import Dict, List
-from actions.append_action import AppendAction
-from actions.clone_table_action import CloneTableAction
-from actions.sql_action import SqlAction
-from actions.sql_command import SQLCommand
-from actions.truncate_action import TruncateAction
-from metadata.additional_field import AdditionalField
-from metadata.column_info import ColumnInfo
-from metadata.table_metadata import TableMetaData
-from utils.sql_template import SQLTemplate
+from tips.framework.actions.append_action import AppendAction
+from tips.framework.actions.clone_table_action import CloneTableAction
+from tips.framework.actions.sql_action import SqlAction
+from tips.framework.actions.sql_command import SQLCommand
+from tips.framework.actions.truncate_action import TruncateAction
+from tips.framework.metadata.additional_field import AdditionalField
+from tips.framework.metadata.column_info import ColumnInfo
+from tips.framework.metadata.table_metadata import TableMetaData
+from tips.framework.utils.sql_template import SQLTemplate
 import re
 
 

@@ -1,5 +1,5 @@
 from typing import List, Dict
-from metadata.additional_field import AdditionalField
+from tips.framework.metadata.additional_field import AdditionalField
 
 
 class ActionMetadata():

@@ -1,13 +1,13 @@
 import json
 from typing import Dict, List
-from db.database_connection import DatabaseConnection
-from factories.framework_factory import FrameworkFactory
-from metadata.column_metadata import ColumnMetadata
-from metadata.table_metadata import TableMetaData
-from metadata.framework_metadata import FrameworkMetaData
-from runners.framework_runner import FrameworkRunner
-from utils.logger import Logger
-
+from tips.framework.db.database_connection import DatabaseConnection
+from tips.framework.factories.framework_factory import FrameworkFactory
+from tips.framework.metadata.column_metadata import ColumnMetadata
+from tips.framework.metadata.table_metadata import TableMetaData
+from tips.framework.metadata.framework_metadata import FrameworkMetaData
+from tips.framework.runners.framework_runner import FrameworkRunner
+from tips.framework.utils.logger import Logger
+from datetime import datetime
 import argparse
 
 
@@ -31,6 +31,7 @@ class App:
         sfConnection: DatabaseConnection = DatabaseConnection(logger)
         sfSess = sfConnection.connect()
 
+        start_dt = datetime.now()
         framework: FrameworkMetaData = FrameworkFactory().getProcess(self._processName, logger)
         frameworkMetaData: List[Dict] = framework.getMetaData(sfSess)
 
@@ -56,6 +57,10 @@ class App:
         # print(json.dumps(runFramework, indent=4))
 
         sfConnection.close_connection()
+        end_dt = datetime.now()
+        logger.info(f'Start DateTime: {start_dt}')
+        logger.info(f'End DateTime: {end_dt}')
+        logger.info(f'Total Elapsed Time (secs): {round((end_dt - start_dt).total_seconds(),2)}')
 
 
 if __name__ == "__main__":

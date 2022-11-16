@@ -1,5 +1,5 @@
 from typing import List
-from actions.sql_action import SqlAction
+from tips.framework.actions.sql_action import SqlAction
 
 
 class DefaultAction(SqlAction):

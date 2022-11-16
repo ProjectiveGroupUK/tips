@@ -1,11 +1,11 @@
 from typing import Dict, List
 
-from actions.sql_action import SqlAction
-from actions.sql_command import SQLCommand
-from metadata.additional_field import AdditionalField
-from metadata.table_metadata import TableMetaData
-from metadata.column_info import ColumnInfo
-from utils.sql_template import SQLTemplate
+from tips.framework.actions.sql_action import SqlAction
+from tips.framework.actions.sql_command import SQLCommand
+from tips.framework.metadata.additional_field import AdditionalField
+from tips.framework.metadata.table_metadata import TableMetaData
+from tips.framework.metadata.column_info import ColumnInfo
+from tips.framework.utils.sql_template import SQLTemplate
 
 
 class AppendAction(SqlAction):

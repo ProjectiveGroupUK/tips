@@ -15,7 +15,10 @@ try:
 except ImportError:
     # the user has a downlevel version of setuptools.
     print("Error: tips requires setuptools v40.1.0 or higher.")
-    print('Please upgrade setuptools with "pip install --upgrade setuptools" ' "and try again")
+    print(
+        'Please upgrade setuptools with "pip install --upgrade setuptools" '
+        "and try again"
+    )
     sys.exit(1)
 
 
@@ -27,7 +30,7 @@ with open(os.path.join(this_directory, "README.md")) as f:
 package_name = "tips"
 package_version = "1.0.1"
 description = """With TIPS, data engineers can build data pipelines \
-using Standard SQL Views and Tables."""
+using first class database objects mainly with Views, Tables and metadata."""
 
 
 setup(
@@ -36,8 +39,8 @@ setup(
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="DTSQUARED",
-    author_email="info@dtsquared.co.uk",
+    author="Nitin Garg",
+    author_email="nitin.garg@dtsquared.co.uk",
     url="https://github.com/nitindt2/tips",
     packages=find_namespace_packages(include=["tips", "tips.*"]),
     include_package_data=True,
@@ -48,28 +51,26 @@ setup(
         ],
     },
     install_requires=[
-        # "Jinja2==2.11.3",
-        # "MarkupSafe>=0.23,<2.1",
-        # "agate>=1.6,<1.6.4",
-        "click>=7.0,<9",
-        # "colorama>=0.3.9,<0.4.5",
-        # "hologram>=0.0.14,<=0.0.15",
-        # "isodate>=0.6,<0.7",
-        # "logbook>=1.5,<1.6",
-        # "mashumaro==2.9",
-        # "minimal-snowplow-tracker==0.0.2",
-        # "networkx>=2.3,<3",
-        # "packaging>=20.9,<22.0",
-        # "sqlparse>=0.2.3,<0.5",
-        # "dbt-extractor~=0.4.1",
-        # "typing-extensions>=3.7.4",
-        # "werkzeug>=1,<3",
-        # the following are all to match snowflake-connector-python
-        # "requests<3.0.0",
-        # "idna>=2.5,<4",
-        # "cffi>=1.9,<2.0.0",
-        "toml>=0.10.2",
-        "snowflake-connector-python==2.7.6"
+        "asn1crypto==1.5.1",
+        "certifi==2022.9.24",
+        "cffi==1.15.1",
+        "charset-normalizer==2.1.1",
+        "click==8.1.3",
+        "colorama==0.4.5",
+        "cryptography==36.0.2",
+        "filelock==3.8.0",
+        "idna==3.4",
+        "oscrypto==1.3.0",
+        "pycparser==2.21",
+        "pycryptodomex==3.15.0",
+        "PyJWT==2.5.0",
+        "pyOpenSSL==22.0.0",
+        "pytz==2022.4",
+        "requests==2.28.1",
+        "snowflake-connector-python==2.8.0",
+        "toml==0.10.2",
+        "typing_extensions==4.4.0",
+        "urllib3==1.26.12",
     ],
     zip_safe=False,
     classifiers=[

@@ -1,6 +1,6 @@
 import abc
 from typing import List, Dict
-from db.database_connection import DatabaseConnection
+from tips.framework.db.database_connection import DatabaseConnection
 
 
 class FrameworkMetaData(abc.ABC):

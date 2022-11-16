@@ -1,5 +1,5 @@
 from typing import Dict, List
-from actions.action import Action
+from tips.framework.actions.action import Action
 import abc
 
 

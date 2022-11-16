@@ -1,10 +1,15 @@
+import os
 import sys
 import warnings
 import argparse
-import tips.commands.init as initCommand  ##TBC
-from tips.utils import ExitCodes   ##TBC
+import tips.commands.setup as SetupCommand
+from tips.utils.utils import ExitCodes
+from tips.utils.logger import Logger
 
-VERSION = '1.0.1'
+VERSION = "1.0.1"
+
+logger = Logger().initialize(os.environ.get("env", "dev"))
+
 
 class TIPSVersion(argparse.Action):
     """This is very similar to the built-in argparse._Version action,
@@ -20,12 +25,16 @@ class TIPSVersion(argparse.Action):
         help="show program's version number and exit",
     ):
         super().__init__(
-            option_strings=option_strings, dest=dest, default=default, nargs=0, help=help
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help,
         )
 
     def __call__(self, parser, namespace, values, option_string=None):
         formatter = argparse.RawTextHelpFormatter(prog=parser.prog)
-        formatter.add_text(f'Tips {VERSION}')
+        formatter.add_text(f"Tips {VERSION}")
         parser.exit(message=formatter.format_help())
 
 
@@ -79,10 +88,10 @@ class TIPSArgumentParser(argparse.ArgumentParser):
 
 
 def main(args=None):
+    logger.debug(f"Inside main")
     warnings.filterwarnings("ignore", category=DeprecationWarning, module="logbook")
     if args is None:
-        args = sys.argv[1:]    
-
+        args = sys.argv[1:]
 
     try:
         results, succeeded = handle_and_check(args)
@@ -100,9 +109,11 @@ def main(args=None):
         exit_code = e.code
 
     except BaseException as e:
+        logger.error(e)
         exit_code = ExitCodes.UnhandledError.value
 
     sys.exit(exit_code)
+
 
 def handle_and_check(args):
     parsed = parse_args(args)
@@ -111,6 +122,7 @@ def handle_and_check(args):
     success = task.interpret_results(res)
 
     return res, success
+
 
 def run_from_args(parsed):
     # this will convert DbtConfigErrors into RuntimeExceptions
@@ -128,6 +140,7 @@ def run_from_args(parsed):
 
 
 def _build_base_subparser():
+    logger.debug("Inside _build_base_subparser")
     base_subparser = argparse.ArgumentParser(add_help=False)
 
     # base_subparser.add_argument(
@@ -143,12 +156,14 @@ def _build_base_subparser():
     base_subparser.set_defaults(defer=None, state=None)
     return base_subparser
 
-def _build_init_subparser(subparsers, base_subparser):
+
+def _build_setup_subparser(subparsers, base_subparser):
+    logger.debug("Inside _build_setup_subparser")
     sub = subparsers.add_parser(
-        "init",
+        "setup",
         parents=[base_subparser],
         help="""
-        Initialize a new TIPS project.
+        Setup a new TIPS project.
         """,
     )
     sub.add_argument(
@@ -195,69 +210,17 @@ def _build_init_subparser(subparsers, base_subparser):
         Inserts Sample Metadata 
         """,
     )
-    sub.set_defaults(cls=initCommand.InitTask, which="init", rpc_method=None)
+    sub.set_defaults(cls=SetupCommand.SetupTask, which="setup", rpc_method=None)
     return sub
 
-def _build_run_subparser(subparsers, base_subparser):
-    sub = subparsers.add_parser(
-        "run",
-        parents=[base_subparser],
-        help="""
-        Runs a pipeline.
-        """,
-    )
-    sub.add_argument(
-        "project_name",
-        nargs="?",
-        # default="$1invalid_",
-        help="""
-        Name of the new TIPS project.
-        """,
-    )
-    sub.add_argument(
-        "-sc",
-        "--skip-connection-setup",
-        dest="skip_connection_setup",
-        action="store_true",
-        help="""
-        Skips database connection setup, when this flag is included
-        """,
-    )
-    sub.add_argument(
-        "-sm",
-        "--skip-metadata-setup",
-        dest="skip_metadata_setup",
-        action="store_true",
-        help="""
-        Skips database metadata setup, when this flag is included
-        """,
-    )
-    sub.add_argument(
-        "-f",
-        "--force-metadata-refresh",
-        dest="force_metadata_refresh",
-        action="store_true",
-        help="""
-        Forces Metadata Refresh, resulting in dropping and recreating metadata schema and tables 
-        """,
-    )
-    sub.add_argument(
-        "-s",
-        "--sample-metadata",
-        dest="insert_sample_metadata",
-        action="store_true",
-        help="""
-        Inserts Sample Metadata 
-        """,
-    )
-    sub.set_defaults(cls=initCommand.InitTask, which="init", rpc_method=None)
-    return sub
 
 def parse_args(args, cls=TIPSArgumentParser):
+    logger.debug("Inside parse_args")
+
     p = cls(
         prog="tips",
         description="""
-        TIPS -> Transformation in Plain SQL:
+        TIPS -> Transformation in Python & SQL:
         An ELT framework for managing your SQL transformations datapipelines.
         For more documentation on these commands, visit: http://localhost:8080/documentation
         """,
@@ -279,8 +242,7 @@ def parse_args(args, cls=TIPSArgumentParser):
 
     base_subparser = _build_base_subparser()
 
-    _build_init_subparser(subs, base_subparser)
-
+    _build_setup_subparser(subs, base_subparser)
 
     if len(args) == 0:
         p.print_help()
@@ -294,6 +256,6 @@ def parse_args(args, cls=TIPSArgumentParser):
 
     return parsed
 
+
 if __name__ == "__main__":
     main()
-

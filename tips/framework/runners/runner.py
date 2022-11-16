@@ -1,8 +1,8 @@
 import abc
 from typing import Dict, List
 
-from db.database_connection import DatabaseConnection
-from actions.action import Action
+from tips.framework.db.database_connection import DatabaseConnection
+from tips.framework.actions.action import Action
 
 class Runner(abc.ABC):
 

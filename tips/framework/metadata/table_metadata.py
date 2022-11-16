@@ -1,6 +1,6 @@
 from typing import List, Dict
-from metadata.additional_field import AdditionalField
-from metadata.column_info import ColumnInfo
+from tips.framework.metadata.additional_field import AdditionalField
+from tips.framework.metadata.column_info import ColumnInfo
 
 
 class TableMetaData:

@@ -1,10 +1,12 @@
 from typing import Dict, List
-from actions.action import Action
-from actions.sql_action import SqlAction
-from actions.sql_command import SQLCommand
-from db.database_connection import DatabaseConnection
-from runners.runner import Runner
+from tips.framework.actions.action import Action
+from tips.framework.actions.sql_action import SqlAction
+from tips.framework.actions.sql_command import SQLCommand
+from tips.framework.db.database_connection import DatabaseConnection
+from tips.framework.runners.runner import Runner
 from snowflake.connector import DictCursor
+import logging
+from datetime import datetime
 
 class SQLRunner(Runner):
 
@@ -24,6 +26,7 @@ class SQLRunner(Runner):
     def executeSQL(self, sql: SQLCommand, conn: DatabaseConnection, frameworkRunner) -> None:
 
         sqlCommand:str = sql.getSqlCommand()
+        logging.info(sqlCommand)
 
         if sql.getSqlBinds() is not None:
             cnt = 0
@@ -52,7 +55,11 @@ class SQLRunner(Runner):
 
         if frameworkRunner.isExecute():
             try:
+                dt1 = datetime.now()
                 results = conn.cursor(DictCursor).execute(sqlCommand).fetchall()
+                dt2 = datetime.now()
+                timeDelta = dt2 - dt1
+                sqlJson["cmd_status"]["EXECUTION_TIME_IN_SECS"] = round(timeDelta.total_seconds(),2)
 
                 if type(results) == list and len(results) > 0:
                     # print(results)
@@ -97,7 +104,11 @@ class SQLRunner(Runner):
                 frameworkRunner.returnJson["steps"][-1]["error_message"] = f'{err}'
                 frameworkRunner.returnJson["status"] = "ERROR"
                 frameworkRunner.returnJson["error_message"] = f'{err}'
+                logging.error(f'Error encountered while executing command:\n{sqlCommand}')
+                logging.error(err)
+                return 1
 
         frameworkRunner.returnJson["steps"][-1]["commands"].append(sqlJson)
+        return 0
 
         # print("Executing: " + sql.getSqlCommand())

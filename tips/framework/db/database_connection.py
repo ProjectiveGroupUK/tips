@@ -1,9 +1,11 @@
 from pathlib import Path
 import snowflake.connector
 from snowflake.connector import DictCursor
-import os
-# from dotenv import load_dotenv
 import toml
+# Below is to initialise logging
+import logging
+from tips.utils.logger import Logger
+logger = logging.getLogger(Logger.getRootLoggerName())
 
 class DatabaseConnection():
     _sfUser: str
@@ -27,12 +29,12 @@ class DatabaseConnection():
         config = toml.load(configFile)
 
         if config is None or len(config) <= 0:
-            raise ValueError('Config file with connection details not found. Please run command [tips init] to setup connections file!!')
+            raise Exception('Config file with connection details not found. Please run command "tips setup" to setup connections file!!')
 
         dbCredentials = config['db_credentials']
 
         if dbCredentials is None or len(dbCredentials) <= 0:
-            raise ValueError('DB Credentials not found in Config file. Please run command [tips init] to setup connections file!!')
+            raise Exception('DB Credentials not found in Config file. Please run command "tips setup" to setup connections file!!')
 
         self._sfAccount = dbCredentials['account']
         self._sfUser = dbCredentials['user']
@@ -67,13 +69,12 @@ class DatabaseConnection():
                         )
                     
                 # print('Connected to SF Database!!')
-                print('Info (Connect): Connected to SF Database!!')
+                logger.info('Connected to SF Database!!')
             
             # return self._sfConnection
 
         except Exception as ex:
             err = f"Error (Connect): Couldn't connect to SF Database. {ex}"
-            print(err)
             raise Exception(err)
 
     def getConnection(self):
@@ -89,23 +90,23 @@ class DatabaseConnection():
 
                 for val in results:
                     if "number of rows deleted" in val:
-                        print(f'Info (Execute SQL): Rows Deletes = {val["number of rows deleted"]}')
+                        logger.info(f'(Execute SQL): Rows Deletes = {val["number of rows deleted"]}')
                         # sqlJson["cmd_status"]["ROWS_DELETED"] = val["number of rows deleted"]
 
                     if "number of rows inserted" in val:
-                        print(f'Info (Execute SQL): Rows Inserted = {val["number of rows inserted"]}')
+                        logger.info(f'(Execute SQL): Rows Inserted = {val["number of rows inserted"]}')
 
                     if "number of rows updated" in val:
-                        print(f'Info (Execute SQL): Rows Updated = {val["number of rows updated"]}')
+                        logger.info(f'(Execute SQL): Rows Updated = {val["number of rows updated"]}')
 
                     if "rows_loaded" in val:
-                        print(f'Info (Execute SQL): Rows Loaded = {val["rows_loaded"]}')
+                        logger.info(f'(Execute SQL): Rows Loaded = {val["rows_loaded"]}')
 
                     if "rows_unloaded" in val:
-                        print(f'Info (Execute SQL): Rows Unloaded = {val["rows_unloaded"]}')
+                        logger.info(f'(Execute SQL): Rows Unloaded = {val["rows_unloaded"]}')
 
                     if "status" in val:
-                        print(f'Info (Execute SQL): Status = {val["status"]}')
+                        logger.info(f'(Execute SQL): Status = {val["status"]}')
 
             return results
         except Exception as ex:
@@ -115,10 +116,8 @@ class DatabaseConnection():
 
     def closeConnection(self):
         try:
-            self.conn.close()
-            self.logger.info('Closed connection to SF Database!!')
+            self._sfConnection.close()
+            logger.info('Closed connection to SF Database!!')
         except Exception as ex:
             err = f"Error: Couldn't close connecttion to SF Database. {ex}"
-            self.logger.error(err)
             raise Exception(err)
-

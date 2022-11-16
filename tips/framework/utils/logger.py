@@ -51,7 +51,6 @@ class Logger():
             sh.setFormatter(f)
             self._logger.addHandler(sh)
 
-
         return self._logger
 
     def writeResultJson(self, resultJson: Dict) -> None:

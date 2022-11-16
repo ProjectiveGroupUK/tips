@@ -1,7 +1,7 @@
 import json
 import re
 from typing import List, Dict
-from db.database_connection import DatabaseConnection
+from tips.framework.db.database_connection import DatabaseConnection
 from snowflake.connector import DictCursor
 import os
 from dotenv import load_dotenv

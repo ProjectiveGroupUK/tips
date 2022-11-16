@@ -1,17 +1,18 @@
 from typing import Dict
-from actions.action import Action
-from actions.append_action import AppendAction
-from actions.copy_into_file_action import CopyIntoFileAction
-from actions.default_action import DefaultAction
-from actions.delete_action import DeleteAction
-from actions.di_refresh_action import DIRefreshAction
-from actions.merge_action import MergeAction
-from actions.oi_refresh_action import OIRefreshAction
-from actions.scd2_publish_action import SCD2PublishAction
-from actions.ti_refresh_action import TIRefreshAction
-from actions.truncate_action import TruncateAction
-from metadata.action_metadata import ActionMetadata
-from metadata.table_metadata import TableMetaData
+from tips.framework.actions.action import Action
+from tips.framework.actions.append_action import AppendAction
+from tips.framework.actions.copy_into_file_action import CopyIntoFileAction
+from tips.framework.actions.default_action import DefaultAction
+from tips.framework.actions.delete_action import DeleteAction
+from tips.framework.actions.di_refresh_action import DIRefreshAction
+from tips.framework.actions.merge_action import MergeAction
+from tips.framework.actions.oi_refresh_action import OIRefreshAction
+from tips.framework.actions.scd2_publish_action import SCD2PublishAction
+from tips.framework.actions.ti_refresh_action import TIRefreshAction
+from tips.framework.actions.truncate_action import TruncateAction
+from tips.framework.metadata.action_metadata import ActionMetadata
+from tips.framework.metadata.table_metadata import TableMetaData
+import logging
 
 
 class ActionFactory:
@@ -19,6 +20,8 @@ class ActionFactory:
         self, actionMetaData: ActionMetadata, metadata: TableMetaData, frameworkRunner
     ) -> Action:
         action: Action
+
+        logging.info('Inside ActionFactory...')
 
         actionJson: Dict = {
             "status": "SKIPPED"
@@ -42,6 +45,7 @@ class ActionFactory:
         if actionMetaData.isActive():
 
             if actionMetaData.getCmdType() == "APPEND":
+                logging.info('Running Append Action...')
                 action = AppendAction(
                     source=actionMetaData.getSource(),
                     target=actionMetaData.getTarget(),
@@ -53,6 +57,7 @@ class ActionFactory:
                     isCreateTempTable=actionMetaData.isCreateTempTable(),
                 )
             elif actionMetaData.getCmdType() == "COPY_INTO_FILE":
+                logging.info('Running Copy Into File Action...')
                 action = CopyIntoFileAction(
                     actionMetaData.getSource(),
                     actionMetaData.getTarget(),
@@ -60,12 +65,14 @@ class ActionFactory:
                     actionMetaData.getBinds(),
                 )
             elif actionMetaData.getCmdType() == "DELETE":
+                logging.info('Running Delete Action...')
                 action = DeleteAction(
                     actionMetaData.getSource(),
                     actionMetaData.getWhereClause(),
                     actionMetaData.getBinds(),
                 )
             elif actionMetaData.getCmdType() == "MERGE":
+                logging.info('Running Merge Action...')
                 action = MergeAction(
                     source=actionMetaData.getSource(),
                     target=actionMetaData.getTarget(),
@@ -79,6 +86,7 @@ class ActionFactory:
                     isCreateTempTable=actionMetaData.isCreateTempTable(),
                 )
             elif actionMetaData.getCmdType() == "PUBLISH_SCD2_DIM":
+                logging.info('Running Publish SCD2 Dim Action...')
                 action = SCD2PublishAction(
                     source=actionMetaData.getSource(),
                     target=actionMetaData.getTarget(),
@@ -91,6 +99,7 @@ class ActionFactory:
                 )
             elif actionMetaData.getCmdType() == "REFRESH":
                 if actionMetaData.getRefreshType() == "DI":
+                    logging.info('Running DI Refresh Action...')
                     action = DIRefreshAction(
                         actionMetaData.getSource(),
                         actionMetaData.getTarget(),
@@ -101,6 +110,7 @@ class ActionFactory:
                         isCreateTempTable=actionMetaData.isCreateTempTable(),
                     )
                 elif actionMetaData.getRefreshType() == "OI":
+                    logging.info('Running OI Refresh Action...')
                     action = OIRefreshAction(
                         actionMetaData.getSource(),
                         actionMetaData.getTarget(),
@@ -111,6 +121,7 @@ class ActionFactory:
                         isCreateTempTable=actionMetaData.isCreateTempTable(),
                     )
                 elif actionMetaData.getRefreshType() == "TI":
+                    logging.info('Running TI Refresh Action...')
                     action = TIRefreshAction(
                         actionMetaData.getSource(),
                         actionMetaData.getTarget(),
@@ -121,12 +132,16 @@ class ActionFactory:
                         isCreateTempTable=actionMetaData.isCreateTempTable(),
                     )
                 else:
+                    logging.info('Running Default Action...')
                     action = DefaultAction()
             elif actionMetaData.getCmdType() == "TRUNCATE":
+                logging.info('Running Truncate Action...')
                 action = TruncateAction(actionMetaData.getTarget())
             else:
+                logging.info('Running Default Action...')
                 action = DefaultAction()
         else:
+            logging.info('Running Default Action...')
             action = DefaultAction()
 
         frameworkRunner.returnJson["steps"].append(actionJson)

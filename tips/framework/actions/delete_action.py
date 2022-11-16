@@ -1,7 +1,7 @@
 from typing import List
-from actions.sql_action import SqlAction
-from actions.sql_command import SQLCommand
-from utils.sql_template import SQLTemplate
+from tips.framework.actions.sql_action import SqlAction
+from tips.framework.actions.sql_command import SQLCommand
+from tips.framework.utils.sql_template import SQLTemplate
 
 
 class DeleteAction(SqlAction):

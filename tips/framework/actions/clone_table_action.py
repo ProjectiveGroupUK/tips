@@ -1,10 +1,10 @@
 from typing import List
 
-from actions.sql_action import SqlAction
-from actions.sql_command import SQLCommand
-from metadata.column_info import ColumnInfo
-from metadata.table_metadata import TableMetaData
-from utils.sql_template import SQLTemplate
+from tips.framework.actions.sql_action import SqlAction
+from tips.framework.actions.sql_command import SQLCommand
+from tips.framework.metadata.column_info import ColumnInfo
+from tips.framework.metadata.table_metadata import TableMetaData
+from tips.framework.utils.sql_template import SQLTemplate
 
 
 class CloneTableAction(SqlAction):
@@ -16,6 +16,7 @@ class CloneTableAction(SqlAction):
         self._source = source
         self._target = target
         self._tableMetaData = tableMetaData
+        self.cloneMetadata()
 
     def getBinds(self) -> List[str]:
         pass
@@ -35,15 +36,12 @@ class CloneTableAction(SqlAction):
 
         ## if it is normal clone command, drop any columns that are populated using sequences (key columns)
         if self._source != self._target:
-            ## copy MetaData of source to target
-            targetTableMetaData = self._tableMetaData.getColumns(tableName=self._source, excludeVirtualColumns=True)
 
             seqCols: List[ColumnInfo] = self._tableMetaData.getColumnsWithSequence(self._source)
             colList: List[str] = list()
 
             for seqCol in seqCols:
                 if seqCol.getSequenceName() is not None:
-                    targetTableMetaData.remove(seqCol)
                     colList.append(seqCol.getColumnName())
 
             if len(colList) > 0:
@@ -53,8 +51,21 @@ class CloneTableAction(SqlAction):
                 cmd = f'ALTER TABLE {self._target} DROP COLUMN {commaDelimitedList}'
                 
                 retCmd.append(SQLCommand(cmd))
+           
+        return retCmd
+    
+    def cloneMetadata(self) -> None:
+        ## if it is normal clone command, drop any columns that are populated using sequences (key columns)
+        if self._source != self._target:
+            ## copy MetaData of source to target
+            targetTableMetaData = self._tableMetaData.getColumns(tableName=self._source, excludeVirtualColumns=True)
+
+            seqCols: List[ColumnInfo] = self._tableMetaData.getColumnsWithSequence(self._source)
+
+            for seqCol in seqCols:
+                if seqCol.getSequenceName() is not None:
+                    targetTableMetaData.remove(seqCol)
 
             ## add table MetaData of target
             self._tableMetaData.addMetaData(self._target, targetTableMetaData)
-            
-        return retCmd
+
