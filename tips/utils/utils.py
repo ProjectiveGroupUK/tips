@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from enum import Enum
 
 
@@ -9,28 +10,38 @@ class ExitCodes(int, Enum):
 
 
 class Globals:
+    _instance = None
     _projectDir: Path
-    _configDir: Path
-    _configFilePath: Path
+    _projectID: str
 
-    def __init__(self):
-        self._projectDir = None
-        self._configDir = None
+    """
+    This is singleton class, hence on instantiation, it returns the same instance
+    if already instantiated, otherwise creates a new instance.
+    This is to enable reusing setter and getter methods across the project
+    """
+
+    def __new__(self):
+        if self._instance is None:
+            self._instance = super(Globals, self).__new__(self)
+            # Put any initialization here.
+            self._projectDir = None
+            self._projectID = None
+        return self._instance
+
+    def setProjectID(self, projectID: str) -> None:
+        self._projectID = projectID
+
+    def getProjectID(self) -> str:
+        return self._projectID
 
     def setProjectDir(self, projectDir: Path) -> None:
         self._projectDir = projectDir
 
     def getProjectDir(self) -> Path:
-        return self._projectDir
-
-    def setConfigDir(self, configDir: Path) -> None:
-        self._configDir = configDir
+        return Path(self._projectDir)
 
     def getConfigDir(self) -> Path:
-        return self._configDir
-
-    def setConfigFilePath(self, configFilePath: Path) -> None:
-        self._configFilePath = configFilePath
+        return Path(os.path.join(Path.home(), ".tips"))
 
     def getConfigFilePath(self) -> Path:
-        return self._configFilePath
+        return Path(os.path.join(self.getConfigDir(), "config.toml"))

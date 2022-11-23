@@ -26,10 +26,7 @@ class CloneTableAction(SqlAction):
 
         cmd: str = SQLTemplate().getTemplate(
             sqlAction="clone_table",
-            parameters={
-                "source": self._source,
-                "target": self._target
-            },
+            parameters={"source": self._source, "target": self._target},
         )
 
         retCmd.append(SQLCommand(cmd))
@@ -37,7 +34,9 @@ class CloneTableAction(SqlAction):
         ## if it is normal clone command, drop any columns that are populated using sequences (key columns)
         if self._source != self._target:
 
-            seqCols: List[ColumnInfo] = self._tableMetaData.getColumnsWithSequence(self._source)
+            seqCols: List[ColumnInfo] = self._tableMetaData.getColumnsWithSequence(
+                self._source
+            )
             colList: List[str] = list()
 
             for seqCol in seqCols:
@@ -48,19 +47,23 @@ class CloneTableAction(SqlAction):
                 separator = ", "
                 commaDelimitedList = separator.join(colList)
 
-                cmd = f'ALTER TABLE {self._target} DROP COLUMN {commaDelimitedList}'
-                
+                cmd = f"ALTER TABLE {self._target} DROP COLUMN {commaDelimitedList}"
+
                 retCmd.append(SQLCommand(cmd))
-           
+
         return retCmd
-    
+
     def cloneMetadata(self) -> None:
         ## if it is normal clone command, drop any columns that are populated using sequences (key columns)
         if self._source != self._target:
             ## copy MetaData of source to target
-            targetTableMetaData = self._tableMetaData.getColumns(tableName=self._source, excludeVirtualColumns=True)
+            targetTableMetaData = self._tableMetaData.getColumns(
+                tableName=self._source, excludeVirtualColumns=True
+            )
 
-            seqCols: List[ColumnInfo] = self._tableMetaData.getColumnsWithSequence(self._source)
+            seqCols: List[ColumnInfo] = self._tableMetaData.getColumnsWithSequence(
+                self._source
+            )
 
             for seqCol in seqCols:
                 if seqCol.getSequenceName() is not None:
@@ -68,4 +71,3 @@ class CloneTableAction(SqlAction):
 
             ## add table MetaData of target
             self._tableMetaData.addMetaData(self._target, targetTableMetaData)
-

@@ -1,10 +1,11 @@
 import os
-from pathlib import Path
+from pathlib import Path, PurePath, PosixPath, PurePosixPath
 import re
 import shutil
 from typing import Any
 import click
 from datetime import datetime
+import uuid
 
 from tips.base import BaseTask
 from tips.utils.utils import Globals
@@ -14,6 +15,7 @@ from tips.include.starter_project import PACKAGE_PATH as starterProjectFolder
 # Below is to initialise logging
 import logging
 from tips.utils.logger import Logger
+
 logger = logging.getLogger(Logger.getRootLoggerName())
 
 
@@ -63,6 +65,7 @@ class ProjectName(ValidatedStringMixin):
 
 class SetupTask(BaseTask):
     _projectName: str
+    _projectID: str
     _projectCreatedAt: datetime
     _projectDir: Path
     globalVals = Globals()
@@ -84,12 +87,12 @@ class SetupTask(BaseTask):
         )
         logger.debug("Starter project created!")
 
-    def createProjectDir(self, projectName: str) -> Path:
+    def getProjectDir(self, projectName: str) -> Path:
         """This function creates directory where user's profiles is stored, if it doesn't already exist."""
         logger.debug("Inside createProjectDir")
 
         projectName = Path(projectName)
-        projectIdFile = f"tips_{projectName}.id"
+        projectIdFile = f"tips_project.toml"
         workingFolder = Path(os.getcwd())
         workingFolderName = Path(os.path.split(workingFolder)[-1])
         workingSubFolder = Path(os.path.join(workingFolder, projectName))
@@ -114,19 +117,7 @@ class SetupTask(BaseTask):
 
         configFile = self.globalVals.getConfigFilePath()
 
-        with open(configFile, "w") as cf:
-            cf.write(
-                f"""[base]
-package_name = "tips"
-package_version = "1.0.1"
-description = "With TIPS, data engineers can build data pipelines using Standard SQL Views and Tables."
-
-[project]
-project_name = "{self._projectName}"
-last_initialised_at = {self._projectCreatedAt}
-
-"""
-            )
+        with open(configFile, "a") as cf:
 
             sfAccount = ""
             while not len(sfAccount) > 0:
@@ -136,7 +127,7 @@ last_initialised_at = {self._projectCreatedAt}
                     "Enter snowflake account name (https://<this_value>.snowflakecomputing.com)"
                 )
 
-            cf.write(f"[db_credentials]\n")
+            cf.write(f"[{self._projectID}]\n")
             cf.write(f'type = "snowflake"\n')
             cf.write(f'account = "{sfAccount}"\n')
 
@@ -198,7 +189,7 @@ last_initialised_at = {self._projectCreatedAt}
                 )
             cf.write(f'database = "{sfDatabase}"\n')
 
-            sfSchema = ""
+            sfSchema = "TIPS_MD_SCHEMA"
             while not len(sfSchema) > 0:
                 if sfSchema:
                     click.echo(sfSchema + " is not a valid schema.")
@@ -214,9 +205,10 @@ last_initialised_at = {self._projectCreatedAt}
         """This function creates schema and tables for storing data pipeline metadata"""
 
         logger.debug("Inside createMetaStore")
-
         configFile = self.globalVals.getConfigFilePath()
-        db = DatabaseConnection(configFile)
+        logger.debug(f"Config file location is {configFile}")
+
+        db = DatabaseConnection()
 
         if dropSchema:
             sqlCommand = "DROP SCHEMA IF EXISTS TIPS_MD_SCHEMA CASCADE;"
@@ -296,28 +288,34 @@ COMMENT = 'This Schema holds Metadata for TIPS (Transformation In Plain SQL) too
         self._projectName = projectName
         self._projectCreatedAt = datetime.now()
 
-        projectDir = self.createProjectDir(self._projectName)
-        self._projectDir = projectDir
+        self._projectDir = self.getProjectDir(self._projectName)
 
-        if projectDir is not None:
-            self.globalVals.setProjectDir(projectDir=projectDir)
-            self.copyStarterRepo(projectDir)
-            os.chdir(projectDir)
-            projectIdFile = f"tips_{self._projectName}.id"
+        if self._projectDir is not None:
+            self.globalVals.setProjectDir(projectDir=self._projectDir)
+            self.copyStarterRepo(self._projectDir)
+            os.chdir(self._projectDir)
+
+            projectIdFile = f"tips_project.toml"
+            
+            #Create a unique project ID and set it to globals
+            self._projectID = str(uuid.uuid1())
+            self.globalVals.setProjectID(self._projectID)
+
             with open(projectIdFile, "w") as f:
                 f.write(
-                    f'Project {self._projectName} last initialized on {self._projectCreatedAt.strftime("%d %b %Y %H:%M:%S")}'
+                    f"""[project]
+project_id = "{self._projectID}"
+project_name = "{self._projectName}"
+last_initialised_at = {self._projectCreatedAt}
+
+"""
                 )
 
             # Now generate DB Connection information
-
-            configDir = os.path.join(projectDir, ".tips")
-            configFileName = "config.toml"
-            configFilePath = os.path.join(configDir, configFileName)
-            self.globalVals.setConfigDir(configDir=configDir)
-            self.globalVals.setConfigFilePath(configFilePath=configFilePath)
-
             if not self.args.skip_connection_setup:
+                logger.debug("Starting to setup config")
+                # Create directory if it doesn't already exists
+                Path(self.globalVals.getConfigDir()).mkdir(parents=True, exist_ok=True)
                 self.setupConfig()
 
             # # Now run metadata setup in database
@@ -328,6 +326,7 @@ COMMENT = 'This Schema holds Metadata for TIPS (Transformation In Plain SQL) too
                 )
 
         logger.info("Project setup completed!")
+        return True
 
     def interpret_results(self, results):
-        return True
+        return results

@@ -19,7 +19,7 @@ SELECT p.process_id,
        NVL(c.dq_type,'') dq_type,
        NVL(c.cmd_external_call,'') cmd_external_call,
        NVL(c.active,'N') active
-  FROM batch.process P
-  JOIN batch.process_cmd c ON p.process_id = c.process_id
+  FROM tips_md_schema.process P
+  JOIN tips_md_schema.process_cmd c ON p.process_id = c.process_id
   WHERE p.process_code = '{{ parameters.process_name }}'
  ORDER BY c.process_cmd_id

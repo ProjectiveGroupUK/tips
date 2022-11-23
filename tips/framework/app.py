@@ -6,9 +6,16 @@ from tips.framework.metadata.column_metadata import ColumnMetadata
 from tips.framework.metadata.table_metadata import TableMetaData
 from tips.framework.metadata.framework_metadata import FrameworkMetaData
 from tips.framework.runners.framework_runner import FrameworkRunner
-from tips.framework.utils.logger import Logger
+
+# from tips.framework.utils.logger import Logger
 from datetime import datetime
 import argparse
+
+# Below is to initialise logging
+import logging
+from tips.utils.logger import Logger
+
+logger = logging.getLogger(Logger.getRootLoggerName())
 
 
 class App:
@@ -24,19 +31,17 @@ class App:
         self._executeFlag = executeFlag
 
     def main(self) -> None:
+        logger.debug("Inside framework app main")
 
-        logRunner = Logger()
-        logger = logRunner.setupLogger()
-
-        sfConnection: DatabaseConnection = DatabaseConnection(logger)
-        sfSess = sfConnection.connect()
+        dbConnection: DatabaseConnection = DatabaseConnection()
+        logger.debug("DB Connection established!")
 
         start_dt = datetime.now()
-        framework: FrameworkMetaData = FrameworkFactory().getProcess(self._processName, logger)
-        frameworkMetaData: List[Dict] = framework.getMetaData(sfSess)
+        framework: FrameworkMetaData = FrameworkFactory().getProcess(self._processName)
+        frameworkMetaData: List[Dict] = framework.getMetaData(dbConnection)
 
         columnMetaData: List[Dict] = ColumnMetadata().getData(
-            frameworkMetaData=frameworkMetaData, conn=sfSess, logger=logger
+            frameworkMetaData=frameworkMetaData, conn=dbConnection
         )
 
         tableMetaData: TableMetaData = TableMetaData(columnMetaData)
@@ -48,20 +53,22 @@ class App:
         )
 
         runFramework: Dict = frameworkRunner.run(
-            conn=sfSess,
+            conn=dbConnection,
             tableMetaData=tableMetaData,
             frameworkMetaData=frameworkMetaData,
         )
 
-        logRunner.writeResultJson(runFramework)
-        # print(json.dumps(runFramework, indent=4))
+        loggerInstance = Logger()
+        loggerInstance.writeResultJson(runFramework)
+        
 
-        sfConnection.close_connection()
+        dbConnection.closeConnection()
         end_dt = datetime.now()
-        logger.info(f'Start DateTime: {start_dt}')
-        logger.info(f'End DateTime: {end_dt}')
-        logger.info(f'Total Elapsed Time (secs): {round((end_dt - start_dt).total_seconds(),2)}')
-
+        logger.info(f"Start DateTime: {start_dt}")
+        logger.info(f"End DateTime: {end_dt}")
+        logger.info(
+            f"Total Elapsed Time (secs): {round((end_dt - start_dt).total_seconds(),2)}"
+        )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

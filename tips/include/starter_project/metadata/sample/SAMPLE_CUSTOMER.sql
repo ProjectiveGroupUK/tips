@@ -135,7 +135,7 @@ VALUES
 ,	'TRANSFORM.VW_SRC_CUSTOMER_HISTORY'							--cmd_src
 ,	'DIMENSION.CUSTOMER_HISTORY'								--cmd_tgt
 ,	NULL														--cmd_where
-,	NULL														--cmd_binds
+,	'COBID'														--cmd_binds
 ,	NULL														--refresh_type
 ,	'CUSTOMER_NAME'												--business_key
 ,	'Y'															--active
@@ -143,7 +143,7 @@ VALUES
 ,	NULL														--generate_merge_matched_clause
 ,	NULL														--generate_merge_non_matched_clause
 ,	NULL														--additional_fields
-,	'Y'															--temp_table
+,	NULL														--temp_table
 ,	NULL														--cmd_pivot_by
 ,	NULL														--cmd_pivot_field
 ,	'SCD2'														--dq_type

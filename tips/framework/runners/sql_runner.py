@@ -4,9 +4,12 @@ from tips.framework.actions.sql_action import SqlAction
 from tips.framework.actions.sql_command import SQLCommand
 from tips.framework.db.database_connection import DatabaseConnection
 from tips.framework.runners.runner import Runner
-from snowflake.connector import DictCursor
-import logging
 from datetime import datetime
+# Below is to initialise logging
+import logging
+from tips.utils.logger import Logger
+
+logger = logging.getLogger(Logger.getRootLoggerName())
 
 class SQLRunner(Runner):
 
@@ -26,7 +29,7 @@ class SQLRunner(Runner):
     def executeSQL(self, sql: SQLCommand, conn: DatabaseConnection, frameworkRunner) -> None:
 
         sqlCommand:str = sql.getSqlCommand()
-        logging.info(sqlCommand)
+        logger.info(sqlCommand)
 
         if sql.getSqlBinds() is not None:
             cnt = 0
@@ -56,7 +59,7 @@ class SQLRunner(Runner):
         if frameworkRunner.isExecute():
             try:
                 dt1 = datetime.now()
-                results = conn.cursor(DictCursor).execute(sqlCommand).fetchall()
+                results = conn.executeSQL(sqlCommand=sqlCommand)
                 dt2 = datetime.now()
                 timeDelta = dt2 - dt1
                 sqlJson["cmd_status"]["EXECUTION_TIME_IN_SECS"] = round(timeDelta.total_seconds(),2)
@@ -104,8 +107,8 @@ class SQLRunner(Runner):
                 frameworkRunner.returnJson["steps"][-1]["error_message"] = f'{err}'
                 frameworkRunner.returnJson["status"] = "ERROR"
                 frameworkRunner.returnJson["error_message"] = f'{err}'
-                logging.error(f'Error encountered while executing command:\n{sqlCommand}')
-                logging.error(err)
+                logger.error(f'Error encountered while executing command:\n{sqlCommand}')
+                logger.error(err)
                 return 1
 
         frameworkRunner.returnJson["steps"][-1]["commands"].append(sqlJson)

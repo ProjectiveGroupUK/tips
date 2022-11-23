@@ -3,6 +3,8 @@ import sys
 import warnings
 import argparse
 import tips.commands.setup as SetupCommand
+import tips.commands.deploy as DeployCommand
+import tips.commands.run as RunCommand
 from tips.utils.utils import ExitCodes
 from tips.utils.logger import Logger
 
@@ -214,6 +216,133 @@ def _build_setup_subparser(subparsers, base_subparser):
     return sub
 
 
+def _build_deploy_subparser(subparsers, base_subparser):
+    logger.debug("Inside _build_deploy_subparser")
+    sub = subparsers.add_parser(
+        "deploy",
+        parents=[base_subparser],
+        help="""
+        Deploy database objects.
+        """,
+    )
+
+    sub.add_argument(
+        "-ot",
+        "--object-types",
+        dest="object_types",
+        nargs="+",
+        choices=[
+            "metadata",
+            "table",
+            "view",
+            "sequence",
+            "procedure",
+            "function",
+            "schema",
+            "stage",
+            "pipe",
+            "fileformat",
+            "METADATA",
+            "TABLE",
+            "VIEW",
+            "SEQUENCE",
+            "PROCEDURE",
+            "FUNCTION",
+            "SCHEMA",
+            "STAGE",
+            "PIPE",
+            "FILEFORMAT",
+        ],
+        help="""
+        Specify the type of objects that you want to deploy.
+        All files in folders related to specified object would be deployed
+        """,
+        metavar="OBJECT TYPE",
+        required=False,
+    )
+
+    sub.add_argument(
+        "-on",
+        "--object-names",
+        dest="object_names",
+        nargs="+",
+        help="""
+        Specify names of objects that you want to be deployed, if only certain objects are to be deployed.
+        Object names should match filenames. File extension is not required. 
+        """,
+        metavar="OBJECT NAME",
+        required=False,
+    )
+
+    sub.add_argument(
+        "-sm",
+        "--skip-metadata-setup",
+        dest="skip_metadata_setup",
+        action="store_true",
+        help="""
+        Skips database metadata setup, when this flag is included
+        """,
+    )
+
+    sub.add_argument(
+        "-s",
+        "--sample-metadata",
+        dest="insert_sample_metadata",
+        action="store_true",
+        help="""
+        Inserts Sample Metadata, when this flah is included 
+        """,
+    )
+    sub.set_defaults(cls=DeployCommand.DeployTask, which="deploy", rpc_method=None)
+    return sub
+
+def _build_run_subparser(subparsers, base_subparser):
+    logger.debug("Inside _build_run_subparser")
+    sub = subparsers.add_parser(
+        "run",
+        parents=[base_subparser],
+        help="""
+        Run data pipeline.
+        """,
+    )
+
+    sub.add_argument(
+        "-p",
+        "--process",
+        dest="process_name",
+        help="""
+        Process Name to run.
+        """,
+        metavar="Process Name",
+        required=True,
+    )
+
+    sub.add_argument(
+        "-v",
+        "--var",
+        dest="variables_dict",
+        help="""
+        Enter bind variables to be used by the process
+        Needs to be in dictionary format. E.g. "{'VAR1': 'VALUE1','VAR2':'VALUE2'}" 
+        """,
+        metavar="Variables Dict",
+        required=False,
+    )
+
+    sub.add_argument(
+        "-ne",
+        "--no-execute",
+        dest="no_execute_mode",
+        action="store_true",
+        help="""
+        When this option is used, it would run the process in no execute mode,
+        i.e. sqls would be generated and listed in output file, but would not be run
+        """,
+    )
+
+    sub.set_defaults(cls=RunCommand.RunTask, which="deploy", rpc_method=None)
+    return sub
+
 def parse_args(args, cls=TIPSArgumentParser):
     logger.debug("Inside parse_args")
 
@@ -243,6 +372,8 @@ def parse_args(args, cls=TIPSArgumentParser):
     base_subparser = _build_base_subparser()
 
     _build_setup_subparser(subs, base_subparser)
+    _build_deploy_subparser(subs, base_subparser)
+    _build_run_subparser(subs, base_subparser)
 
     if len(args) == 0:
         p.print_help()
