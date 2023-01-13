@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import toml
 from enum import Enum
 
 
@@ -13,6 +14,8 @@ class Globals:
     _instance = None
     _projectDir: Path
     _projectID: str
+    _projectName: str
+    _envName: str
 
     """
     This is singleton class, hence on instantiation, it returns the same instance
@@ -26,7 +29,21 @@ class Globals:
             # Put any initialization here.
             self._projectDir = None
             self._projectID = None
+            self._projectName = None
+            self._envName = None
         return self._instance
+
+    def setEnvName(self, envName: str) -> None:
+        self._envName = envName
+
+    def getEnvName(self) -> str:
+        return self._envName
+
+    def setProjectName(self, projectName: str) -> None:
+        self._projectName = projectName
+
+    def getProjectName(self) -> str:
+        return self._projectName
 
     def setProjectID(self, projectID: str) -> None:
         self._projectID = projectID
@@ -45,3 +62,16 @@ class Globals:
 
     def getConfigFilePath(self) -> Path:
         return Path(os.path.join(self.getConfigDir(), "config.toml"))
+    
+    def initGlobals(self):
+        # Initialise globals
+        projectIdFile = f"tips_project.toml"
+        workingFolder = Path.cwd()
+        config = toml.load(Path.joinpath(workingFolder, projectIdFile))
+        projectID = config.get('project').get('project_id')
+        if projectID is None:
+            raise Exception('Project config file seems to be corrupted, please run setup again to recreate the file!')
+
+        self.setProjectDir(Path.cwd())
+        self.setProjectID(projectID=projectID)
+

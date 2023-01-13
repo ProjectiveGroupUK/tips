@@ -32,6 +32,8 @@ class App:
 
     def main(self) -> None:
         logger.debug("Inside framework app main")
+        logInstance = Logger()
+        logInstance.addFileHandler() 
 
         dbConnection: DatabaseConnection = DatabaseConnection()
         logger.debug("DB Connection established!")
@@ -40,29 +42,39 @@ class App:
         framework: FrameworkMetaData = FrameworkFactory().getProcess(self._processName)
         frameworkMetaData: List[Dict] = framework.getMetaData(dbConnection)
 
-        columnMetaData: List[Dict] = ColumnMetadata().getData(
-            frameworkMetaData=frameworkMetaData, conn=dbConnection
-        )
+        if len(frameworkMetaData) <= 0:
+            logger.error('Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!')
+        else:
+            logger.info('Fetched Framework Metadata!')
 
-        tableMetaData: TableMetaData = TableMetaData(columnMetaData)
 
-        frameworkRunner: FrameworkRunner = FrameworkRunner(
-            processName=self._processName,
-            bindVariables=self._bindVariables,
-            executeFlag=self._executeFlag,
-        )
+            columnMetaData: List[Dict] = ColumnMetadata().getData(
+                frameworkMetaData=frameworkMetaData, conn=dbConnection
+            )
 
-        runFramework: Dict = frameworkRunner.run(
-            conn=dbConnection,
-            tableMetaData=tableMetaData,
-            frameworkMetaData=frameworkMetaData,
-        )
+            tableMetaData: TableMetaData = TableMetaData(columnMetaData)
 
-        loggerInstance = Logger()
-        loggerInstance.writeResultJson(runFramework)
+            frameworkRunner: FrameworkRunner = FrameworkRunner(
+                processName=self._processName,
+                bindVariables=self._bindVariables,
+                executeFlag=self._executeFlag,
+            )
+
+            runFramework: Dict = frameworkRunner.run(
+                conn=dbConnection,
+                tableMetaData=tableMetaData,
+                frameworkMetaData=frameworkMetaData,
+            )
+
+            logInstance.writeResultJson(runFramework)
+
+            if runFramework.get('status') == 'ERROR':
+                error_message = runFramework.get('error_message')
+                logger.error(error_message)
         
 
         dbConnection.closeConnection()
+        logInstance.removeFileHandler()
         end_dt = datetime.now()
         logger.info(f"Start DateTime: {start_dt}")
         logger.info(f"End DateTime: {end_dt}")

@@ -1,11 +1,12 @@
 import os
-from pathlib import Path, PurePath, PosixPath, PurePosixPath
+from pathlib import Path
 import re
 import shutil
 from typing import Any
 import click
 from datetime import datetime
 import uuid
+import toml
 
 from tips.base import BaseTask
 from tips.utils.utils import Globals
@@ -64,10 +65,10 @@ class ProjectName(ValidatedStringMixin):
 
 
 class SetupTask(BaseTask):
-    _projectName: str
-    _projectID: str
-    _projectCreatedAt: datetime
-    _projectDir: Path
+    _projectName: str = None
+    _projectID: str = None
+    _projectCreatedAt: datetime = None
+    _projectDir: Path = None
     globalVals = Globals()
 
     def copyStarterRepo(self, tgtProjectFolder):
@@ -115,88 +116,100 @@ class SetupTask(BaseTask):
         """This function sets up project config i.e. db credentials etc."""
         logger.debug("Inside setupConfig")
 
+        config = {}
+
         configFile = self.globalVals.getConfigFilePath()
+        if configFile.exists():
+            config = toml.load(configFile)
 
-        with open(configFile, "a") as cf:
+        config[self._projectID] = {}
+ 
+        config[self._projectID]["type"] = "snowflake"
+ 
+        sfAccount = ""
+        while not len(sfAccount) > 0:
+            if sfAccount:
+                click.echo(sfAccount + " is not a valid account.")
+            sfAccount = click.prompt(
+                "Enter snowflake account name (https://<this_value>.snowflakecomputing.com)"
+            )
 
-            sfAccount = ""
-            while not len(sfAccount) > 0:
-                if sfAccount:
-                    click.echo(sfAccount + " is not a valid account.")
-                sfAccount = click.prompt(
-                    "Enter snowflake account name (https://<this_value>.snowflakecomputing.com)"
+        config[self._projectID]["account"] = f"{sfAccount}"
+
+        sfUser = ""
+        while not len(sfUser) > 0:
+            if sfUser:
+                click.echo(sfUser + " is not a valid user.")
+            sfUser = click.prompt("Enter snowflake username (user)")
+
+        config[self._projectID]["user"] = f"{sfUser}"
+
+        click.echo("[1] password")
+        click.echo("[2] externalbrowser")
+
+        sfAuthenticationMethod = 0
+        while sfAuthenticationMethod not in ("1", "2"):
+            if sfAuthenticationMethod:
+                click.echo(
+                    "Enter valid authentication method ([1] password / [2] externalbrowser)"
                 )
+            sfAuthenticationMethod = click.prompt(
+                "Desired authentication type option (enter a number)"
+            )
 
-            cf.write(f"[{self._projectID}]\n")
-            cf.write(f'type = "snowflake"\n')
-            cf.write(f'account = "{sfAccount}"\n')
-
-            sfUser = ""
-            while not len(sfUser) > 0:
-                if sfUser:
-                    click.echo(sfUser + " is not a valid user.")
-                sfUser = click.prompt("Enter snowflake username (user)")
-            cf.write(f'user = "{sfUser}"\n')
-
-            click.echo("[1] password")
-            click.echo("[2] externalbrowser")
-
-            sfAuthenticationMethod = 0
-            while sfAuthenticationMethod not in ("1", "2", "3"):
-                if sfAuthenticationMethod:
-                    click.echo(
-                        "Enter valid authentication method ([1] password / [2] externalbrowser)"
-                    )
-                sfAuthenticationMethod = click.prompt(
-                    "Desired authentication type option (enter a number)"
+        if sfAuthenticationMethod == "1":
+            config[self._projectID]["authentication_method"] = "password"
+            sfPassword = ""
+            while not len(sfPassword) > 0:
+                if sfPassword:
+                    click.echo(sfPassword + " is not a valid password.")
+                sfPassword = click.prompt(
+                    f"Enter snowflake password for user [{sfUser}]", hide_input=True
                 )
+            config[self._projectID]["password"] = f"{sfPassword}"
+        else:
+            config[self._projectID]["authentication_method"] = "externalbrowser"
 
-            if sfAuthenticationMethod == "1":
-                cf.write(f'authentication_method = "password"\n')
-                sfPassword = ""
-                while not len(sfPassword) > 0:
-                    if sfPassword:
-                        click.echo(sfPassword + " is not a valid password.")
-                    sfPassword = click.prompt(
-                        f"Enter snowflake password for user [{sfUser}]", hide_input=True
-                    )
-                cf.write(f'password = "{sfPassword}"\n')
-            else:
-                cf.write(f'authentication_method = "externalbrowser"\n')
+        sfRole = ""
+        while not len(sfRole) > 0:
+            if sfRole:
+                click.echo(sfRole + " is not a valid role.")
+            sfRole = click.prompt("Enter snowflake role to use")
+        config[self._projectID]["role"] = f"{sfRole}"
 
-            sfRole = ""
-            while not len(sfRole) > 0:
-                if sfRole:
-                    click.echo(sfRole + " is not a valid role.")
-                sfRole = click.prompt("Enter snowflake role to use")
-            cf.write(f'role = "{sfRole}"\n')
+        sfWarehouse = ""
+        while not len(sfWarehouse) > 0:
+            if sfWarehouse:
+                click.echo(sfWarehouse + " is not a valid warehouse.")
+            sfWarehouse = click.prompt(
+                "Enter snowflake warehouse to use (warehouse name)"
+            )
+        config[self._projectID]["warehouse"] = f"{sfWarehouse}"
 
-            sfWarehouse = ""
-            while not len(sfWarehouse) > 0:
-                if sfWarehouse:
-                    click.echo(sfWarehouse + " is not a valid warehouse.")
-                sfWarehouse = click.prompt(
-                    "Enter snowflake warehouse to use (warehouse name)"
-                )
-            cf.write(f'warehouse = "{sfWarehouse}"\n')
+        sfDatabase = ""
+        while not len(sfDatabase) > 0:
+            if sfDatabase:
+                click.echo(sfDatabase + " is not a valid database.")
+            sfDatabase = click.prompt(
+                "Enter snowflake database to use (when ommited in object definition)"
+            )
+        config[self._projectID]["database"] = f"{sfDatabase}"
 
-            sfDatabase = ""
-            while not len(sfDatabase) > 0:
-                if sfDatabase:
-                    click.echo(sfDatabase + " is not a valid database.")
-                sfDatabase = click.prompt(
-                    "Enter snowflake database to use (when ommited in object definition)"
-                )
-            cf.write(f'database = "{sfDatabase}"\n')
+        # sfSchema = ""
+        # while not len(sfSchema) > 0:
+        #     if sfSchema:
+        #         click.echo(sfSchema + " is not a valid schema.")
+        #     sfSchema = click.prompt(
+        #         "Enter snowflake schema to use (when ommited in object definition)"
+        #     )
+        # config[self._projectID]["schema"] = f"{sfSchema}"
 
-            sfSchema = "TIPS_MD_SCHEMA"
-            while not len(sfSchema) > 0:
-                if sfSchema:
-                    click.echo(sfSchema + " is not a valid schema.")
-                sfSchema = click.prompt(
-                    "Enter snowflake schema to use (when ommited in object definition)"
-                )
-            cf.write(f'schema = "{sfSchema}"\n')
+        sfSchema = "TIPS_MD_SCHEMA"
+        config[self._projectID]["schema"] = f"{sfSchema}"
+
+        with open(configFile, "w") as cf:
+            toml.dump(config, cf)
+
             logger.info("Config setup completed!")
 
     def createMetaStore(
@@ -274,31 +287,61 @@ COMMENT = 'This Schema holds Metadata for TIPS (Transformation In Plain SQL) too
                                     sqlCommand = ""
 
     def run(self):
-        """Entry point for the init task."""
+        """Entry point for the setup task."""
         logger.info("Setting up Project...")
+        projectName: str
 
-        projectName = self.args.project_name
-        while not ProjectName.is_valid(projectName):
-            if projectName:
-                click.echo(projectName + " is not a valid project name.")
-            projectName = click.prompt(
-                "Enter a name for your project (letters, digits, underscore)"
-            )
+        actionOption = 0
+        # check if already in project folder
+        if Path.cwd().joinpath("tips_project.toml").exists():
+            click.echo("You are already in TIPS Project folder, what do you want to do?")
+            click.echo("[1] Reconfigure DB Credentials")
+            click.echo("[2] Re-initialise whole project")
+            click.echo("[3] Exit")
 
-        self._projectName = projectName
+            while actionOption not in ("1", "2", "3"):
+                if actionOption:
+                    click.echo(
+                        "Enter valid option ([1] Reconfigure DB Credentials / [2] Re-initialise whole project) / [3] Exit"
+                    )
+                actionOption = click.prompt("Desired option (enter a number)")
+
+            # Exit silently
+            if actionOption == "3":
+                return True
+            else:
+                projectFile = toml.load(Path.cwd().joinpath("tips_project.toml"))
+                self._projectName = projectFile.get("project").get("project_name")
+                self._projectID = projectFile.get("project").get("project_id")
+
+        if self._projectName is None:
+            projectName = self.args.project_name
+            while not ProjectName.is_valid(projectName):
+                if projectName:
+                    click.echo(projectName + " is not a valid project name.")
+                projectName = click.prompt(
+                    "Enter a name for your project (letters, digits, underscore)"
+                )
+
+            self._projectName = projectName
+
+        self.globalVals.setProjectName(self._projectName)
+
         self._projectCreatedAt = datetime.now()
 
         self._projectDir = self.getProjectDir(self._projectName)
 
         if self._projectDir is not None:
             self.globalVals.setProjectDir(projectDir=self._projectDir)
-            self.copyStarterRepo(self._projectDir)
-            os.chdir(self._projectDir)
+            if actionOption != "1":
+                self.copyStarterRepo(self._projectDir)
+                os.chdir(self._projectDir)
 
             projectIdFile = f"tips_project.toml"
-            
-            #Create a unique project ID and set it to globals
-            self._projectID = str(uuid.uuid1())
+
+            # Create a unique project ID and set it to globals
+            if self._projectID is None:
+                self._projectID = str(uuid.uuid1())
             self.globalVals.setProjectID(self._projectID)
 
             with open(projectIdFile, "w") as f:
@@ -312,14 +355,21 @@ last_initialised_at = {self._projectCreatedAt}
                 )
 
             # Now generate DB Connection information
-            if not self.args.skip_connection_setup:
-                logger.debug("Starting to setup config")
+            if (self.args.skip_connection_setup) and (actionOption not in ("1", "2")):
+                logger.info("Skipping connection setup")
+            else:
+                logger.info("Starting to setup config")
                 # Create directory if it doesn't already exists
                 Path(self.globalVals.getConfigDir()).mkdir(parents=True, exist_ok=True)
                 self.setupConfig()
-
+            
             # # Now run metadata setup in database
-            if not self.args.skip_metadata_setup:
+            if actionOption == "1":
+                logger.info("Skipping Metadata Setup")
+            elif self.args.skip_metadata_setup:
+                logger.info("Skipping Metadata Setup")
+            else:
+                logger.info("Starting setting up metadata")
                 self.createMetaStore(
                     dropSchema=self.args.force_metadata_refresh,
                     insertSampleMetaData=self.args.insert_sample_metadata,

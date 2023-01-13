@@ -25,6 +25,4 @@ class SQLFrameworkMetaDataRunner(FrameworkMetaData):
         )
 
         results: List[Dict] = conn.executeSQL(sqlCommand=cmdStr)
-        logger.info('Fetched Framework Metadata!')
-
         return results

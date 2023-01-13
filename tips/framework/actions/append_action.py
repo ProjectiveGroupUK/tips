@@ -54,7 +54,6 @@ class AppendAction(SqlAction):
             )
 
             cmd.append(SQLCommand(cmdStr))
-
         commonColumns: List[ColumnInfo] = self._metadata.getCommonColumns(
             self._source, self._target
         )

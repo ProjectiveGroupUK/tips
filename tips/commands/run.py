@@ -8,6 +8,7 @@ from tips.utils.logger import Logger
 from tips.utils.utils import Globals
 from tips.framework.app import App
 
+
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
 
@@ -48,8 +49,8 @@ class RunTask(BaseTask):
         return 0
 
     def run(self):
-        """Entry point for gendag task."""
-        logger.debug("Generate DAG process initiated..")
+        """Entry point for run task."""
+        logger.debug("Run Task initiated..")
 
         logger.debug(f"Argument process_name: {self.args.process_name}")
         logger.debug(f"Argument variables_dict: {self.args.variables_dict}")
@@ -71,15 +72,7 @@ class RunTask(BaseTask):
             executeFlag = "Y"
 
         # Initialise globals
-        projectIdFile = f"tips_project.toml"
-        workingFolder = Path.cwd()
-        config = toml.load(Path.joinpath(workingFolder, projectIdFile))
-        projectID = config.get('project').get('project_id')
-        if projectID is None:
-            raise Exception('Project config file seems to be corrupted, please run setup again to recreate the file!')
-
-        globals.setProjectDir(Path.cwd())
-        globals.setProjectID(projectID=projectID)
+        globals.initGlobals()
         
         # Now call framework
         app = App(

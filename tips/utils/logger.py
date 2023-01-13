@@ -7,9 +7,11 @@ from datetime import datetime
 from colorama import init, Fore, Back
 from pathlib import Path
 import os
+from tips.utils.utils import Globals
 
 init(autoreset=True)
 LOGGER_ROOT_NAME = "tips"
+globals = Globals()
 
 
 class CustomFormatter(logging.Formatter):
@@ -39,6 +41,8 @@ class CustomFormatter(logging.Formatter):
 class Logger:
     logDir: Path
     logger: Logger
+    info_file_handler: RotatingFileHandler
+    error_file_handler: RotatingFileHandler
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance') or not cls.instance:
@@ -46,25 +50,18 @@ class Logger:
 
         return cls.instance
 
-    def initialize(self, env: str):
+    def initialize(self):
         self.logger = logging.getLogger(LOGGER_ROOT_NAME)
+        env = globals.getEnvName()
         console = logging.StreamHandler()
 
-        # Create logs folder if doesn't exists
-        subfldrts = datetime.now().strftime('%Y%m%d%H%M%S')
-        self.logDir = Path.joinpath(Path.cwd(),'logs',subfldrts)
-        self.logDir.mkdir(parents=True, exist_ok=True)
-
-        info_log_file = Path.joinpath(self.logDir,'info.log')
-        info_file_handler = RotatingFileHandler(filename=info_log_file, maxBytes=10485760, backupCount=20,encoding='utf8')
-        error_log_file = Path.joinpath(self.logDir,'error.log')
-        error_file_handler = RotatingFileHandler(filename=error_log_file, maxBytes=10485760, backupCount=20,encoding='utf8')
-        info_file_handler.setLevel(logging.INFO)
-        error_file_handler.setLevel(logging.ERROR)
         if env.lower() == "debug":
             self.logger.setLevel(logging.DEBUG)
             console.setLevel(logging.DEBUG)
-        elif env.lower() == "prod":
+        elif env.lower() in ("dev", "development"):
+            self.logger.setLevel(logging.INFO)
+            console.setLevel(logging.INFO)
+        elif env.lower() in ("prod","production"):
             self.logger.setLevel(logging.ERROR)
             console.setLevel(logging.ERROR)
         else:
@@ -74,14 +71,39 @@ class Logger:
         console.setFormatter(CustomFormatter())
         self.logger.addHandler(console)
 
-        fileFormatter = logging.Formatter(fmt="%(asctime)s: %(name)s => %(levelname)s :: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-        info_file_handler.setFormatter(fileFormatter)
-        error_file_handler.setFormatter(fileFormatter)
-        self.logger.addHandler(info_file_handler)
-        self.logger.addHandler(error_file_handler)
+        # fileFormatter = logging.Formatter(fmt="%(asctime)s: %(name)s => %(levelname)s :: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+        # self.info_file_handler.setFormatter(fileFormatter)
+        # self.error_file_handler.setFormatter(fileFormatter)
+        # self.logger.addHandler(self.info_file_handler)
+        # self.logger.addHandler(self.error_file_handler)
 
         return self.logger
 
+    def addFileHandler(self):
+        self.logger = logging.getLogger(LOGGER_ROOT_NAME)
+        # Create logs folder if doesn't exists
+        subfldrts = datetime.now().strftime('%Y%m%d%H%M%S')
+        self.logDir = Path.joinpath(Path.cwd(),'logs',subfldrts)
+        self.logDir.mkdir(parents=True, exist_ok=True)
+
+        info_log_file = Path.joinpath(self.logDir,'info.log')
+        self.info_file_handler = RotatingFileHandler(filename=info_log_file, maxBytes=10485760, backupCount=20,encoding='utf8')
+        error_log_file = Path.joinpath(self.logDir,'error.log')
+        self.error_file_handler = RotatingFileHandler(filename=error_log_file, maxBytes=10485760, backupCount=20,encoding='utf8')
+        self.info_file_handler.setLevel(logging.INFO)
+        self.error_file_handler.setLevel(logging.ERROR)
+
+        fileFormatter = logging.Formatter(fmt="%(asctime)s: %(name)s => %(levelname)s :: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+        self.info_file_handler.setFormatter(fileFormatter)
+        self.error_file_handler.setFormatter(fileFormatter)
+        self.logger.addHandler(self.info_file_handler)
+        self.logger.addHandler(self.error_file_handler)
+
+    def removeFileHandler(self):
+        self.logger = logging.getLogger(LOGGER_ROOT_NAME)
+        self.logger.removeHandler(self.info_file_handler)
+        self.logger.removeHandler(self.error_file_handler)
+        
     def getRootLoggerName() -> str:
         return LOGGER_ROOT_NAME
 

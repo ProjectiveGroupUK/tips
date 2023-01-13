@@ -15,18 +15,22 @@ class SQLRunner(Runner):
 
     def execute(self, action: Action, conn: DatabaseConnection, frameworkRunner) -> None:
         commandList: List[object] = action.getCommands()
+        ret: int = 0
 
         if commandList is None:
             pass
-            # print('Executing: DEFAULT ACTION')
         else:
             for command in commandList:
                 if isinstance(command, SQLCommand):
-                    self.executeSQL(command, conn, frameworkRunner)
+                    ret = self.executeSQL(command, conn, frameworkRunner)
+                    if ret == 1:
+                        return ret
                 elif isinstance(command, SqlAction):
                     self.execute(command, conn, frameworkRunner)
 
-    def executeSQL(self, sql: SQLCommand, conn: DatabaseConnection, frameworkRunner) -> None:
+            return ret
+
+    def executeSQL(self, sql: SQLCommand, conn: DatabaseConnection, frameworkRunner) -> int:
 
         sqlCommand:str = sql.getSqlCommand()
         logger.info(sqlCommand)
@@ -65,7 +69,6 @@ class SQLRunner(Runner):
                 sqlJson["cmd_status"]["EXECUTION_TIME_IN_SECS"] = round(timeDelta.total_seconds(),2)
 
                 if type(results) == list and len(results) > 0:
-                    # print(results)
 
                     for val in results:
                         if "number of rows deleted" in val:
@@ -98,20 +101,16 @@ class SQLRunner(Runner):
                                     sqlJson["cmd_status"]["CHECK_CONDITION_STATUS"] = 'PASSED'
 
             except Exception as err:
-                # print(err)
                 sqlJson["status"] = "ERROR"
                 sqlJson["error_message"] = f'{err}'
                 sqlJson["cmd_status"]["STATUS"] = "ERROR"
+                frameworkRunner.returnJson["steps"][-1]["commands"].append(sqlJson)                
                 ##Also propogate higher in the heirarchy
-                frameworkRunner.returnJson["steps"][-1]["status"] = "ERROR"
-                frameworkRunner.returnJson["steps"][-1]["error_message"] = f'{err}'
+                # frameworkRunner.returnJson["steps"][-1]["status"] = "ERROR"
+                # frameworkRunner.returnJson["steps"][-1]["error_message"] = f'{err}'
                 frameworkRunner.returnJson["status"] = "ERROR"
                 frameworkRunner.returnJson["error_message"] = f'{err}'
-                logger.error(f'Error encountered while executing command:\n{sqlCommand}')
-                logger.error(err)
                 return 1
 
         frameworkRunner.returnJson["steps"][-1]["commands"].append(sqlJson)
         return 0
-
-        # print("Executing: " + sql.getSqlCommand())

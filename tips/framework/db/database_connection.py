@@ -28,7 +28,6 @@ class DatabaseConnection():
             logger.debug('New Instance of DatabaseConnection Class created')
 
             configFile = os.path.join(os.path.expanduser("~"), ".tips",f"config.toml")
-            logger.debug(configFile)
             config = toml.load(configFile)
             if config is None or len(config) <= 0:
                 raise Exception('Config file with connection details not found. Please run command "tips setup" to setup connections file!!')
@@ -41,14 +40,14 @@ class DatabaseConnection():
             if dbCredentials is None or len(dbCredentials) <= 0:
                 raise Exception('DB Credentials not found in Config file. Please run command "tips setup" to setup connections file!!')
 
-            cls._sfAccount = dbCredentials['account']
-            cls._sfUser = dbCredentials['user']
-            cls._sfRole = dbCredentials['role']
-            cls._sfPassword = dbCredentials['password']
-            cls._sfDatabase = dbCredentials['database']
-            cls._sfWarehouse = dbCredentials['warehouse']
-            cls._sfSchema = dbCredentials['schema']
-            cls._sfAuthenticator = dbCredentials['authentication_method']
+            cls._sfAccount = dbCredentials.get('account')
+            cls._sfUser = dbCredentials.get('user')
+            cls._sfRole = dbCredentials.get('role')
+            cls._sfPassword = dbCredentials.get('password')
+            cls._sfDatabase = dbCredentials.get('database')
+            cls._sfWarehouse = dbCredentials.get('warehouse')
+            cls._sfSchema = dbCredentials.get('schema')
+            cls._sfAuthenticator = dbCredentials.get('authentication_method')
 
             try:
                 if cls._sfConnection is None:
@@ -73,7 +72,6 @@ class DatabaseConnection():
                             role=cls._sfRole
                             )
                         
-                    # print('Connected to SF Database!!')
                     logger.info('Connected to SF Database!!')
                 
             except Exception as ex:
@@ -96,7 +94,6 @@ class DatabaseConnection():
         try:
             results = conn.cursor(DictCursor).execute(sqlCommand).fetchall() 
             if type(results) == list and len(results) > 0:
-                # print(results)
 
                 for val in results:
                     if "number of rows deleted" in val:
@@ -121,6 +118,18 @@ class DatabaseConnection():
             return results
         except Exception as ex:
             err = f"Error (Execute SQL): While executing SQL {ex}"
+            raise Exception(err)
+
+    def executeSQLFile(self, sqlFile:Path):
+        conn = self._sfConnection
+
+        try:
+            with open(sqlFile,'r') as f:
+                for cur in conn.execute_stream(f):
+                    for ret in cur:
+                        logger.info(f'(Execute SQLFile):  {sqlFile}\nRows affected = {ret[0]}')
+        except Exception as ex:
+            err = f"Error (Execute SQLFile): {sqlFile}\n{ex}"
             raise Exception(err)
 
     def executeSQLReturnQID(self, sqlCommand:str):

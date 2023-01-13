@@ -21,9 +21,10 @@ class TableMetaData:
 
         if excludeVirtualColumns:
             ### TBC
-            for col in self._metadata.get(tableName):
-                if not col.isVirtual():
-                    cols.append(col)
+            if self._metadata.get(tableName) is not None:
+                for col in self._metadata.get(tableName):
+                    if not col.isVirtual():
+                        cols.append(col)
         else:
             cols = self._metadata.get(tableName)
 
@@ -38,11 +39,12 @@ class TableMetaData:
         tgtColumns: List[ColumnInfo] = self.getColumns(tgtTableName, True)
         srcColumns: List[ColumnInfo] = self.getColumns(srcTableName, True)
 
-        for col in tgtColumns:
-            if any(
-                col.getColumnName() == srcCol.getColumnName() for srcCol in srcColumns
-            ):
-                commonColumns.append(col)
+        if len(tgtColumns) > 0:
+            for col in tgtColumns:
+                if any(
+                    col.getColumnName() == srcCol.getColumnName() for srcCol in srcColumns
+                ):
+                    commonColumns.append(col)
 
         return commonColumns
 

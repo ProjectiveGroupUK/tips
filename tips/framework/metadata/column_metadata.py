@@ -107,7 +107,6 @@ class ColumnMetadata:
 
                 schemaName = key.split(".", 1)[0]
                 tableName = key.split(".", 1)[1]
-                # print(key)
                 for row in value:
                     columnName = row["column_name"]
                     dataType = json.loads(row["data_type"])["type"]

@@ -5,12 +5,15 @@ import argparse
 import tips.commands.setup as SetupCommand
 import tips.commands.deploy as DeployCommand
 import tips.commands.run as RunCommand
-from tips.utils.utils import ExitCodes
+from tips.utils.utils import ExitCodes, Globals
 from tips.utils.logger import Logger
 
 VERSION = "1.0.1"
 
-logger = Logger().initialize(os.environ.get("env", "dev"))
+globals = Globals()
+globals.setEnvName(os.environ.get("env", "debug"))
+
+logger = Logger().initialize()
 
 
 class TIPSVersion(argparse.Action):
@@ -227,12 +230,23 @@ def _build_deploy_subparser(subparsers, base_subparser):
     )
 
     sub.add_argument(
+        "-sd",
+        "--skip-db-objects",
+        dest="skip_db_objects",
+        action="store_true",
+        help="""
+        Skips database objects deployment, when this flag is included
+        """,
+        required=False,
+    )
+
+
+    sub.add_argument(
         "-ot",
         "--object-types",
         dest="object_types",
         nargs="+",
         choices=[
-            "metadata",
             "table",
             "view",
             "sequence",
@@ -242,7 +256,6 @@ def _build_deploy_subparser(subparsers, base_subparser):
             "stage",
             "pipe",
             "fileformat",
-            "METADATA",
             "TABLE",
             "VIEW",
             "SEQUENCE",
@@ -275,6 +288,19 @@ def _build_deploy_subparser(subparsers, base_subparser):
     )
 
     sub.add_argument(
+        "-mn",
+        "--metadata-script-names",
+        dest="metadata_script_names",
+        nargs="+",
+        help="""
+        Specify names of scripts for Metadata that you want to be deployed, if only certain metadata scripts are to be deployed.
+        Names should match filenames. File extension is not required. 
+        """,
+        metavar="METADATA NAME",
+        required=False,
+    )
+
+    sub.add_argument(
         "-sm",
         "--skip-metadata-setup",
         dest="skip_metadata_setup",
@@ -284,15 +310,6 @@ def _build_deploy_subparser(subparsers, base_subparser):
         """,
     )
 
-    sub.add_argument(
-        "-s",
-        "--sample-metadata",
-        dest="insert_sample_metadata",
-        action="store_true",
-        help="""
-        Inserts Sample Metadata, when this flah is included 
-        """,
-    )
     sub.set_defaults(cls=DeployCommand.DeployTask, which="deploy", rpc_method=None)
     return sub
 
