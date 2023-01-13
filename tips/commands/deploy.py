@@ -54,11 +54,11 @@ class DeployTask(BaseTask):
 
     def checkDBFolderExists(self) -> bool:
         logger.debug("Inside checkDBFolderExists")
-        dbFolder = "db_object"
+        dbFolder = "db_objects"
         workingFolder = Path.cwd()
         if not Path.joinpath(workingFolder, dbFolder).exists():
             raise Exception(
-                "Could not find db_object folder, which should contain DB Object scripts to be deployed"
+                "Could not find db_objects folder, which should contain DB Object scripts to be deployed"
             )
 
         return True
@@ -136,7 +136,7 @@ class DeployTask(BaseTask):
         else:
             logger.debug("Deploy all DB Object scripts")
 
-        dboFolder = Path.joinpath(Path.cwd(), "db_object")
+        dboFolder = Path.joinpath(Path.cwd(), "db_objects")
         db = DatabaseConnection()
         errorList = []
         executeThisFile:bool
