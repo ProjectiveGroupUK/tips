@@ -69,7 +69,7 @@ class FrameworkRunner:
                         self.returnJson["status"] = "ERROR"
                         self.returnJson[
                             "error_message"
-                        ] = f"cmd_binds {bind} doesn't exists in session_variables"
+                        ] = f"cmd_binds {bind} doesnt exists in session_variables"
                         return self.returnJson
 
                     binds.append(self._bindVariables[bind])

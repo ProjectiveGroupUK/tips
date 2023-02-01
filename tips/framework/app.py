@@ -33,7 +33,7 @@ class App:
     def main(self) -> None:
         logger.debug("Inside framework app main")
         logInstance = Logger()
-        logInstance.addFileHandler() 
+        logInstance.addFileHandler()
 
         dbConnection: DatabaseConnection = DatabaseConnection()
         logger.debug("DB Connection established!")
@@ -43,10 +43,12 @@ class App:
         frameworkMetaData: List[Dict] = framework.getMetaData(dbConnection)
 
         if len(frameworkMetaData) <= 0:
-            logger.error('Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!')
+            logger.error(
+                "Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!"
+            )
         else:
-            logger.info('Fetched Framework Metadata!')
-
+            logger.info("Fetched Framework Metadata!")
+            processStartTime = start_dt
 
             columnMetaData: List[Dict] = ColumnMetadata().getData(
                 frameworkMetaData=frameworkMetaData, conn=dbConnection
@@ -68,10 +70,18 @@ class App:
 
             logInstance.writeResultJson(runFramework)
 
-            if runFramework.get('status') == 'ERROR':
-                error_message = runFramework.get('error_message')
+            # Now insert process run log to database
+            processEndTime = datetime.now()
+            sqlCommand = f"""
+INSERT INTO tips_md_schema.process_log (process_name, process_start_time, process_end_time, process_elapsed_time_in_seconds, execute_flag, status, error_message, log_json)
+SELECT '{self._processName}','{processStartTime}','{processEndTime}',{round((processEndTime - processStartTime).total_seconds(),2)},'{self._executeFlag}','{runFramework["status"]}','{runFramework["error_message"]}',PARSE_JSON('{json.dumps(runFramework).replace("'","''")}')
+            """
+            logger.info(sqlCommand)
+            results = dbConnection.executeSQL(sqlCommand=sqlCommand)
+
+            if runFramework.get("status") == "ERROR":
+                error_message = runFramework.get("error_message")
                 logger.error(error_message)
-        
 
         dbConnection.closeConnection()
         logInstance.removeFileHandler()
@@ -81,6 +91,7 @@ class App:
         logger.info(
             f"Total Elapsed Time (secs): {round((end_dt - start_dt).total_seconds(),2)}"
         )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

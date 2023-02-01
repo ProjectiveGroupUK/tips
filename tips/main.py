@@ -5,13 +5,15 @@ import argparse
 import tips.commands.setup as SetupCommand
 import tips.commands.deploy as DeployCommand
 import tips.commands.run as RunCommand
+import tips.commands.app as AppCommand
+import tips.commands.webapp as WebAppCommand
 from tips.utils.utils import ExitCodes, Globals
 from tips.utils.logger import Logger
 
 VERSION = "1.0.1"
 
 globals = Globals()
-globals.setEnvName(os.environ.get("env", "debug"))
+globals.setEnvName(os.environ.get("env", "dev"))
 
 logger = Logger().initialize()
 
@@ -357,7 +359,55 @@ def _build_run_subparser(subparsers, base_subparser):
         """,
     )
 
-    sub.set_defaults(cls=RunCommand.RunTask, which="deploy", rpc_method=None)
+    sub.set_defaults(cls=RunCommand.RunTask, which="run", rpc_method=None)
+    return sub
+
+def _build_app_subparser(subparsers, base_subparser):
+    logger.debug("Inside _build_app_subparser")
+    sub = subparsers.add_parser(
+        "app",
+        parents=[base_subparser],
+        help="""
+        Start TIPS app server.
+        """,
+    )
+
+    sub.add_argument(
+        "-p",
+        "--port",
+        dest="server_port",
+        help="""
+        Specify port on which web server should run. Default is 8501   
+        """,
+        metavar="Port",
+        required=False,
+    )
+
+    sub.set_defaults(cls=AppCommand.AppTask, which="app", rpc_method=None)
+    return sub
+
+def _build_webapp_subparser(subparsers, base_subparser):
+    logger.debug("Inside _build_webapp_subparser")
+    sub = subparsers.add_parser(
+        "webapp",
+        parents=[base_subparser],
+        help="""
+        Start TIPS web app server.
+        """,
+    )
+
+    sub.add_argument(
+        "-p",
+        "--port",
+        dest="server_port",
+        help="""
+        Specify port on which web server should run. Default is 8501   
+        """,
+        metavar="Port",
+        required=False,
+    )
+
+    sub.set_defaults(cls=WebAppCommand.WebAppTask, which="webapp", rpc_method=None)
     return sub
 
 def parse_args(args, cls=TIPSArgumentParser):
@@ -391,6 +441,8 @@ def parse_args(args, cls=TIPSArgumentParser):
     _build_setup_subparser(subs, base_subparser)
     _build_deploy_subparser(subs, base_subparser)
     _build_run_subparser(subs, base_subparser)
+    _build_app_subparser(subs, base_subparser)
+    _build_webapp_subparser(subs, base_subparser)
 
     if len(args) == 0:
         p.print_help()

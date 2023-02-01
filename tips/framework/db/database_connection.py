@@ -9,6 +9,8 @@ import logging
 from tips.utils.logger import Logger
 logger = logging.getLogger(Logger.getRootLoggerName())
 
+logging.getLogger('snowflake.connector').setLevel(logging.ERROR)
+
 class DatabaseConnection():
 
     _sfUser: str

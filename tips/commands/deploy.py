@@ -1,9 +1,6 @@
 import logging
-import textwrap
-import toml
 from pathlib import Path
 import os
-import re
 
 from tips.base import BaseTask
 from tips.utils.logger import Logger
@@ -83,7 +80,6 @@ class DeployTask(BaseTask):
         executeThisFile:bool
 
         for subdir, dirs, files in os.walk(walkFolder):
-            print(files)
             for file in sorted(files):
                 executeThisFile = False
                 if not subdir.endswith('sample'):

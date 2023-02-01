@@ -1,6 +1,6 @@
 SELECT p.process_id,
-       p.process_code,
-       p.description process_description,
+       p.process_name,
+       NVL(p.process_description,'') process_description,
        c.process_cmd_id,
        c.cmd_type,
        NVL(c.cmd_src,'') cmd_src,
@@ -21,5 +21,7 @@ SELECT p.process_id,
        NVL(c.active,'N') active
   FROM tips_md_schema.process P
   JOIN tips_md_schema.process_cmd c ON p.process_id = c.process_id
-  WHERE p.process_code = '{{ parameters.process_name }}'
- ORDER BY c.process_cmd_id
+  {% if parameters.process_name != "ALL" %}
+  WHERE p.process_name = '{{ parameters.process_name }}'
+  {% endif %}
+ ORDER BY p.process_id, c.process_cmd_id
