@@ -11,6 +11,9 @@ globals = Globals()
 # Initialise globals
 globals.initGlobals()
 
+if 'entryPoint' not in st.session_state:
+    st.session_state['entryPoint'] = 'ProcessList'
+
 def setupApp():
     st.set_page_config(
         page_title="TIPS",

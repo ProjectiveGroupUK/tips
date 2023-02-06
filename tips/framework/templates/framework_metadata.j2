@@ -1,6 +1,7 @@
 SELECT p.process_id,
        p.process_name,
        NVL(p.process_description,'') process_description,
+       NVL(p.active,'N') process_active,
        c.process_cmd_id,
        c.cmd_type,
        NVL(c.cmd_src,'') cmd_src,

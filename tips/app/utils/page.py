@@ -59,6 +59,14 @@ class PageGroup:
         else:
             params[self._param] = [self._backup]
 
+        if params['p'][0] == '**logs**':
+            st.session_state['entryPoint'] = 'LogList'
+        elif params['p'][0] == '**processes**':
+            st.session_state['entryPoint'] = 'ProcessList'
+        else:
+            st.session_state['entryPoint'] = params['p'][0]
+        
+        
         st.experimental_set_query_params(**params)
 
     def _normalize_label(self, label: str) -> str:
