@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 # Streamlit
 import streamlit as st
-from streamlit_elements import elements, mui, html, dashboard
+from streamlit_elements import elements, mui, dashboard
 
 # Pandas
 import pandas as pd
@@ -14,7 +14,7 @@ from tips.framework.db.database_connection import DatabaseConnection
 from utils.navigation import deletePage
 
 # Enums
-from enums import StateVariable, EntryPoint
+from enums import StateVariable
 
 DG_COLUMNS = [
     {
