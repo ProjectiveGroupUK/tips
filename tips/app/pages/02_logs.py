@@ -80,6 +80,13 @@ def title_bar(padding="5px 15px 5px 15px", dark_switcher=True):
     ):
         yield
 
+def _setUpPageLayout():
+    st.set_page_config(
+        page_title="TIPS",
+        page_icon="✨",
+        layout="wide"
+    ) 
+
 
 def _fetchButtonClicked():
     st.session_state.display_json = logJSON
@@ -104,6 +111,9 @@ def _handleRowClick(params):
             st.session_state.display_json = results[0]['log_json']
 
 def main():
+
+    _setUpPageLayout()
+
     # Initialize 'display_table' to False (if needed)
 
     st.caption("Home > :blue[Logs]")

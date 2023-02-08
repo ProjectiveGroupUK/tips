@@ -30,6 +30,13 @@ else:
     build_dir = os.path.join(parent_dir, "frontend/build")
     _component_func = components.declare_component("react_component", path=build_dir)
 
+def _setUpPageLayout():
+    st.set_page_config(
+        page_title="TIPS",
+        page_icon="✨",
+        layout="wide"
+    ) 
+
 def react_component(functionCalled: str, inputData:dict, key=None):
     """Create a new instance of "react_component".
     Parameters
@@ -88,6 +95,8 @@ def _loadListOfProcesses():
     return newList
 
 def main():
+
+    _setUpPageLayout()
 
     # Ensure that state contains an entryPoint value (and revert to PROCESS_LIST if it doesn't)
     entryPoint = st.session_state.get(StateVariable.ENTRY_POINT)
