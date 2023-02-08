@@ -12,6 +12,9 @@ import pandas as pd
 # TIPS
 from tips.framework.db.database_connection import DatabaseConnection
 
+# Enums
+from enums import StateVariable, EntryPoint
+
 DG_COLUMNS = [
     {
         "field": "id",
@@ -53,16 +56,16 @@ DG_COLUMNS = [
 
 
 logJSON:dict = {}
-if "display_json" not in st.session_state:
+if StateVariable.DISPLAY_JSON not in st.session_state:
     st.session_state.display_json = logJSON
 
-if "process_log_result1" not in st.session_state:
+if StateVariable.PROCESS_LOG_RESULT_1 not in st.session_state:
     st.session_state.process_log_result1 = []
 
-if "process_log_result2" not in st.session_state:
+if StateVariable.PROCESS_LOG_RESULT_2 not in st.session_state:
     st.session_state.process_log_result2 = []
 
-if "fetchButtonClicked" not in st.session_state:
+if StateVariable.FETCH_BUTTON_CLICKED not in st.session_state:
     st.session_state.fetchButtonClicked = False
 
 @contextmanager
@@ -89,14 +92,14 @@ def _setUpPageLayout():
 
 
 def _fetchButtonClicked():
-    st.session_state.display_json = logJSON
-    st.session_state.process_log_result2 = []
-    st.session_state.fetchButtonClicked = True
+    st.session_state[StateVariable.DISPLAY_JSON] = logJSON
+    st.session_state[StateVariable.PROCESS_LOG_RESULT_2] = []
+    st.session_state[StateVariable.FETCH_BUTTON_CLICKED] = True
 
 def _handleSelectChange():
-    st.session_state.display_json = logJSON
-    st.session_state.process_log_result2 = []
-    st.session_state.fetchButtonClicked = False
+    st.session_state[StateVariable.DISPLAY_JSON] = logJSON
+    st.session_state[StateVariable.PROCESS_LOG_RESULT_2] = []
+    st.session_state[StateVariable.FETCH_BUTTON_CLICKED] = False
 
 def _handleRowClick(params):
     # st.info(params)
@@ -108,7 +111,7 @@ def _handleRowClick(params):
         results = db.executeSQL(sqlCommand=cmdStr)
         if len(results) > 0:
             # global logJSON
-            st.session_state.display_json = results[0]['log_json']
+            st.session_state[StateVariable.DISPLAY_JSON] = results[0]['log_json']
 
 def main():
 
@@ -140,7 +143,7 @@ def main():
             toDate = col4.date_input("Date To:", datetime.date.today())
             toTime = col5.time_input("Time To", datetime.time(23, 59))
             st.button("Fetch Logs", on_click=_fetchButtonClicked, key='fetch_button')
-            if st.session_state.fetchButtonClicked:
+            if st.session_state[StateVariable.FETCH_BUTTON_CLICKED]:
 
                 cmdStr: str = f"""
                 SELECT process_log_id as "id", to_varchar(process_start_time,'DD/MM/YYYY HH24:MI:SS') as "start_time", to_varchar(process_end_time,'DD/MM/YYYY HH24:MI:SS') as "end_time", process_elapsed_time_in_seconds as "elapsed_time", execute_flag as "execute_flag", status as "status", error_message as "error" 
@@ -149,9 +152,9 @@ def main():
                 AND process_start_time BETWEEN '{fromDate} {fromTime}' AND '{toDate} {toTime}'
                 ORDER BY process_start_time DESC
                 """
-                st.session_state.process_log_result2 = db.executeSQL(sqlCommand=cmdStr)
+                st.session_state[StateVariable.PROCESS_LOG_RESULT_2] = db.executeSQL(sqlCommand=cmdStr)
 
-            if len(st.session_state.process_log_result2) > 0:
+            if len(st.session_state[StateVariable.PROCESS_LOG_RESULT_2]) > 0:
                 with elements("process_log_dashboard"):
                     layout = [
                         # Parameters: element_identifier, x_pos, y_pos, width, height, [item properties...]
@@ -183,15 +186,15 @@ def main():
                             with mui.Box(sx={"flex": 1, "minHeight": 0}):
                                 mui.DataGrid(
                                     columns=DG_COLUMNS,
-                                    rows=st.session_state.process_log_result2,
+                                    rows=st.session_state[StateVariable.PROCESS_LOG_RESULT_2],
                                     pageSize=10,
                                     rowsPerPageOptions=[10],
                                     disableSelectionOnClick=False,
                                     autoHeight=True,
                                     onRowClick=_handleRowClick,
                                 )
-                if len(st.session_state.display_json) > 0: ## != {}:
-                    st.json(st.session_state.display_json)
+                if len(st.session_state[StateVariable.DISPLAY_JSON]) > 0: ## != {}:
+                    st.json(st.session_state[StateVariable.DISPLAY_JSON])
                 else:
                     st.subheader("Select row in Process Log Table to display Log JSON")
 
