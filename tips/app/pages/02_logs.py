@@ -11,6 +11,7 @@ import pandas as pd
 
 # TIPS
 from tips.framework.db.database_connection import DatabaseConnection
+from utils.navigation import deletePage
 
 # Enums
 from enums import StateVariable, EntryPoint
@@ -90,6 +91,7 @@ def _setUpPageLayout():
         layout="wide"
     ) 
 
+    deletePage('home') # Hide homepage from navigation panel
 
 def _fetchButtonClicked():
     st.session_state[StateVariable.DISPLAY_JSON] = logJSON
