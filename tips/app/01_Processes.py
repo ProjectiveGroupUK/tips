@@ -11,7 +11,6 @@ from tips.framework.db.database_connection import DatabaseConnection
 from tips.framework.utils.sql_template import SQLTemplate
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals
-from utils.navigation import deletePage
 
 # Enums
 from tips.app.enums import StateVariable, EntryPoint
@@ -37,8 +36,6 @@ def _setUpPageLayout():
         page_icon="✨",
         layout="wide"
     )
-
-    deletePage('home') # Hide homepage from navigation panel
 
 def react_component(functionCalled: str, inputData:dict, key=None):
     """Create a new instance of "react_component".

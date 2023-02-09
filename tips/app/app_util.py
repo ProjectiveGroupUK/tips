@@ -33,7 +33,7 @@ class AppUtil:
             logger.error(f"Error Encountered {e}")
 
     def startServer(self, port=None):
-        homeFilePath = os.path.join(os.path.dirname(__file__),'home.py')
+        homeFilePath = os.path.join(os.path.dirname(__file__),'01_Processes.py')
         if port is None:
             cmd = ["streamlit", "run", homeFilePath]
         else:
