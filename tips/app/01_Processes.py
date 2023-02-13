@@ -31,7 +31,6 @@ if not _RELEASE:
 else:
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     build_dir = os.path.join(parent_dir, "frontend/build")
-    _component_func = components.declare_component("react_component", path=build_dir)
 
 def _setUpPageLayout():
     st.set_page_config(
@@ -39,26 +38,6 @@ def _setUpPageLayout():
         page_icon="✨",
         layout="wide"
     )
-
-def react_component(functionCalled: str, inputData:dict, key=None):
-    """Create a new instance of "react_component".
-    Parameters
-    ----------
-    inputData: dict           
-    key: str or None
-        An optional key that uniquely identifies this component. If this is
-        None, and the component's arguments are changed, the component will
-        be re-mounted in the Streamlit frontend and lose its current state.
-    Returns
-    -------
-    dict
-        Output Data returned from react component
-    """
-    component_value = _component_func(functionCalled=functionCalled, inputData=inputData, key=key, default={})
-
-    # We could modify the value returned from the component if we wanted.
-    # There's no need to do this in our simple example - but it's an option.
-    return component_value
 
 def _loadListOfProcesses():
     db = DatabaseConnection()
