@@ -3,10 +3,6 @@ export declare interface ProcessDataInterface extends Array <{
     name: string;
     description: string;
     steps: Array<{
-        PROCESS_ID: number;
-        PROCESS_NAME: string;
-        PROCESS_DESCRIPTION: string;
-        PROCESS_ACTIVE: 'Y' | 'N';
         PROCESS_CMD_ID: number;
         CMD_TYPE: 'APPEND' | 'COPY_INTO_FILE' | 'DELETE'| 'DI' | 'MERGE' | 'OI' | 'PUBLISH_SCD2_DIM' | 'REFRESH' | 'TI' | 'TRUNCATE';
         CMD_SRC: string;

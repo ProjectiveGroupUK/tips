@@ -84,18 +84,26 @@ def _loadListOfProcesses():
                         "id": processID,
                         "name": processName,
                         "description": processDescription,
-                        "steps": [row],
+                        "steps": _stripStepDict(row),
                         "status": processStatus,
                     }
                 )
             else:
-                newList[len(newList) - 1]["steps"].append(row)
+                newList[len(newList) - 1]["steps"].append(_stripStepDict(row))
 
             prevVal = processName
     except Exception as e:
         logger.error(f'Error loading list of processes: {e}')
 
     return newList
+
+def _stripStepDict(stepDict: dict):
+    strippedDict = stepDict.copy()
+    strippedDict.pop("PROCESS_ID")
+    strippedDict.pop("PROCESS_NAME")
+    strippedDict.pop("PROCESS_DESCRIPTION")
+    strippedDict.pop("PROCESS_ACTIVE")
+    return strippedDict
 
 def main():
 
