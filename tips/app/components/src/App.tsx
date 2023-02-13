@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 
 // StreamLit
-import { Streamlit, withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
+import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
 // Components
 import ProcessTable from '@/components/ProcessTable';
@@ -21,7 +21,6 @@ interface ComponentPropsWithArgs extends ComponentProps {
 
 function App(props: ComponentPropsWithArgs) {
   const { component } = props.args;
-  useEffect(() => { Streamlit.setFrameHeight() }); // Update frame height on each re-render
 
   switch(component) {
     case 'ProcessTable': {
