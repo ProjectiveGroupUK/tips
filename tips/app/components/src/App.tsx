@@ -8,7 +8,7 @@ import { Streamlit, withStreamlitConnection, ComponentProps } from 'streamlit-co
 import { useTable, usePagination, useFilters } from 'react-table';
 
 // CSS
-import './styles/global.css'
+import tableStyle from '@/styles/processTable.module.css';
 
 interface PropsInterface {
   data: Array<{
@@ -71,7 +71,7 @@ function App(props: ComponentProps) {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance
 
   return (
-    <table {...getTableProps()}>
+    <table {...getTableProps()} className={tableStyle.table}>
       <thead>
           {
               headerGroups.map(headerGroup => (
