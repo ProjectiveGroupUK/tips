@@ -8,10 +8,13 @@ import { Streamlit } from 'streamlit-component-lib';
 import { useTable } from 'react-table';
 
 // Interfaces
-import { ProcessDataInterface } from '@/Interfaces';
+import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
 // CSS
 import tableStyle from '@/styles/processTable.module.css';
+
+// Components
+import StatusPill from '@/components/StatusPill';
 
 interface PropsInterface {
   processData: ProcessDataInterface;
@@ -76,13 +79,18 @@ export default function ProcessTable({ processData }: PropsInterface) {
                     prepareRow(row)
                     return (
                     <tr {...row.getRowProps()}>
-                        {
-                        row.cells.map(cell => (
-                            <td {...cell.getCellProps()}>
-                            { cell.render('Cell') }
-                            </td>
-                        ))
-                        }
+                    {
+                        row.cells.map(cell => {
+                            let renderedCell: React.ReactNode;
+                            if(cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value} />;
+                            else renderedCell = cell.render('Cell');
+                            return (
+                                <td {...cell.getCellProps()}>
+                                    { renderedCell }
+                                </td>
+                            )
+                        })
+                    }
                     </tr>
                     )
                 })

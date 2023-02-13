@@ -1,0 +1,24 @@
+.parent {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    max-width: fit-content;
+}
+
+.parent > p::first-letter {
+    text-transform: uppercase;
+}
+
+.active {
+    background-color: #e8f3eb;
+    color: #5e8675;
+}
+
+.inactive {
+    background-color: #f8e8e8;
+    color: #b85f55;
+}
