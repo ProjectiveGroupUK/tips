@@ -1,5 +1,29 @@
 .table {
-    border: 1px solid black;
+    
+    border-spacing: 0px;
     border-radius: 5px;
+    overflow: hidden;
+    font-family: 'Open Sans';
+}
+
+.table > thead > tr > th {
+    box-sizing: border-box;
+    padding: 10px 15px;
+    background-color: lightgray;
+    font-weight: 500;
+}
+
+.table > tbody > tr {
+    cursor: pointer;
+    transition: background-color 0.2s linear;
+}
+
+.table > tbody > tr:hover {
+    background-color: #fae8d2;
+}
+
+.table > tbody > tr > td {
     padding: 10px;
+    font-weight: 300;
+    font-size: 0.9rem;
 }

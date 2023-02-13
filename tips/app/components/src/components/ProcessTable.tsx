@@ -24,20 +24,20 @@ export default function ProcessTable({ processData }: PropsInterface) {
 
     const tableColumns = useMemo(() => [
         {
-        Header: 'Id',
-        accessor: 'process_id'
+            Header: 'Id',
+            accessor: 'process_id'
         },
         {
-        Header: 'Name',
-        accessor: 'process_name'
+            Header: 'Name',
+            accessor: 'process_name'
         },
         {
-        Header: 'Description',
-        accessor: 'process_description'
+            Header: 'Description',
+            accessor: 'process_description'
         },
         {
-        Header: 'Status',
-        accessor: 'process_status'
+            Header: 'Status',
+            accessor: 'process_status'
         }
     ], []);
 
@@ -56,46 +56,46 @@ export default function ProcessTable({ processData }: PropsInterface) {
 
     return (
         <table {...getTableProps()} className={tableStyle.table}>
-        <thead>
+            <thead>
+                {
+                    headerGroups.map(headerGroup => (
+                        <tr {...headerGroup.getHeaderGroupProps()}>
+                            {
+                                headerGroup.headers.map(column => (
+                                    <th {...column.getHeaderProps()}>
+                                        { column.render('Header') }
+                                    </th>
+                                ))}
+                        </tr>
+                    ))}
+            </thead>
+
+            <tbody {...getTableBodyProps()}>
             {
-                headerGroups.map(headerGroup => (
-                    <tr {...headerGroup.getHeaderGroupProps()}>
+                rows.map((row) => {
+                    prepareRow(row)
+                    return (
+                    <tr {...row.getRowProps()}>
                         {
-                            headerGroup.headers.map(column => (
-                                <th {...column.getHeaderProps()}>
-                                    { column.render('Header') }
-                                </th>
-                            ))}
+                        row.cells.map(cell => (
+                            <td {...cell.getCellProps()}>
+                            { cell.render('Cell') }
+                            </td>
+                        ))
+                        }
                     </tr>
-                ))}
-        </thead>
+                    )
+                })
+            }
+            </tbody>
 
-        <tbody {...getTableBodyProps()}>
-        {
-            rows.map((row) => {
-                prepareRow(row)
-                return (
-                <tr {...row.getRowProps()}>
-                    {
-                    row.cells.map(cell => (
-                        <td {...cell.getCellProps()}>
-                        { cell.render('Cell') }
-                        </td>
-                    ))
-                    }
+            <tfoot>
+                <tr>
+                <td>
+                    { /* Footer */ }
+                </td>
                 </tr>
-                )
-            })
-        }
-        </tbody>
-
-        <tfoot>
-            <tr>
-            <td>
-                { /* Footer */ }
-            </td>
-            </tr>
-        </tfoot>
+            </tfoot>
         </table>
     )
 }
