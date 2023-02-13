@@ -13,9 +13,9 @@ else:
     build_dir = os.path.join(parent_dir, "dist")
     _component_func = components.declare_component("react_component", path=build_dir)
 
-def processesTable(key: str, data: list):
+def processesTable(key: str, processData: list):
     return _component_func(
         key = key,
-        data = data,
-        component = 'processTable'
+        processData = processData,
+        component = 'ProcessTable'
     )

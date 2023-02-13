@@ -113,7 +113,7 @@ def main():
         # Fetch process data and pass it as a prop to React component
         with st.spinner("Fetching Metadata from DB..."):
             newList = _loadListOfProcesses()
-            processesTable(key = 'processTable', data = newList)
+            processesTable(key = 'processTable', processData = newList)
 
 if __name__ == "__main__":
     # tips_project.toml file is needed for next command to run

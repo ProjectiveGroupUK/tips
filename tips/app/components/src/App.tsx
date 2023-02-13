@@ -1,130 +1,37 @@
 // React
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect } from 'react';
 
 // StreamLit
 import { Streamlit, withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
-// React-table
-import { useTable, usePagination, useFilters } from 'react-table';
+// Components
+import ProcessTable from '@/components/ProcessTable';
 
-// CSS
-import tableStyle from '@/styles/processTable.module.css';
+// Interfaces
+import { ProcessDataInterface } from '@/Interfaces';
 
-interface PropsInterface {
-  data: Array<{
-    id: number;
-    name: string;
-    description: string;
-    steps: Array<{
-      PROCESS_ID: number;
-      PROCSS_NAME: string;
-      PROCESS_DESCRIPTION: string;
-      PROCESS_ACTIVE: 'Y' | 'N';
-      PROCESS_CMD_ID: number;
-      CMD_TYPE: 'APPEND' | 'COPY_INTO_FILE' | 'DELETE'| 'DI' | 'MERGE' | 'OI' | 'PUBLISH_SCD2_DIM' | 'REFRESH' | 'TI' | 'TRUNCATE';
-      CMD_SRC: string;
-      CND_TGT: string;
-      CMD_WHERE: string;
-      CMD_BINDS: string;
-      REFRESH_TYPE: 'DI' | null;
-      BUSINESS_KEY: string;
-      MERGE_ON_FIELDS: string;
-      GENERATE_MERGE_MATCHED_CLAUSE: 'Y' | '';
-      GENERATE_MERGE_NON_MATCHED_CLAUSE: 'Y' | '';
-      ADDITIONAL_FIELDS: string;
-      TEMP_TABLE: 'Y' | null;
-      CMD_PIVOT_BY: string | null;
-      CMD_PIVOT_FIELD: string | null;
-      DQ_TYPE: 'DUPS' | 'SCD2' | '';
-      CMD_EXTERNAL_CALL: string;
-      ACTIVE: 'Y' | 'N'; 
-    }>;
-    status: 'active' | 'inactive';
-  }>;
+interface PropsInterface_ProcessTable {
+  component: 'ProcessTable';
+  processData: ProcessDataInterface;
 }
 
-type Data = object;
+interface ComponentPropsWithArgs extends ComponentProps {
+  args: PropsInterface_ProcessTable;
+}
 
-function App(props: ComponentProps) {
-  const { data }: PropsInterface = props.args;
+function App(props: ComponentPropsWithArgs) {
+  const { component } = props.args;
   useEffect(() => { Streamlit.setFrameHeight() }); // Update frame height on each re-render
 
-  const tableColumns = useMemo(() => [
-    {
-      Header: 'Id',
-      accessor: 'process_id'
-    },
-    {
-      Header: 'Name',
-      accessor: 'process_name'
-    },
-    {
-      Header: 'Description',
-      accessor: 'process_description'
-    },
-    {
-      Header: 'Status',
-      accessor: 'process_status'
+  switch(component) {
+    case 'ProcessTable': {
+      const { processData } = props.args;
+      return <ProcessTable processData={processData} />;
     }
-  ], []);
 
-  const tableData = useMemo(() => data.map((process) => ({
-    process_id: process.id,
-    process_name: process.name,
-    process_description: process.description,
-    process_status: process.status
-  })), []);
-
-  const tableInstance = useTable<Data>({
-    columns: tableColumns,
-    data: tableData
-  });
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance
-
-  return (
-    <table {...getTableProps()} className={tableStyle.table}>
-      <thead>
-          {
-              headerGroups.map(headerGroup => (
-                  <tr {...headerGroup.getHeaderGroupProps()}>
-                      {
-                          headerGroup.headers.map(column => (
-                              <th {...column.getHeaderProps()}>
-                                  { column.render('Header') }
-                              </th>
-                          ))}
-                  </tr>
-              ))}
-      </thead>
-
-      <tbody {...getTableBodyProps()}>
-      {
-        rows.map((row) => {
-            prepareRow(row)
-            return (
-              <tr {...row.getRowProps()}>
-                {
-                  row.cells.map(cell => (
-                    <td {...cell.getCellProps()}>
-                      { cell.render('Cell') }
-                    </td>
-                  ))
-                }
-              </tr>
-            )
-        })
-      }
-      </tbody>
-
-      <tfoot>
-        <tr>
-          <td>
-            { /* Footer */ }
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-  )
+    default:
+      return <p>Invalid component name</p>;
+  }
 }
 
 export default withStreamlitConnection(App)
