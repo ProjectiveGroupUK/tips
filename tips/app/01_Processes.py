@@ -12,6 +12,9 @@ from tips.framework.utils.sql_template import SQLTemplate
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals
 
+# Components
+from utils import processesTable
+
 # Enums
 from tips.app.enums import StateVariable, EntryPoint
 
@@ -110,20 +113,7 @@ def main():
         # Fetch process data and pass it as a prop to React component
         with st.spinner("Fetching Metadata from DB..."):
             newList = _loadListOfProcesses()
-            data = {"dbData": newList}
-            functionCalled = "ProcessList"
-            res = react_component(functionCalled=functionCalled, inputData=data, key="process_list")
-            if "nextAction" in res:
-                st.session_state[StateVariable.ENTRY_POINT] = res["nextAction"]
-                st.experimental_rerun()
-
-    elif entryPoint == EntryPoint.PROCESS_ADD:
-        data = {}
-        functionCalled = "ProcessAdd"
-        res = react_component(functionCalled=functionCalled, inputData=data, key="process_add")
-        if "nextAction" in res:
-            st.session_state[StateVariable.ENTRY_POINT] = res["nextAction"]
-            st.experimental_rerun()
+            processesTable(key = 'processTable', data = newList)
 
 if __name__ == "__main__":
     # tips_project.toml file is needed for next command to run
