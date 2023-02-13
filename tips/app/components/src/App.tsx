@@ -1,6 +1,3 @@
-// React
-import { useEffect } from 'react';
-
 // StreamLit
 import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
@@ -8,7 +5,7 @@ import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib
 import ProcessTable from '@/components/ProcessTable';
 
 // Interfaces
-import { ProcessDataInterface } from '@/Interfaces';
+import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
 interface PropsInterface_ProcessTable {
   component: 'ProcessTable';
