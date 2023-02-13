@@ -38,8 +38,9 @@ interface PropsInterface {
       DQ_TYPE: 'DUPS' | 'SCD2' | '';
       CMD_EXTERNAL_CALL: string;
       ACTIVE: 'Y' | 'N'; 
-    }>
-  }>
+    }>;
+    status: 'active' | 'inactive';
+  }>;
 }
 
 type Data = object;
@@ -56,12 +57,22 @@ function App(props: ComponentProps) {
     {
       Header: 'Name',
       accessor: 'process_name'
+    },
+    {
+      Header: 'Description',
+      accessor: 'process_description'
+    },
+    {
+      Header: 'Status',
+      accessor: 'process_status'
     }
   ], []);
 
   const tableData = useMemo(() => data.map((process) => ({
     process_id: process.id,
-    process_name: process.name
+    process_name: process.name,
+    process_description: process.description,
+    process_status: process.status
   })), []);
 
   const tableInstance = useTable<Data>({
