@@ -27,7 +27,7 @@
     background-color: #f5f5f5;
 }
 
-.table > tbody > tr:hover {
+.table > tbody > tr:not(.rowSubComponent):hover {
     background-color: #fae8d2;
 }
 
@@ -35,4 +35,8 @@
     padding: 10px;
     font-weight: 300;
     font-size: 0.9rem;
+}
+
+.rowSubComponent > td > pre {
+    font-size: 10px;
 }

@@ -73,11 +73,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
         ({ row }: { row: Row }) => {
             const stepsForProcess = mockDataSet/*processData*/.find((process) => process.id.toString() === row.id)!.steps;
             return (
-                <pre
-                    style={{
-                    fontSize: '10px',
-                    }}
-                >
+                <pre>
                     <code>{JSON.stringify({ values: stepsForProcess }, null, 2)}</code>
                 </pre>
             )
@@ -122,7 +118,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
                                 })}
                             </tr>
                             { row.isExpanded && (
-                                <tr>
+                                <tr className={tableStyle.rowSubComponent}>
                                     <td colSpan={visibleColumns.length}>
                                         { renderRowSubComponent({ row }) }
                                     </td>
