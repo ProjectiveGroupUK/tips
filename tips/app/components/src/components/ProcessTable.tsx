@@ -16,6 +16,9 @@ import tableStyle from '@/styles/processTable.module.css';
 // Components
 import StatusPill from '@/components/StatusPill';
 
+// Mock data
+import mockDataSet from '@/mockData/mockProcessData';
+
 interface PropsInterface {
   processData: ProcessDataInterface;
 }
@@ -52,7 +55,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
         }
     ], []);
 
-    const tableData = useMemo(() => processData.map((process) => ({
+    const tableData = useMemo(() => mockDataSet/*processData*/.map((process) => ({
         process_id: process.id,
         process_name: process.name,
         process_description: process.description,
@@ -68,7 +71,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
 
     const renderRowSubComponent = useCallback(
         ({ row }: { row: Row }) => {
-            const stepsForProcess = processData.find((process) => process.id.toString() === row.id)!.steps;
+            const stepsForProcess = mockDataSet/*processData*/.find((process) => process.id.toString() === row.id)!.steps;
             return (
                 <pre
                     style={{
