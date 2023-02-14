@@ -1,11 +1,11 @@
 // React
-import { useMemo, useEffect } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
 // StreamLit
 import { Streamlit } from 'streamlit-component-lib';
 
 // React-table
-import { useTable } from 'react-table';
+import { useTable, useExpanded, Row } from 'react-table';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -24,6 +24,14 @@ type Data = object;
 
 export default function ProcessTable({ processData }: PropsInterface) {
     useEffect(() => { Streamlit.setFrameHeight() }); // Update frame height on each re-render
+
+    const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+
+    useEffect(() => { // Expand row when clicked
+        rows.forEach((row) => {
+            row.toggleRowExpanded(row.id === expandedRowId)
+        })
+    }, [expandedRowId])
 
     const tableColumns = useMemo(() => [
         {
@@ -53,9 +61,26 @@ export default function ProcessTable({ processData }: PropsInterface) {
 
     const tableInstance = useTable<Data>({
         columns: tableColumns,
-        data: tableData
-    });
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance
+        data: tableData,
+        getRowId: (row: any) => (row.process_id.toString())
+    }, useExpanded);
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, visibleColumns, state: { expanded } } = tableInstance
+
+    const renderRowSubComponent = useCallback(
+        ({ row }: { row: Row }) => {
+            const stepsForProcess = processData.find((process) => process.id.toString() === row.id)!.steps;
+            return (
+                <pre
+                    style={{
+                    fontSize: '10px',
+                    }}
+                >
+                    <code>{JSON.stringify({ values: stepsForProcess }, null, 2)}</code>
+                </pre>
+            )
+        },
+        []
+      )
 
     return (
         <table {...getTableProps()} className={tableStyle.table}>
@@ -78,20 +103,29 @@ export default function ProcessTable({ processData }: PropsInterface) {
                 rows.map((row) => {
                     prepareRow(row)
                     return (
-                    <tr {...row.getRowProps()}>
-                    {
-                        row.cells.map(cell => {
-                            let renderedCell: React.ReactNode;
-                            if(cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value} />;
-                            else renderedCell = cell.render('Cell');
-                            return (
-                                <td {...cell.getCellProps()}>
-                                    { renderedCell }
-                                </td>
-                            )
-                        })
-                    }
-                    </tr>
+                        <Fragment key={row.id}>
+                            <tr onClick={() => {
+                                setExpandedRowId((prev) => prev === row.id ? null : row.id)
+                            }}>
+                                { row.cells.map(cell => {
+                                    let renderedCell: React.ReactNode;
+                                    if(cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value} />;
+                                    else renderedCell = cell.render('Cell');
+                                    return (
+                                        <td {...cell.getCellProps()}>
+                                            { renderedCell }
+                                        </td>
+                                    )
+                                })}
+                            </tr>
+                            { row.isExpanded && (
+                                <tr>
+                                    <td colSpan={visibleColumns.length}>
+                                        { renderRowSubComponent({ row }) }
+                                    </td>
+                                </tr>
+                            )}
+                        </Fragment>
                     )
                 })
             }
