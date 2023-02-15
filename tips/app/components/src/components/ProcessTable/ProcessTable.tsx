@@ -1,11 +1,11 @@
 // React
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 // StreamLit
 import { Streamlit } from 'streamlit-component-lib';
 
 // React-table
-import { useTable, useExpanded, Row } from 'react-table';
+import { useTable, useExpanded } from 'react-table';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -15,6 +15,7 @@ import tableStyle from '@/styles/processTable.module.css';
 
 // Components
 import StatusPill from '@/components/ProcessTable/StatusPill';
+import ProcessStepSubComponent from './ProcessStepSubComponent';
 
 // Mock data
 import mockDataSet from '@/mockData/mockProcessData';
@@ -67,19 +68,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
         data: tableData,
         getRowId: (row: any) => (row.process_id.toString())
     }, useExpanded);
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow, visibleColumns, state: { expanded } } = tableInstance
-
-    const renderRowSubComponent = useCallback(
-        ({ row }: { row: Row }) => {
-            const stepsForProcess = mockDataSet/*processData*/.find((process) => process.id.toString() === row.id)!.steps;
-            return (
-                <pre>
-                    <code>{JSON.stringify({ values: stepsForProcess }, null, 2)}</code>
-                </pre>
-            )
-        },
-        []
-      )
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance
 
     return (
         <table {...getTableProps()} className={tableStyle.table}>
@@ -117,13 +106,13 @@ export default function ProcessTable({ processData }: PropsInterface) {
                                     )
                                 })}
                             </tr>
-                            { row.isExpanded && (
-                                <tr className={tableStyle.rowSubComponent}>
-                                    <td colSpan={visibleColumns.length}>
-                                        { renderRowSubComponent({ row }) }
-                                    </td>
-                                </tr>
-                            )}
+                            { row.isExpanded && 
+                                <ProcessStepSubComponent 
+                                    processData={mockDataSet} 
+                                    row={row} 
+                                    tableInstance={tableInstance} 
+                                />
+                            }
                         </Fragment>
                     )
                 })
