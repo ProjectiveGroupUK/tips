@@ -46,11 +46,12 @@ def _loadListOfProcesses():
         parameters={"process_name": "ALL"},
     )
 
+    fetchedProcessData = [] # Stores list of processes fetched from SQL query (in results variable). May be a two-dimensional array of 
+
     try:
         results: dict = db.executeSQL(sqlCommand=cmdStr)
-        newList = [] # Stores list of processes fetched from SQL query (in results variable). May be a two-dimensional array of 
 
-        # Iterate through keys in dictionary 'results' and for each unique process name, capture process details in 'newList'
+        # Iterate through keys in dictionary 'results' and for each unique process name, capture process details in 'fetchedProcessData'
         prevVal = ""
         for row in results:
             processID: str = row["PROCESS_ID"]
@@ -58,7 +59,7 @@ def _loadListOfProcesses():
             processDescription: str = row["PROCESS_DESCRIPTION"]
             processStatus = "active" if row["PROCESS_ACTIVE"] == "Y" else "inactive"
             if processName != prevVal:
-                newList.append(
+                fetchedProcessData.append(
                     {
                         "id": processID,
                         "name": processName,
@@ -68,13 +69,13 @@ def _loadListOfProcesses():
                     }
                 )
             else:
-                newList[len(newList) - 1]["steps"].append(_stripStepDict(row))
+                fetchedProcessData[len(fetchedProcessData) - 1]["steps"].append(_stripStepDict(row))
 
             prevVal = processName
     except Exception as e:
         logger.error(f'Error loading list of processes: {e}')
 
-    return newList
+    return fetchedProcessData
 
 def _stripStepDict(stepDict: dict):
     strippedDict = stepDict.copy()
@@ -99,8 +100,8 @@ def main():
     if entryPoint == EntryPoint.PROCESS_LIST: # Show user list of all processes
         # Fetch process data and pass it as a prop to React component
         with st.spinner("Fetching Metadata from DB..."):
-            newList = _loadListOfProcesses()
-            processesTable(key = 'processTable', processData = newList)
+            fetchedProcessData = _loadListOfProcesses()
+            processesTable(key = 'processTable', processData = fetchedProcessData)
 
 if __name__ == "__main__":
     # tips_project.toml file is needed for next command to run
