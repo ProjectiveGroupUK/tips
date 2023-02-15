@@ -2,7 +2,7 @@
 import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
 // Components
-import ProcessTable from '@/components/ProcessTable';
+import ProcessTable from '@/components/ProcessTable/ProcessTable';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
