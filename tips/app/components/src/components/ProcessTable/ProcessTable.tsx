@@ -30,45 +30,12 @@ export default function ProcessTable({ processData }: PropsInterface) {
     useEffect(() => { Streamlit.setFrameHeight() }); // Update frame height on each re-render
 
     const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+    const tableInstance = generateTableData({ processData: mockDataSet/*processData*/ });
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
     useEffect(() => { // Expand row when clicked
-        rows.forEach((row) => {
-            row.toggleRowExpanded(row.id === expandedRowId)
-        })
+        rows.forEach((row) => row.toggleRowExpanded(row.id === expandedRowId))
     }, [expandedRowId])
-
-    const tableColumns = useMemo(() => [
-        {
-            Header: 'Id',
-            accessor: 'process_id'
-        },
-        {
-            Header: 'Name',
-            accessor: 'process_name'
-        },
-        {
-            Header: 'Description',
-            accessor: 'process_description'
-        },
-        {
-            Header: 'Status',
-            accessor: 'process_status'
-        }
-    ], []);
-
-    const tableData = useMemo(() => mockDataSet/*processData*/.map((process) => ({
-        process_id: process.id,
-        process_name: process.name,
-        process_description: process.description,
-        process_status: process.status
-    })), []);
-
-    const tableInstance = useTable<Data>({
-        columns: tableColumns,
-        data: tableData,
-        getRowId: (row: any) => (row.process_id.toString())
-    }, useExpanded);
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance
 
     return (
         <table {...getTableProps()} className={tableStyle.table}>
@@ -128,4 +95,40 @@ export default function ProcessTable({ processData }: PropsInterface) {
             </tfoot>
         </table>
     )
+}
+
+function generateTableData({ processData }: PropsInterface) {
+    const tableColumns = useMemo(() => [
+        {
+            Header: 'Id',
+            accessor: 'process_id'
+        },
+        {
+            Header: 'Name',
+            accessor: 'process_name'
+        },
+        {
+            Header: 'Description',
+            accessor: 'process_description'
+        },
+        {
+            Header: 'Status',
+            accessor: 'process_status'
+        }
+    ], []);
+
+    const tableData = useMemo(() => processData.map((process) => ({
+        process_id: process.id,
+        process_name: process.name,
+        process_description: process.description,
+        process_status: process.status
+    })), []);
+
+    const tableInstance = useTable<Data>({
+        columns: tableColumns,
+        data: tableData,
+        getRowId: (row: any) => (row.process_id.toString())
+    }, useExpanded);
+
+    return tableInstance;
 }
