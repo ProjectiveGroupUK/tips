@@ -14,7 +14,7 @@ import { ProcessDataInterface } from '@/interfaces/Interfaces';
 import tableStyle from '@/styles/processTable.module.css';
 
 // Components
-import StatusPill from '@/components/ProcessTable/StatusPill';
+import StatusPill from '@/components/ProcessTable/jsx/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
 // Mock data
