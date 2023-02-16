@@ -1,0 +1,24 @@
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: all 300ms linear;
+}
+
+.content {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 1rem;
+    min-width: 20%;
+    max-width: 80%;
+    max-width: 500px;
+    min-height: 200px;
+}
