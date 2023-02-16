@@ -15,7 +15,7 @@ import tableStyle from '@/styles/processTable.module.css';
 
 // Components
 import StatusPill from '@/components/ProcessTable/StatusPill';
-import ProcessStepSubComponent from './ProcessStepSubComponent';
+import ProcessCommandsTable from './ProcessCommandsTable';
 
 // Mock data
 import mockDataSet from '@/mockData/mockProcessData';
@@ -59,8 +59,10 @@ export default function ProcessTable({ processData }: PropsInterface) {
                     prepareRow(row)
                     return (
                         <Fragment key={row.id}>
-                            <tr onClick={() => {
-                                setExpandedRowId((prev) => prev === row.id ? null : row.id)
+                            <tr 
+                                className={row.id === expandedRowId ? tableStyle.selected : undefined} // If row is expanded, add 'selected' class
+                                onClick={() => { // When clicked, update expandedRowId state variable
+                                    setExpandedRowId((prev) => prev === row.id ? null : row.id)
                             }}>
                                 { row.cells.map(cell => {
                                     let renderedCell: React.ReactNode;
@@ -74,11 +76,15 @@ export default function ProcessTable({ processData }: PropsInterface) {
                                 })}
                             </tr>
                             { row.isExpanded && 
-                                <ProcessStepSubComponent 
-                                    processData={mockDataSet/*processData*/} 
-                                    row={row} 
-                                    tableInstance={tableInstance} 
-                                />
+                                <tr className={tableStyle.rowSubComponent}>
+                                    <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
+                                        <div>
+                                            <ProcessCommandsTable 
+                                                commands={mockDataSet/*processData*/.find((process) => process.id.toString() === row.id)!.steps} // returns steps for process whose id matches the row id
+                                            />
+                                        </div>
+                                    </td>
+                                </tr>
                             }
                         </Fragment>
                     )
@@ -94,7 +100,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
                 </tr>
             </tfoot>
         </table>
-    )
+    );
 }
 
 function generateTableData({ processData }: PropsInterface) {

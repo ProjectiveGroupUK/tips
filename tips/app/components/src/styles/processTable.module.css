@@ -18,7 +18,7 @@
     text-align: left;
 }
 
-.table > tbody > tr {
+.table > tbody > tr:not(.rowSubComponent) {
     cursor: pointer;
     transition: background-color 0.2s linear;
 }
@@ -27,7 +27,7 @@
     background-color: #f5f5f5;
 }
 
-.table > tbody > tr:not(.rowSubComponent):hover {
+.table > tbody > tr:not(.rowSubComponent):not(.selected):hover {
     background-color: #fae8d2;
 }
 

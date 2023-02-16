@@ -45,7 +45,7 @@ const mockDataSet: ProcessDataInterface = [
                 CMD_PIVOT_FIELD: null,
                 DQ_TYPE: '',
                 CMD_EXTERNAL_CALL: '',
-                ACTIVE: 'Y'
+                ACTIVE: 'N'
             }
         ],
         status: 'active'

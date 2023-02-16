@@ -1,0 +1,80 @@
+.table {
+    border-radius: 7px;
+    text-align: center;
+    width: 100%;
+    border-spacing: 0px;
+    overflow: hidden;
+}
+
+.table > thead > tr {
+    background-color: #5A6691;
+    color: #D1DBFF;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.table > thead > tr > th {
+    padding: 0.6rem 0;
+}
+
+.table th > div {
+    padding: 0.05rem 1rem;
+    border: 1px solid #D1DBFF;
+    font-size: 0.7rem;
+    border-radius: 100rem;
+    width: fit-content;
+    margin: auto;
+}
+
+.table > tbody > tr {
+    cursor: pointer;
+    transition: background-color 0.2s linear;
+}
+
+.table > tbody > tr > :nth-child(1) {
+    padding: 1rem 0;
+}
+
+.table > tbody > tr:nth-child(even) {
+    background-color: #f0f3ff;
+}
+
+.table > tbody > tr:nth-child(odd) {
+    background-color: #e8edfd;
+}
+
+.table > tbody > tr:hover {
+    background-color: #d1dbff;
+}
+
+:has(> .command_id) { /* Select (div) parent of displayed command id value (this centers the container within the cell) */
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+}
+
+.command_id { /* Add a circle around command ID (number) value */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1/1;
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 100rem;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.table .commandStatus-true {
+    border-color: #006e00;
+    color: #006e00;
+    background-color: #006e0015;
+}
+
+.table .commandStatus-false {
+    border-color: #b40000;
+    color: #b40000;
+    background-color: #b4000015;
+}
