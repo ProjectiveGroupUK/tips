@@ -6,6 +6,7 @@ import ProcessDataContextProvider from '@/components/ProcessTable/contexts/Proce
 
 // Components
 import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
+import EditCommandModal from '@/components/ProcessTable/jsx/EditCommandModal';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -31,6 +32,7 @@ function App(props: ComponentPropsWithArgs) {
       return(
         <ProcessDataContextProvider processData={processData}>
           <ProcessTable />
+          <EditCommandModal />
         </ProcessDataContextProvider>
       );
     }

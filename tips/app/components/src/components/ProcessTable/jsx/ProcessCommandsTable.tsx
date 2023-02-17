@@ -24,7 +24,7 @@ interface PropsInterface {
 type Data = object;
 
 export default function ProcessCommandsTable() {
-    const { selectedProcess } = useProcessData();
+    const { selectedProcess, setSelectedCommandId } = useProcessData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
 
     return (
@@ -46,9 +46,14 @@ export default function ProcessCommandsTable() {
             <tbody {...getTableBodyProps()}>
             {
                 rows.map((row) => {
-                    prepareRow(row)
+                    prepareRow(row);
                     return (
-                        <tr key={row.id}>
+                        <tr 
+                            key={row.id} 
+                            onClick={() => { // When clicked, update expandedRowId state variable
+                                setSelectedCommandId(row.id);
+                            }}
+                        >
                             { row.cells.map(cell => {
                                 const columnId = cell.column.id;
                                 const commandData = (selectedProcess?.steps ?? []).find((command) => command.PROCESS_CMD_ID.toString() === row.id); // Get command data from commands array (for styling purposes

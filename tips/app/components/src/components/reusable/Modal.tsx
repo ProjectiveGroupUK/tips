@@ -64,12 +64,14 @@ export default function Modal({ isOpen, closeModal, children}: PropsInterface) {
 
     return(
         <div 
-            className={styles.modal}
+            className={styles.backdrop}
             style={modalDisplayProps.modalOpacityStyle}
             onClick={closeModal}
         >
-            <div className={styles.content} onClick={(e) => e.stopPropagation()}>
-                { children }
+            <div className={styles.contentContainer}>
+                <div className={styles.content} onClick={(e) => e.stopPropagation()}>
+                    { children }
+                </div>
             </div>
         </div>
     )

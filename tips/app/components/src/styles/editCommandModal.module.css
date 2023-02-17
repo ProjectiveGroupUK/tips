@@ -1,0 +1,96 @@
+.container {
+    padding: 0.5rem;
+    font-family: 'Open Sans';
+}
+
+.header {
+    display: flex;
+}
+
+.header > .headerLeft {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.2rem;
+}
+
+.header > .headerLeft > h1 {
+    font-size: 1.7rem;
+    font-weight: 500;
+}
+
+.header > .headerLeft > h2 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #8c8c8c;
+    min-width: max-content;
+}
+
+.header > .separator {
+    margin-left: 4rem;
+    margin-right: 1rem;
+    width: 2px;
+    border-radius: 100rem;
+    background-color: #8c8c8c;
+}
+
+.header > .headerRight {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    letter-spacing: 0.1ch;
+}
+
+.header > .headerRight[data-active-status="Y"] {
+    color: var(--success-green);
+}
+
+.header > .headerRight[data-active-status="N"] {
+    color: var(--fail-red);
+}
+
+.configContainer {
+    display: flex;
+    width: 100%;
+    column-gap: 0.8rem;
+    margin-top: 3rem;
+}
+
+.configContainer > .verticalBar {
+    width: 3px;
+    border-radius: 100rem;
+    background-color: #8c8c8c;
+}
+
+.configContainer > .configFields {
+    padding: 0.4rem 0;
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+    width: 100%;
+}
+
+.configContainer > .configFields > .fieldPair {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.configContainer > .configFields > .fieldPair > .fieldLabel {
+    font-weight: 500;
+    background-color: #e8edfd;
+    color: #8c8c8c;
+    padding: 0.4rem;
+}
+
+.configContainer > .configFields > .fieldPair > .fieldValue {
+    font-size: 0.9rem;
+    background-color: #f0f3ff;
+    color: #8c8c8c;
+    padding: 0.4rem;
+}
+
+.configContainer > .configFields > .fieldPair > .fieldLabel::after {
+    content: ':';
+}
