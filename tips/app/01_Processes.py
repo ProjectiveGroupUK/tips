@@ -64,7 +64,7 @@ def _loadListOfProcesses():
                         "id": processID,
                         "name": processName,
                         "description": processDescription,
-                        "steps": _stripStepDict(row),
+                        "steps": [_stripStepDict(row)],
                         "status": processStatus,
                     }
                 )
