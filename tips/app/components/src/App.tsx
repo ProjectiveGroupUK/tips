@@ -10,6 +10,9 @@ import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
+// CSS
+import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
+
 interface PropsInterface_ProcessTable {
   component: 'ProcessTable';
   processData: ProcessDataInterface;

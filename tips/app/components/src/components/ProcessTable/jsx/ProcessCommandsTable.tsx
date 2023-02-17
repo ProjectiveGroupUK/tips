@@ -1,8 +1,12 @@
 // React
 import { useMemo } from 'react';
+import ReactDOMServer from 'react-dom/server'
 
 // React-table
 import { useTable } from 'react-table';
+
+// React-toolip
+import { Tooltip } from 'react-tooltip';
 
 // Contexts
 import { useProcessData } from '@/components/ProcessTable/contexts/ProcessDataContext';
@@ -78,7 +82,7 @@ function generateTableData({ commands }: PropsInterface) {
         {
             Header: 'Id',
             accessor: 'command_id',
-            Cell: ({ value }: { value: CommandDataInterface['PROCESS_CMD_ID'] }) => <div><div>{value}</div></div> // Wrap cell contents in a two divs for styling purposes (first div to center the second div, which is a colour-coded circle containing the cell value)
+            Cell: getJSXForCommandId
         },
         {
             Header: 'Type',
@@ -108,4 +112,25 @@ function generateTableData({ commands }: PropsInterface) {
     });
 
     return tableInstance;
+
+    function getJSXForCommandId({ value }: {  // Prepare JSX for command id cell (including div wrappers for styling, and tooltip)
+        value: CommandDataInterface['PROCESS_CMD_ID']; 
+    }) {
+        const command = commands.find((command) => command.PROCESS_CMD_ID === value);
+        const isActive = command?.ACTIVE === 'Y' ? true : false;
+        const tooltipContent = <p>Command is <span>{isActive? 'active' : 'inactive'}</span></p>
+
+        return (
+            <>
+                <div 
+                    className={styles.cellValueContainer}
+                    data-tooltip-id={`command-${value}`}
+                    data-tooltip-html={ReactDOMServer.renderToStaticMarkup(tooltipContent)}
+                >
+                    <div>{value}</div>
+                </div>
+                <Tooltip id={`command-${value}`} />
+            </>
+        )
+    }
 }
