@@ -68,23 +68,23 @@
 }
 
 .table .commandStatus-true > div > div { /* Colour background and border of command id's circle container to green if the command is active */
-    border-color: #006e00;
-    color: #006e00;
+    border-color: var(--success-green);
+    color: var(--success-green);
     background-color: #006e0015;
 }
 
 .table .commandStatus-true p > span { /* 'active' word inside the tooltip text */
-    color: #18c418;
+    color: var(--success-green-light);
     font-weight: 600;
 }
 
 .table .commandStatus-false > div > div { /* Colour background and border of command id's circle container to red if the command is inactive */
-    border-color: #b40000;
-    color: #b40000;
+    border-color: var(--fail-red);
+    color: var(--fail-red);
     background-color: #b4000015;
 }
 
 .table .commandStatus-false p > span { /* 'active' word inside the tooltip text */
-    color: #ff4949;
+    color: var(--fail-red-light);
     font-weight: 600;
 }

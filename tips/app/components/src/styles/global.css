@@ -6,3 +6,11 @@
     padding:0;
     box-sizing: border-box;
 }
+
+/* Global colour variables */
+:root {
+    --success-green: #006e00;
+    --success-green-light: #18c418;
+    --fail-red: #b40000;
+    --fail-red-light: #ff4949;
+}
