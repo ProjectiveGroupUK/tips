@@ -49,15 +49,11 @@ export default function ProcessCommandsTable() {
                                 const columnId = cell.column.id;
                                 const commandData = (selectedProcess?.steps ?? []).find((command) => command.PROCESS_CMD_ID.toString() === row.id); // Get command data from commands array (for styling purposes
                                 const commandStatus = columnId === 'command_id' ? (commandData?.ACTIVE === 'Y' ? true : false) : undefined // If cell is command_id, set commandStatus to true if command is active, and false if it isn't. If it's not a command_id cell, set commandStatus to undefined.
-                                const cellContents = (
+                                return (
                                     <td {...cell.getCellProps()} className={`${styles[columnId]} ${styles[`commandStatus-${commandStatus}`]}`}>
                                         { cell.render('Cell') }
                                     </td>
-                                )
-                                if(columnId === 'command_id') // if cell is command_id, wrap it in a div (for styling purposes)
-                                    return cellContents 
-                                else
-                                    return cellContents;
+                                );
 
                             })}
                         </tr>
