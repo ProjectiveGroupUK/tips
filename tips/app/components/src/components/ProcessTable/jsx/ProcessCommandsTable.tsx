@@ -8,7 +8,7 @@ import { useTable } from 'react-table';
 import { useProcessData } from '@/components/ProcessTable/contexts/ProcessDataContext';
 
 // Interfaces
-import { ProcessDataInterface, ArrayElement } from '@/interfaces/Interfaces';
+import { ProcessDataInterface, ArrayElement, CommandDataInterface } from '@/interfaces/Interfaces';
 
 // CSS
 import styles from '@/styles/commandsTable.module.css'
@@ -55,7 +55,7 @@ export default function ProcessCommandsTable() {
                                     </td>
                                 )
                                 if(columnId === 'command_id') // if cell is command_id, wrap it in a div (for styling purposes)
-                                    return <div>{cellContents}</div> 
+                                    return cellContents 
                                 else
                                     return cellContents;
 
@@ -81,7 +81,8 @@ function generateTableData({ commands }: PropsInterface) {
     const tableColumns = useMemo(() => [
         {
             Header: 'Id',
-            accessor: 'command_id'
+            accessor: 'command_id',
+            Cell: ({ value }: { value: CommandDataInterface['PROCESS_CMD_ID'] }) => <div><div>{value}</div></div> // Wrap cell contents in a two divs for styling purposes (first div to center the second div, which is a colour-coded circle containing the cell value)
         },
         {
             Header: 'Type',

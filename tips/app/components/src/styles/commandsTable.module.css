@@ -47,13 +47,13 @@
     background-color: #d1dbff;
 }
 
-:has(> .command_id) { /* Select (div) parent of displayed command id value (this centers the container within the cell) */
+.command_id > div { /* Center the circle container which contains command's id */
     width: fit-content;
     height: fit-content;
     margin: auto;
 }
 
-.command_id { /* Add a circle around command ID (number) value */
+.command_id > div > div { /* Add a circle around command ID (number) value */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -67,13 +67,13 @@
     font-weight: 500;
 }
 
-.table .commandStatus-true {
+.table .commandStatus-true > div > div { /* Colour background and border of command id's circle container to green if the command is active */
     border-color: #006e00;
     color: #006e00;
     background-color: #006e0015;
 }
 
-.table .commandStatus-false {
+.table .commandStatus-false > div > div { /* Colour background and border of command id's circle container to red if the command is inactive */
     border-color: #b40000;
     color: #b40000;
     background-color: #b4000015;
