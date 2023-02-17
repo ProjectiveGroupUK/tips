@@ -1,11 +1,14 @@
 // React
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 
 // StreamLit
 import { Streamlit } from 'streamlit-component-lib';
 
 // React-table
 import { useTable, useExpanded } from 'react-table';
+
+// Contexts
+import { useProcessData } from '@/components/ProcessTable/contexts/ProcessDataContext';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -17,25 +20,18 @@ import tableStyle from '@/styles/processTable.module.css';
 import StatusPill from '@/components/ProcessTable/jsx/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
-// Mock data
-import mockDataSet from '@/mockData/mockProcessData';
-
-interface PropsInterface {
-  processData: ProcessDataInterface;
-}
-
 type Data = object;
 
-export default function ProcessTable({ processData }: PropsInterface) {
-    useEffect(() => { Streamlit.setFrameHeight() }); // Update frame height on each re-render
+export default function ProcessTable() {
+    useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
+    const { processData, selectedProcess, setSelectedProcessId } = useProcessData();
 
-    const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-    const tableInstance = generateTableData({ processData: mockDataSet/*processData*/ });
+    const tableInstance = generateTableData({ processData: processData });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
     useEffect(() => { // Expand row when clicked
-        rows.forEach((row) => row.toggleRowExpanded(row.id === expandedRowId))
-    }, [expandedRowId])
+        rows.forEach((row) => row.toggleRowExpanded(row.id === selectedProcess?.id.toString()))
+    }, [selectedProcess?.id])
 
     return (
         <table {...getTableProps()} className={tableStyle.table}>
@@ -60,9 +56,9 @@ export default function ProcessTable({ processData }: PropsInterface) {
                     return (
                         <Fragment key={row.id}>
                             <tr 
-                                className={row.id === expandedRowId ? tableStyle.selected : undefined} // If row is expanded, add 'selected' class
+                                className={row.id === selectedProcess?.id.toString() ? tableStyle.selected : undefined} // If row is expanded, add 'selected' class
                                 onClick={() => { // When clicked, update expandedRowId state variable
-                                    setExpandedRowId((prev) => prev === row.id ? null : row.id)
+                                    setSelectedProcessId((prev) => prev === row.id ? null : row.id)
                             }}>
                                 { row.cells.map(cell => {
                                     let renderedCell: React.ReactNode;
@@ -79,9 +75,7 @@ export default function ProcessTable({ processData }: PropsInterface) {
                                 <tr className={tableStyle.rowSubComponent}>
                                     <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
                                         <div>
-                                            <ProcessCommandsTable 
-                                                commands={mockDataSet/*processData*/.find((process) => process.id.toString() === row.id)!.steps} // returns steps for process whose id matches the row id
-                                            />
+                                            <ProcessCommandsTable />
                                         </div>
                                     </td>
                                 </tr>
@@ -103,7 +97,9 @@ export default function ProcessTable({ processData }: PropsInterface) {
     );
 }
 
-function generateTableData({ processData }: PropsInterface) {
+function generateTableData({ processData }: {
+    processData: ProcessDataInterface
+}) {
     const tableColumns = useMemo(() => [
         {
             Header: 'Id',

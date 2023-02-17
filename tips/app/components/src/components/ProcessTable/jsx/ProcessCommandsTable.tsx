@@ -4,6 +4,9 @@ import { useMemo } from 'react';
 // React-table
 import { useTable } from 'react-table';
 
+// Contexts
+import { useProcessData } from '@/components/ProcessTable/contexts/ProcessDataContext';
+
 // Interfaces
 import { ProcessDataInterface, ArrayElement } from '@/interfaces/Interfaces';
 
@@ -16,8 +19,9 @@ interface PropsInterface {
 
 type Data = object;
 
-export default function ProcessCommandsTable({ commands }: PropsInterface) {
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands });
+export default function ProcessCommandsTable() {
+    const { selectedProcess } = useProcessData();
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
 
     return (
         <table {...getTableProps()} className={styles.table}>
@@ -43,8 +47,8 @@ export default function ProcessCommandsTable({ commands }: PropsInterface) {
                         <tr key={row.id}>
                             { row.cells.map(cell => {
                                 const columnId = cell.column.id;
-                                const commandData = commands.find((command) => command.PROCESS_CMD_ID.toString() === row.id); // Get command data from commands array (for styling purposes
-                                const commandStatus = columnId === 'command_id' ? (commandData!.ACTIVE === 'Y' ? true : false) : undefined // If cell is command_id, set commandStatus to true if command is active, and false if it isn't. If it's not a command_id cell, set commandStatus to undefined.
+                                const commandData = (selectedProcess?.steps ?? []).find((command) => command.PROCESS_CMD_ID.toString() === row.id); // Get command data from commands array (for styling purposes
+                                const commandStatus = columnId === 'command_id' ? (commandData?.ACTIVE === 'Y' ? true : false) : undefined // If cell is command_id, set commandStatus to true if command is active, and false if it isn't. If it's not a command_id cell, set commandStatus to undefined.
                                 const cellContents = (
                                     <td {...cell.getCellProps()} className={`${styles[columnId]} ${styles[`commandStatus-${commandStatus}`]}`}>
                                         { cell.render('Cell') }

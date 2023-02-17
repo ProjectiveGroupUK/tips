@@ -1,8 +1,11 @@
 // StreamLit
 import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
+// Contexts
+import ProcessDataContextProvider from '@/components/ProcessTable/contexts/ProcessDataContext';
+
 // Components
-import ProcessTable from '@/components/ProcessTable/ProcessTable';
+import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -22,7 +25,11 @@ function App(props: ComponentPropsWithArgs) {
   switch(component) {
     case 'ProcessTable': {
       const { processData } = props.args;
-      return <ProcessTable processData={processData} />;
+      return(
+        <ProcessDataContextProvider processData={processData}>
+          <ProcessTable />
+        </ProcessDataContextProvider>
+      );
     }
 
     default:
@@ -30,4 +37,4 @@ function App(props: ComponentPropsWithArgs) {
   }
 }
 
-export default withStreamlitConnection(App)
+export default withStreamlitConnection(App);
