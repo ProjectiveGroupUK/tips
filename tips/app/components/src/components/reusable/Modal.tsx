@@ -8,6 +8,7 @@ interface PropsInterface {
     isOpen: boolean; // The modal component is always mounted but isOpen tells the component whether it should make itself visible or not
     onFadeOutBegin?: () => void; // Callback function which is called when the modal begins to fade out
     onFadeOutComplete?: () => void; // Callback function which is called when the modal has completed fading out and is now hidden
+    noPadding?: boolean;
     children: React.ReactNode;
 }
 
@@ -18,7 +19,7 @@ interface ModalDisplayPropsInterface {
 
 const fadeDuration = 300; // Duration of fade-in/fade-out effect in milliseconds (needs to match CSS transition duration)
 
-export default function Modal({ isOpen, onFadeOutBegin, onFadeOutComplete, children}: PropsInterface) {
+export default function Modal({ isOpen, onFadeOutBegin, onFadeOutComplete, noPadding, children}: PropsInterface) {
 
     const [modalDisplayProps, setModalDisplayProps] = useState<ModalDisplayPropsInterface>({
         isVisible: undefined,
@@ -79,7 +80,7 @@ export default function Modal({ isOpen, onFadeOutBegin, onFadeOutComplete, child
             style={modalDisplayProps.modalOpacityStyle}
             onClick={handleCloseModal}
         >
-            <div className={styles.contentContainer}>
+            <div className={`${styles.contentContainer} ${noPadding && styles.noPadding}`}>
                 <div className={styles.content} onClick={(e) => e.stopPropagation()}>
                     { children }
                 </div>

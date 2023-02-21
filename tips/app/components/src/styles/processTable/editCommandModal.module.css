@@ -1,6 +1,5 @@
 .container {
-    padding: 0.5rem;
-    font-family: 'Open Sans';
+    padding: 1.5rem;
 }
 
 .header {
@@ -95,4 +94,32 @@
 
 .configContainer > .configFields > .fieldPair > .fieldLabel::after {
     content: ':';
+}
+
+
+
+.editButtonContainer {
+    position: sticky;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    bottom: 0;
+    background-color: #3d5a7383;
+    backdrop-filter: blur(2px);
+    padding: 1rem 0.5rem;
+}
+
+.editButtonContainer > button {
+    padding: 0.15rem 2rem;
+    border: 2px solid var(--primary);
+    border-radius: 100rem;
+    background-color: #ffffff;
+    font-size: 0.9rem;
+    transition: all 150ms linear;
+}
+
+.editButtonContainer > button:hover {
+    color: var(--dirty-white);
+    background-color: #ff9900c5;
+    border-color: white;
 }
