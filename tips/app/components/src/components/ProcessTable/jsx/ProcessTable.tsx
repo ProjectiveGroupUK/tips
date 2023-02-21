@@ -51,12 +51,17 @@ export default function ProcessTable() {
 
             <tbody {...getTableBodyProps()}>
             {
-                rows.map((row) => {
+                rows.map((row, index) => {
                     prepareRow(row)
+                    const isSelected = row.id === selectedProcess?.id.toString();
+                    const expandedRowExistsAbove = rows.some((row, i) => i < index && row.isExpanded); // Used for styling purposes to determine colour of row (since :even and :odd selectors don't work with expanded rows the way I need them to)
+                    const dynamicIndexIsEven = (index - (Number(expandedRowExistsAbove) * 2)) % 2 === 0;
+                    console.log(`dynamicIndexIsEven ${index}: ${dynamicIndexIsEven}`);
+                    
                     return (
                         <Fragment key={row.id}>
-                            <tr 
-                                className={row.id === selectedProcess?.id.toString() ? tableStyle.selected : undefined} // If row is expanded, add 'selected' class
+                            <tr
+                                className={`${isSelected && tableStyle.selected} ${dynamicIndexIsEven ? tableStyle.dynamicIndex_even : tableStyle.dynamicIndex_odd}`} // If row is expanded, add 'selected' class; and depending on dynamicIndex, add 'dynamicIndex-even' or 'dynamicIndex-odd' class
                                 onClick={() => { // When clicked, update expandedRowId state variable
                                     setSelectedProcessId((prev) => prev === Number(row.id) ? null : Number(row.id)) // Deslect row if already selected, otherwise select row
                             }}>
@@ -72,7 +77,7 @@ export default function ProcessTable() {
                                 })}
                             </tr>
                             { row.isExpanded && 
-                                <tr className={tableStyle.rowSubComponent}>
+                                <tr className={`${tableStyle.rowSubComponent} ${dynamicIndexIsEven ? tableStyle.dynamicIndex_even : tableStyle.dynamicIndex_odd}`}>
                                     <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
                                         <div>
                                             <ProcessCommandsTable />

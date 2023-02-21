@@ -10,7 +10,7 @@ import { CommandDataInterface, ProcessDataInterface } from '@/interfaces/Interfa
 // Mock data
 import mockDataSet from '@/mockData/mockProcessData';
 
-const useMockData = false;
+const useMockData = true;
 
 const SharedDataContext = createContext<SharedDataContextInterface>(undefined!);
 

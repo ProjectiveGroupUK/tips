@@ -1,5 +1,4 @@
 .table {
-    border-radius: 7px;
     text-align: center;
     width: 100%;
     border-spacing: 0px;
@@ -7,19 +6,18 @@
 }
 
 .table > thead > tr {
-    background-color: #5A6691;
-    color: #D1DBFF;
+    color: #2F3D40;
     font-weight: 500;
     font-size: 0.9rem;
 }
 
 .table > thead > tr > th {
-    padding: 0.6rem;
+    padding: 1.5rem 0.6rem 0.6rem;
 }
 
 .table th > div {
     padding: 0.05rem 1rem;
-    border: 1px solid #D1DBFF;
+    border: 1px solid #2F3D40;
     font-size: 0.7rem;
     border-radius: 100rem;
     width: fit-content;
@@ -29,22 +27,28 @@
 .table > tbody > tr {
     cursor: pointer;
     transition: background-color 0.2s linear;
+    font-size: 0.82rem;
+    position: relative; /* Reqiored for odd-row background-darkening to work */
 }
 
-.table > tbody > tr > :nth-child(1) {
-    padding: 1rem 0;
+.table > tbody > tr > :nth-child(1) { /* Add padding vertical around command Id column */
+    padding: 0.6rem 0;
 }
 
-.table > tbody > tr:nth-child(even) {
-    background-color: #f0f3ff;
-}
-
-.table > tbody > tr:nth-child(odd) {
-    background-color: #e8edfd;
+.table > tbody > tr:not(:last-child)::after {
+    content: "";
+    background-color: #3D5A73;
+    position: absolute;
+    bottom: 0;
+    left: 3%;
+    width: 94%;
+    height: 1px;
+    margin: 0 auto;
+    border-radius: 100rem;
 }
 
 .table > tbody > tr:hover {
-    background-color: #d1dbff;
+    background-color: #d1e2e1;
 }
 
 .command_id > .cellValueContainer { /* Center the circle container which contains command's id */
