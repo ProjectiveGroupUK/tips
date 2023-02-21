@@ -1,5 +1,5 @@
 .table {
-    border: 1px solid #3D5A73;
+    border: 1px solid var(--primary);
     border-spacing: 0px;
     border-radius: 5px;
     overflow: hidden;
@@ -11,8 +11,8 @@
     box-sizing: border-box;
     padding: 10px 10px;
     min-width: 200%;
-    background-color: #3D5A73;
-    color: #f3f3f3;
+    background-color: var(--primary);
+    color: var(--dirty-white);
     font-weight: 500;
     font-size: 0.9rem;
     text-align: left;

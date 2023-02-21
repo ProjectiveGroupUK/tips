@@ -1,5 +1,5 @@
 /* Load fonts */
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&display=swap'); /* Open Sans*/
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500&display=swap'); /* Open Sans*/
 
 * { /* Remove default styling */
     margin:0;
@@ -9,6 +9,9 @@
 
 /* Global colour variables */
 :root {
+    --primary: #3D5A73;
+    --dirty-white: #f3f3f3;
+
     --success-green: #006e00;
     --success-green-light: #18c418;
     --fail-red: #b40000;
