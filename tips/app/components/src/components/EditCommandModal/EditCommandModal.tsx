@@ -36,111 +36,41 @@ export default function EditCommandModal() {
                 <div className={styles.configContainer}>
                     <div className={styles.verticalBar} />
                     <div className={styles.configFields}>
-
-                        {/* Type */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Type</div>
-                            <div className={styles.fieldValue}>{command?.CMD_TYPE}</div>
-                        </div>
-
-                        {/* Source */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Source</div>
-                            <div className={styles.fieldValue}>{command?.CMD_SRC}</div>
-                        </div>
-
-                        {/* Target */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Target</div>
-                            <div className={styles.fieldValue}>{command?.CMD_TGT}</div>
-                        </div>
-
-                        {/* Where */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Where</div>
-                            <div className={styles.fieldValue}>{command?.CMD_WHERE}</div>
-                        </div>
-
-                        {/* Binds */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Binds</div>
-                            <div className={styles.fieldValue}>{command?.CMD_BINDS}</div>
-                        </div>
-
-                        {/* Refresh type */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Refresh type</div>
-                            <div className={styles.fieldValue}>{command?.REFRESH_TYPE}</div>
-                        </div>
-
-                        {/* Business key */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Business key</div>
-                            <div className={styles.fieldValue}>{command?.BUSINESS_KEY}</div>
-                        </div>
-
-                        {/* Merge on fields */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Merge on fields</div>
-                            <div className={styles.fieldValue}>{command?.MERGE_ON_FIELDS}</div>
-                        </div>
-
-                        {/* Generate merge matched clause */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Generate merge matched clause</div>
-                            <div className={styles.fieldValue}>{command?.GENERATE_MERGE_MATCHED_CLAUSE}</div>
-                        </div>
-
-                        {/* Generate merge non matched clause */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Generate merge non matched clause</div>
-                            <div className={styles.fieldValue}>{command?.GENERATE_MERGE_NON_MATCHED_CLAUSE}</div>
-                        </div>
-
-                        {/* Additional fields */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Additional fields</div>
-                            <div className={styles.fieldValue}>{command?.ADDITIONAL_FIELDS}</div>
-                        </div>
-
-                        {/* Temp table */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Temp table</div>
-                            <div className={styles.fieldValue}>{command?.TEMP_TABLE}</div>
-                        </div>
-
-                        {/* Pivot by */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Pivot by</div>
-                            <div className={styles.fieldValue}>{command?.CMD_PIVOT_BY}</div>
-                        </div>
-
-                        {/* Pivot field */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Pivot field</div>
-                            <div className={styles.fieldValue}>{command?.CMD_PIVOT_FIELD}</div>
-                        </div>
-
-                        {/* DQ type */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>DQ type</div>
-                            <div className={styles.fieldValue}>{command?.DQ_TYPE}</div>
-                        </div>
-
-                        {/* External call */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>External call</div>
-                            <div className={styles.fieldValue}>{command?.CMD_EXTERNAL_CALL}</div>
-                        </div>
-
-                        {/* Active */}
-                        <div className={styles.fieldPair}>
-                            <div className={styles.fieldLabel}>Active</div>
-                            <div className={styles.fieldValue}>{command?.ACTIVE}</div>
-                        </div>
+                        <FieldPair label='Type' value={command?.CMD_TYPE} />
+                        <FieldPair label='Source' value={command?.CMD_SRC} />
+                        <FieldPair label='Target' value={command?.CMD_TGT} />
+                        <FieldPair label='Where' value={command?.CMD_WHERE} />
+                        <FieldPair label='Binds' value={command?.CMD_BINDS} />
+                        <FieldPair label='Refresh type' value={command?.REFRESH_TYPE} />
+                        <FieldPair label='Business key' value={command?.BUSINESS_KEY} />
+                        <FieldPair label='Merge on fields' value={command?.MERGE_ON_FIELDS} />
+                        <FieldPair label='Generate merge matched clause' value={command?.GENERATE_MERGE_MATCHED_CLAUSE} />
+                        <FieldPair label='Generate merge non matched clause' value={command?.GENERATE_MERGE_NON_MATCHED_CLAUSE} />
+                        <FieldPair label='Additional fields' value={command?.ADDITIONAL_FIELDS} />
+                        <FieldPair label='Temp table' value={command?.TEMP_TABLE} />
+                        <FieldPair label='Pivot by' value={command?.CMD_PIVOT_BY} />
+                        <FieldPair label='Pivot field' value={command?.CMD_PIVOT_FIELD} />
+                        <FieldPair label='DQ type' value={command?.DQ_TYPE} />
+                        <FieldPair label='DQ type' value={command?.DQ_TYPE} />
+                        <FieldPair label='External call' value={command?.CMD_EXTERNAL_CALL} />
+                        <FieldPair label='Active' value={command?.ACTIVE} />
                     </div>
                 </div>
             </div>
         </Modal>
     );
+}
+
+interface FieldPairPropsInterface {
+    label: string;
+    value: any;
+}
+
+function FieldPair({ label, value }: FieldPairPropsInterface) {
+    return(
+        <div className={styles.fieldPair}>
+            <div className={styles.fieldLabel}>{label}</div>
+            <div className={styles.fieldValue}>{value}</div>
+        </div>
+    )
 }
