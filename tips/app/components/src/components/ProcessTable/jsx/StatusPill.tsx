@@ -1,5 +1,5 @@
 // CSS
-import styles from '@/styles/statusPill.module.css';
+import styles from '@/styles/processTable/statusPill.module.css';
 
 declare interface StatusPillPropsInterface {
     status: 'active' | 'inactive';

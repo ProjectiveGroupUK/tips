@@ -8,13 +8,13 @@ import { Streamlit } from 'streamlit-component-lib';
 import { useTable, useExpanded } from 'react-table';
 
 // Contexts
-import { useProcessData } from '@/components/ProcessTable/contexts/ProcessDataContext';
+import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
 // CSS
-import tableStyle from '@/styles/processTable.module.css';
+import tableStyle from '@/styles/processTable/processTable.module.css';
 
 // Components
 import StatusPill from '@/components/ProcessTable/jsx/StatusPill';
@@ -24,7 +24,7 @@ type Data = object;
 
 export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
-    const { processData, selectedProcess, setSelectedProcessId } = useProcessData();
+    const { processData, selectedProcess, setSelectedProcessId } = useSharedData();
 
     const tableInstance = generateTableData({ processData: processData });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
@@ -58,7 +58,7 @@ export default function ProcessTable() {
                             <tr 
                                 className={row.id === selectedProcess?.id.toString() ? tableStyle.selected : undefined} // If row is expanded, add 'selected' class
                                 onClick={() => { // When clicked, update expandedRowId state variable
-                                    setSelectedProcessId((prev) => prev === row.id ? null : row.id)
+                                    setSelectedProcessId((prev) => prev === Number(row.id) ? null : Number(row.id)) // Deslect row if already selected, otherwise select row
                             }}>
                                 { row.cells.map(cell => {
                                     let renderedCell: React.ReactNode;

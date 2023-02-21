@@ -2,63 +2,74 @@
 import { useEffect, useState } from "react";
 
 // CSS
-import styles from "@/styles/modal.module.css";
+import styles from "@/styles/processTable/modal.module.css";
 
 interface PropsInterface {
     isOpen: boolean; // The modal component is always mounted but isOpen tells the component whether it should make itself visible or not
-    closeModal: () => void;
+    onFadeOutBegin?: () => void; // Callback function which is called when the modal begins to fade out
+    onFadeOutComplete?: () => void; // Callback function which is called when the modal has completed fading out and is now hidden
     children: React.ReactNode;
 }
 
 interface ModalDisplayPropsInterface {
-    isVisible: boolean; // Keeps track of whether the modal is still actually visible (as opposed to isOpen prop which acts as an instruction to make itself visible or not)
+    isVisible: boolean | undefined; // Keeps track of whether the modal is still actually visible (as opposed to isOpen prop which acts as an instruction to make itself visible or not)
     modalOpacityStyle: React.CSSProperties;
 }
 
 const fadeDuration = 300; // Duration of fade-in/fade-out effect in milliseconds (needs to match CSS transition duration)
 
-export default function Modal({ isOpen, closeModal, children}: PropsInterface) {
+export default function Modal({ isOpen, onFadeOutBegin, onFadeOutComplete, children}: PropsInterface) {
 
     const [modalDisplayProps, setModalDisplayProps] = useState<ModalDisplayPropsInterface>({
-        isVisible: false,
+        isVisible: undefined,
         modalOpacityStyle: { opacity: 0 }
     });
 
     useEffect(() => {
-        let timer: NodeJS.Timeout; // Keep track of setTimeout instances so that they can be cleared in cleanup function
-        setModalDisplayProps((prev) => {
-            switch(isOpen) {
-                case true: // Modal should be visible
+        switch(isOpen) {
+            case true: // Modal should be visible
+                handleOpenModal();
+                break;
 
-                    // Set opacity to 0, and set up an almost-immediate timeout which brings opacity to 1 so that fade effect takes place (rather than instantly appearing)
-                    timer = setTimeout(() => {
-                        setModalDisplayProps((prev) => ({ ...prev, modalOpacityStyle: { opacity: 1 } }));
-                    }, 50);
-
-                    return { 
-                        isVisible: true, 
-                        modalOpacityStyle: { opacity: 0 } 
-                    };
-
-                case false: // Modal should be hidden (or start hiding)
-                    if(!prev.isVisible) return { ...prev, modalOpacityStyle: { opacity: 0 } }; // If modal is already hidden, keep it hidden (and perhaps manually rewrite opacity to 0 even though it should already be 0)
-
-                    // Modal is changing from visible to hidden
-
-                    // Wait for fade-out effect to finish before setting isVisible to false
-                    timer = setTimeout(() => {
-                        setModalDisplayProps((prev) => ({ ...prev, isVisible: false }));
-                    }, fadeDuration);
-
-                    return { ...prev, modalOpacityStyle: { opacity: 0 } }; // Set opacity to 0 immediately so that the fade-out effect can begin
-            }
-        })
-
-        // Clean up timeout if component unmounts before fade-out effect finishes
-        return () => {
-            if(timer !== undefined) clearTimeout(timer);
-        };
+            case false: // Modal should be hidden (or start hiding)
+                handleCloseModal();
+                break;
+        }
     }, [isOpen]);
+
+    useEffect(() => { // Call onFadeOutComplete callback function when modal is no longer visible
+        if(modalDisplayProps.isVisible === false) onFadeOutComplete?.();
+    }, [modalDisplayProps.isVisible]);
+
+    function handleOpenModal() {
+        // Set opacity to 0, and set up an almost-immediate timeout which brings opacity to 1 so that fade effect takes place (rather than instantly appearing)
+        setTimeout(() => {
+            setModalDisplayProps((prev) => ({ ...prev, modalOpacityStyle: { opacity: 1 } }));
+        }, 50);
+
+        setModalDisplayProps({ 
+            isVisible: true, 
+            modalOpacityStyle: { opacity: 0 } 
+        });
+    }
+
+    function handleCloseModal() {
+        setModalDisplayProps((prev) => {
+            if(!prev.isVisible) return { ...prev, modalOpacityStyle: { opacity: 0 } }; // If modal is already hidden, keep it hidden (and perhaps manually rewrite opacity to 0 even though it should already be 0)
+
+            // Code continues here if modal is changing from visible to hidden
+            onFadeOutBegin?.(); // Call callback notifying that fade-out effect is beginning
+
+            // Wait for fade-out effect to finish before setting isVisible to false
+            setTimeout(() => {
+                setModalDisplayProps((prev) => ({ ...prev, isVisible: false }));
+                onFadeOutComplete?.();
+            }, fadeDuration);
+
+            return { ...prev, modalOpacityStyle: { opacity: 0 } }; // Set opacity to 0 immediately so that the fade-out effect can begin
+        });
+        onFadeOutBegin?.();
+    }
 
     if(!modalDisplayProps.isVisible) return <></>; // If modal is not visible, don't render anything
 
@@ -66,7 +77,7 @@ export default function Modal({ isOpen, closeModal, children}: PropsInterface) {
         <div 
             className={styles.backdrop}
             style={modalDisplayProps.modalOpacityStyle}
-            onClick={closeModal}
+            onClick={handleCloseModal}
         >
             <div className={styles.contentContainer}>
                 <div className={styles.content} onClick={(e) => e.stopPropagation()}>

@@ -1,10 +1,11 @@
 # Python
-import os
 import logging
 
 # Streamlit
-import streamlit.components.v1 as components
 import streamlit as st
+
+# Streamlit modal
+from utils.modal import Modal
 
 # TIPS
 from tips.framework.db.database_connection import DatabaseConnection
@@ -13,24 +14,13 @@ from tips.utils.logger import Logger
 from tips.utils.utils import Globals
 
 # Components
-from utils import processesTable
+from utils import processesTable, processComandsModal
 
 # Enums
-from tips.app.enums import StateVariable, EntryPoint
+from tips.app.enums import StateVariable, ProcessTableInstructions
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
-
-_RELEASE = False
-
-if not _RELEASE:
-    _component_func = components.declare_component(
-        "react_component",
-        url="http://localhost:3001",
-    )
-else:
-    parent_dir = os.path.dirname(os.path.abspath(__file__))
-    build_dir = os.path.join(parent_dir, "frontend/build")
 
 def _setUpPageLayout():
     st.set_page_config(
@@ -38,6 +28,23 @@ def _setUpPageLayout():
         page_icon="✨",
         layout="wide"
     )
+
+def _loadCustomCSS():
+    st.markdown('<style>iframe[title="utils.react_component_modal"] {width: 100vw; height: 100vh}</style>', unsafe_allow_html=True) # Makes the modal full screen
+
+def _setUpProcessTableInstructions():
+
+    # Initialise processTableInstructions dictionary with default values
+    processTableInstructions = {
+        ProcessTableInstructions.RESET_SELECTED_COMMAND: False
+    }
+
+    # Retrieve instructions stored in session state from previous run iteration and translate them into appropriate instructions in the ProcessTableInstructions dictionary
+    if StateVariable.CLOSE_COMMAND_MODAL in st.session_state: # If user has closed the overlaying modal component, add instruction to deselect selected command in rendered ProcessTable component
+        processTableInstructions[ProcessTableInstructions.RESET_SELECTED_COMMAND] = True
+        del st.session_state[StateVariable.CLOSE_COMMAND_MODAL]
+    
+    return processTableInstructions
 
 def _loadListOfProcesses():
     db = DatabaseConnection()
@@ -77,7 +84,7 @@ def _loadListOfProcesses():
 
     return fetchedProcessData
 
-def _stripStepDict(stepDict: dict):
+def _stripStepDict(stepDict: dict): # Removes process keys from dictionary intended to store data on process's command, since the command dictionary is nested within the process dictionary (which contains the process's details already)
     strippedDict = stepDict.copy()
     strippedDict.pop("PROCESS_ID")
     strippedDict.pop("PROCESS_NAME")
@@ -88,20 +95,39 @@ def _stripStepDict(stepDict: dict):
 def main():
 
     _setUpPageLayout()
+    _loadCustomCSS()
+    processTableInstructions = _setUpProcessTableInstructions()
 
-    # Ensure that state contains an entryPoint value (and revert to PROCESS_LIST if it doesn't)
-    entryPoint = st.session_state.get(StateVariable.ENTRY_POINT)
-    if(entryPoint is None):
-        entryPoint = EntryPoint.PROCESS_LIST
-        st.session_state[StateVariable.ENTRY_POINT] = entryPoint
-
-    # Iterate through potential EntryPoint values for Processes page and display widgets/components for matched value
-
-    if entryPoint == EntryPoint.PROCESS_LIST: # Show user list of all processes
-        # Fetch process data and pass it as a prop to React component
+    # Fetch process data if it hasn't been fetched previously
+    processesTableData = None
+    if StateVariable.PROCESS_DATA not in st.session_state:
         with st.spinner("Fetching Metadata from DB..."):
-            fetchedProcessData = _loadListOfProcesses()
-            processesTable(key = 'processTable', processData = fetchedProcessData)
+            st.session_state[StateVariable.PROCESS_DATA] = _loadListOfProcesses()
+
+    # Render processes table component
+    processesTableData = processesTable(
+        key = 'processTable', 
+        processData = st.session_state[StateVariable.PROCESS_DATA],
+        instructions = processTableInstructions
+    )
+    
+    # Render process commands modal component (if a command has been selected in the processes table component)
+    commandModalData = None
+    if processesTableData != None and processesTableData.get('selectedCommand') != None:
+        modal = Modal(title="Process Comands Modal", key="processCommandsModal")
+        with modal.container():
+            commandModalData = processComandsModal(
+                key = 'modal',
+                processData = processesTableData.get('processData'),
+                selectedProcessId = processesTableData.get('selectedProcess').get('id'),
+                selectedCommandId = processesTableData.get('selectedCommand').get('PROCESS_CMD_ID')
+            )
+
+            # If user has closed the modal, add instruction to deselect selected command in rendered ProcessTable component on next script run
+            if commandModalData != None:
+                if commandModalData.get('selectedCommand') == None: # User has closed the modal
+                    st.session_state[StateVariable.CLOSE_COMMAND_MODAL] = True
+                    st.experimental_rerun()        
 
 if __name__ == "__main__":
     # tips_project.toml file is needed for next command to run

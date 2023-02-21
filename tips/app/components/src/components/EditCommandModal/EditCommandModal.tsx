@@ -2,16 +2,16 @@
 import { useState, useEffect } from "react";
 
 // Contexts
-import { useProcessData } from "@/components/ProcessTable/contexts/ProcessDataContext";
+import { useSharedData } from "@/components/reusable/contexts/SharedDataContext";
 
 // Components
 import Modal from "@/components/reusable/Modal";
 
 // CSS
-import styles from "@/styles/editCommandModal.module.css";
+import styles from "@/styles/processTable/editCommandModal.module.css";
 
 export default function EditCommandModal() {
-    const { selectedProcess, selectedCommand, setSelectedCommandId } = useProcessData();
+    const { selectedProcess, selectedCommand, setSelectedCommandId } = useSharedData();
     
     // Create a 'command' state variable which duplicates data from 'selectedCommand', but temporarily persists the data even is 'selectedCommand' is set to null and modal starts fading out (to prevent the modal from flashing the 'undefined' values)
     const [command, setCommand] = useState(selectedCommand);
@@ -20,7 +20,7 @@ export default function EditCommandModal() {
     return(
         <Modal
             isOpen={selectedCommand !== null}
-            closeModal={() => setSelectedCommandId(null)}
+            onFadeOutComplete={() => setSelectedCommandId(null)}
         >
             <div className={styles.container}>
                 <div className={styles.header}>

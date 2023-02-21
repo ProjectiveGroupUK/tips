@@ -26,6 +26,3 @@ export declare interface CommandDataInterface {
     CMD_EXTERNAL_CALL: string;
     ACTIVE: 'Y' | 'N';
 }
-
-type ArrayElement<ArrayType extends readonly unknown[]> = 
-  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;

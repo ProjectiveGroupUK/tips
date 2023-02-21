@@ -1,5 +1,5 @@
 // React
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import ReactDOMServer from 'react-dom/server'
 
 // React-table
@@ -9,23 +9,27 @@ import { useTable } from 'react-table';
 import { Tooltip } from 'react-tooltip';
 
 // Contexts
-import { useProcessData } from '@/components/ProcessTable/contexts/ProcessDataContext';
+import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
 
 // Interfaces
-import { ProcessDataInterface, ArrayElement, CommandDataInterface } from '@/interfaces/Interfaces';
+import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
 
 // CSS
-import styles from '@/styles/commandsTable.module.css'
+import styles from '@/styles/processTable/commandsTable.module.css';
 
 interface PropsInterface {
-    commands: ArrayElement<ProcessDataInterface>['steps'];
+    commands: ProcessDataInterface[0]['steps'];
 }
 
 type Data = object;
 
 export default function ProcessCommandsTable() {
-    const { selectedProcess, setSelectedCommandId } = useProcessData();
+    const { selectedProcess, setSelectedCommandId, selectedCommand, setShowProcessCommandModal } = useSharedData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
+
+    useEffect(() => {
+        setShowProcessCommandModal(Boolean(selectedCommand));
+    }, [selectedCommand]);
 
     return (
         <table {...getTableProps()} className={styles.table}>
@@ -51,7 +55,7 @@ export default function ProcessCommandsTable() {
                         <tr 
                             key={row.id} 
                             onClick={() => { // When clicked, update expandedRowId state variable
-                                setSelectedCommandId(row.id);
+                                setSelectedCommandId(Number(row.id));
                             }}
                         >
                             { row.cells.map(cell => {
