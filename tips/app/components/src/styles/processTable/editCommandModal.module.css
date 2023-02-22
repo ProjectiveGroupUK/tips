@@ -107,6 +107,7 @@
     background-color: #3d5a7383;
     backdrop-filter: blur(2px);
     padding: 1rem 0.5rem;
+    column-gap: 2rem;
 }
 
 .editButtonContainer > button {
@@ -115,7 +116,6 @@
     border-radius: 100rem;
     background-color: #ffffff;
     font-size: 0.9rem;
-    transition: all 150ms linear;
 }
 
 .editButtonContainer > button:hover {

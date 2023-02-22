@@ -1,3 +1,9 @@
+// React
+import { useState } from "react";
+
+// Framer motion
+import { AnimatePresence, motion } from "framer-motion";
+
 // Contexts
 import { useSharedData } from "@/components/reusable/contexts/SharedDataContext";
 
@@ -74,9 +80,29 @@ function FieldPair({ label, value }: FieldPairPropsInterface) {
 }
 
 function FloatingEditButton() {
+    const [editing, setEditing] = useState(false);
+
     return(
         <div className={styles.editButtonContainer}>
-            <button>Edit</button>
+
+            <motion.button
+                layout
+                onClick={() => setEditing((prev) => !prev)}
+            >
+                { editing ? 'Cancel' : 'Edit' }
+            </motion.button>
+            <AnimatePresence mode='popLayout'>
+                { editing && (
+                    <motion.button
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                    >
+                        Save
+                    </motion.button>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
