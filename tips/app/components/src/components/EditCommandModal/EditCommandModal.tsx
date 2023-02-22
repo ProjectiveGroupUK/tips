@@ -5,14 +5,12 @@ import { useState, useMemo } from "react";
 import { useTable, useFilters } from 'react-table';
 import { TableInstance } from "react-table";
 
-// Framer motion
-import { AnimatePresence, motion } from "framer-motion";
-
 // Contexts
 import { useSharedData } from "@/components/reusable/contexts/SharedDataContext";
 
 // Components
 import Modal from "@/components/reusable/Modal";
+import FloatingEditButtons from "./FloatingEditButtons";
 
 // Interfaces
 import { CommandDataInterface } from "@/interfaces/Interfaces";
@@ -108,7 +106,7 @@ export default function EditCommandModal() {
                     </div>
                 </div>
 
-                <FloatingEditButton />
+                <FloatingEditButtons />
             </>
         </Modal>
     );
@@ -192,34 +190,4 @@ function generateTableData({ commandData, filterCategories }: {
     }, useFilters);
 
     return tableInstance;
-}
-
-function FloatingEditButton() {
-    const [editing, setEditing] = useState(false);
-
-    return(
-        <div className={styles.editButtonContainer}>
-
-            <motion.button
-                layout
-                className={ editing ? styles.button_cancel : styles.button_edit}
-                onClick={() => setEditing((prev) => !prev)}
-            >
-                { editing ? 'Cancel' : 'Edit' }
-            </motion.button>
-            <AnimatePresence mode='popLayout'>
-                { editing && (
-                    <motion.button
-                        layout
-                        className={styles.button_save}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }} 
-                        exit={{ opacity: 0 }}
-                    >
-                        Save
-                    </motion.button>
-                )}
-            </AnimatePresence>
-        </div>
-    );
 }
