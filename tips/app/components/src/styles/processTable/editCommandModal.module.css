@@ -107,19 +107,29 @@
     background-color: #3d5a7383;
     backdrop-filter: blur(2px);
     padding: 1rem 0.5rem;
-    column-gap: 2rem;
+    column-gap: 1rem;
 }
 
 .editButtonContainer > button {
-    padding: 0.15rem 2rem;
-    border: 2px solid var(--primary);
+    padding: 0.2rem 2rem;
+    background-color: white;
+    border: 1.5px solid var(--primary);
     border-radius: 100rem;
-    background-color: #ffffff;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    transition: border-color 200ms ease, background-color 200ms ease, color 200ms ease;
 }
 
-.editButtonContainer > button:hover {
-    color: var(--dirty-white);
-    background-color: #ff9900c5;
-    border-color: white;
+.editButtonContainer > button.button_edit:hover {
+    background-color: #f3c589;
+    border-color: #e6880e;
+}
+
+.editButtonContainer > button.button_cancel:hover {
+    background-color: #f3a789;
+    border-color: #e64b0e;
+}
+
+.editButtonContainer > button.button_save:hover {
+    background-color: #b1d6b1;
+    border-color: #6cb66c;
 }

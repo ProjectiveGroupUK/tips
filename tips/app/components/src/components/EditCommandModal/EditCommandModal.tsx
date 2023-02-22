@@ -87,6 +87,7 @@ function FloatingEditButton() {
 
             <motion.button
                 layout
+                className={ editing ? styles.button_cancel : styles.button_edit}
                 onClick={() => setEditing((prev) => !prev)}
             >
                 { editing ? 'Cancel' : 'Edit' }
@@ -95,6 +96,7 @@ function FloatingEditButton() {
                 { editing && (
                     <motion.button
                         layout
+                        className={styles.button_save}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }} 
                         exit={{ opacity: 0 }}
