@@ -115,3 +115,22 @@
     background-color: #fff1df;
     border-color: #f3c589;
 }
+
+.configParent table thead td {
+    font-size: 1.3rem;
+    font-weight: 500;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.configParent table thead td::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    margin-bottom: 0.3rem;
+    background-color: var(--primary);
+    border-radius: 100rem;
+}
