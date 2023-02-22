@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // CSS
-import styles from "@/styles/editCommandModal/editCommandModal.module.css";
+import styles from "@/styles/editCommandModal/floatingEditButtons.module.css";
 
 export default function FloatingEditButton() {
     const [editing, setEditing] = useState(false);
