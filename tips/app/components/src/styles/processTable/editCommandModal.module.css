@@ -61,7 +61,62 @@
     background-color: var(--primary);
 }
 
-.configContainer > .configFields {
+.configParent {
+    padding: 0.4rem 0;
+    display: flex;
+    flex-direction: column;
+    row-gap: 2rem;
+    width: 100%;
+}
+
+.configParent > .configHeader > .searchBox {
+    width: 100%;
+    border: 1px solid var(--primary);
+    border-radius: 100rem;
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.configParent > .configHeader > .searchBox > svg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0.5rem;
+    margin: auto 0;
+    pointer-events: none;
+}
+
+.configParent > .configHeader > .searchBox > .searchInput {
+    width: 100%;
+    height: 1.5rem;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    padding: 0 0.5rem;
+    padding-left: 2rem; /* Explicit padding-left for input text not to clash with magnifying glass icon */
+}
+
+.configParent > .configHeader > .categorySelector {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.configParent > .configHeader > .categorySelector > .categoryItem {
+    font-size: 0.8rem;
+    border: 1px solid var(--primary);
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.configParent > .configHeader > .categorySelector > .categoryItem.active {
+    background-color: #fff1df;
+    border-color: #f3c589;
+}
+
+/*.configContainer > .configFields {
     padding: 0.4rem 0;
     display: flex;
     flex-direction: column;
@@ -94,7 +149,7 @@
 
 .configContainer > .configFields > .fieldPair > .fieldLabel::after {
     content: ':';
-}
+}*/
 
 
 

@@ -1,5 +1,9 @@
 // React
-import { useState } from "react";
+import { useState, useMemo } from "react";
+
+// React-table
+import { useTable, useFilters } from 'react-table';
+import { TableInstance } from "react-table";
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,11 +14,44 @@ import { useSharedData } from "@/components/reusable/contexts/SharedDataContext"
 // Components
 import Modal from "@/components/reusable/Modal";
 
+// Interfaces
+import { CommandDataInterface } from "@/interfaces/Interfaces";
+
 // CSS
 import styles from "@/styles/processTable/editCommandModal.module.css";
 
+// Icons
+import { Search } from 'tabler-icons-react';
+
+interface FilterCategoryInterface{
+    id: string;
+    label: string;
+    active: boolean;
+    propertyIds: Array<keyof CommandDataInterface>;
+}
+
 export default function EditCommandModal() {
     const { selectedProcess, selectedCommand, setSelectedCommandId } = useSharedData();
+    const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
+        { id: 'params', label: 'Parameters', active: false, propertyIds: ['CMD_TYPE', 'CMD_WHERE', 'CMD_BINDS'] },
+        { id: 'io', label: 'Input & output', active: false, propertyIds: ['CMD_SRC', 'CMD_TGT'] },
+        { id: 'merging', label: 'Merging', active: false, propertyIds: ['MERGE_ON_FIELDS', 'GENERATE_MERGE_MATCHED_CLAUSE', 'GENERATE_MERGE_NON_MATCHED_CLAUSE'] },
+        { id: 'additional_fields_and_processing', label: 'Additional fields & processing', active: false, propertyIds: ['ADDITIONAL_FIELDS', 'TEMP_TABLE', 'CMD_PIVOT_BY', 'CMD_PIVOT_FIELD'] },
+        { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL', 'ACTIVE'] }
+    ])
+
+    const tableInstance = generateTableData({
+        commandData: selectedCommand ?? {} as CommandDataInterface,
+        filterCategories
+    });
+
+    function handleCategoryClick(selectedCategoryId: string) {
+        setFilterCategories(filterCategories.map((iteratedCategory) => 
+            iteratedCategory.id === selectedCategoryId ? 
+                { ...iteratedCategory, active: !iteratedCategory.active } 
+                : { ...iteratedCategory, active: false }
+        ));
+    }
 
     return(
         <Modal
@@ -36,24 +73,37 @@ export default function EditCommandModal() {
                     </div>
                     <div className={styles.configContainer}>
                         <div className={styles.verticalBar} />
-                        <div className={styles.configFields}>
-                            <FieldPair label='Type' value={selectedCommand?.CMD_TYPE} />
-                            <FieldPair label='Source' value={selectedCommand?.CMD_SRC} />
-                            <FieldPair label='Target' value={selectedCommand?.CMD_TGT} />
-                            <FieldPair label='Where' value={selectedCommand?.CMD_WHERE} />
-                            <FieldPair label='Binds' value={selectedCommand?.CMD_BINDS} />
-                            <FieldPair label='Refresh type' value={selectedCommand?.REFRESH_TYPE} />
-                            <FieldPair label='Business key' value={selectedCommand?.BUSINESS_KEY} />
-                            <FieldPair label='Merge on fields' value={selectedCommand?.MERGE_ON_FIELDS} />
-                            <FieldPair label='Generate merge matched clause' value={selectedCommand?.GENERATE_MERGE_MATCHED_CLAUSE} />
-                            <FieldPair label='Generate merge non matched clause' value={selectedCommand?.GENERATE_MERGE_NON_MATCHED_CLAUSE} />
-                            <FieldPair label='Additional fields' value={selectedCommand?.ADDITIONAL_FIELDS} />
-                            <FieldPair label='Temp table' value={selectedCommand?.TEMP_TABLE} />
-                            <FieldPair label='Pivot by' value={selectedCommand?.CMD_PIVOT_BY} />
-                            <FieldPair label='Pivot field' value={selectedCommand?.CMD_PIVOT_FIELD} />
-                            <FieldPair label='DQ type' value={selectedCommand?.DQ_TYPE} />
-                            <FieldPair label='External call' value={selectedCommand?.CMD_EXTERNAL_CALL} />
-                            <FieldPair label='Active' value={selectedCommand?.ACTIVE} />
+
+                        <div className={styles.configParent}>
+
+                            {/* Header */}
+                            <div className={styles.configHeader}>
+
+                                {/* Search box */}
+                                <div className={styles.searchBox}>
+                                    <Search size={15} strokeWidth={2} color={'black'} />
+                                    <input className={styles.searchInput} />
+                                </div>
+
+                                {/* Category selection */}
+                                <div className={styles.categorySelector}>
+                                { filterCategories.map((category) => (
+                                    <button 
+                                        key={category.id}
+                                        className={`${styles.categoryItem} ${category.active && styles.active}`}
+                                        onClick={() => handleCategoryClick(category.id)}
+                                    >
+                                        {category.label}
+                                    </button>
+                                ))}
+                                </div>
+                            </div>
+
+                            { /* Tables */}
+                            { filterCategories.map((category) => (
+                                <TableForCategory key={category.id} category={category} tableInstance={tableInstance} />
+                            )) }
+                            
                         </div>
                     </div>
                 </div>
@@ -64,18 +114,84 @@ export default function EditCommandModal() {
     );
 }
 
-interface FieldPairPropsInterface {
-    label: string;
-    value: any;
+type Data = object;
+
+type CategoryToKeysMap = {
+    [K in keyof CommandDataInterface]: string;
+};
+
+function TableForCategory({ category, tableInstance }: {
+    category: FilterCategoryInterface;
+    tableInstance: TableInstance<Data>;
+}) {
+    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
+    return (
+        <table>
+            {/* Table header */}
+            <thead><tr><td colSpan={100}>{category.label}</td></tr></thead>
+
+            {/* Table body */}
+            <tbody>
+            <>
+                { rows.forEach((row) => prepareRow(row) ) } {/* Must prepare all rows before rendering, since rending logic requires to filter out columns with irrelevant category, but cell value can only be access after the row has been prepared */}
+                { rows.filter((row) => row.allCells[0].value === category.id).map((row) => {
+                    return (
+                        <tr {...row.getRowProps()}>
+                            {row.cells.map((cell) => {
+                                return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                            })}
+                        </tr>
+                    );
+                })}
+            </>
+            </tbody>
+        </table>
+    )
 }
 
-function FieldPair({ label, value }: FieldPairPropsInterface) {
-    return(
-        <div className={styles.fieldPair}>
-            <div className={styles.fieldLabel}>{label}</div>
-            <div className={styles.fieldValue}>{value}</div>
-        </div>
-    );
+function generateTableData({ commandData, filterCategories }: {
+    commandData: CommandDataInterface;
+    filterCategories: FilterCategoryInterface[];
+}) {
+    const tableColumns = useMemo(() => [
+        {
+            Header: 'category_id',
+            accessor: 'category_id'
+        },
+        {
+            Header: 'Property Name',
+            accessor: 'property_name'
+        },
+        {
+            Header: 'Property Value',
+            accessor: 'property_value'
+        }
+    ], []);
+
+    // Create a dictionary where there's one key for each property ID, and the value is the category ID (e.g., { CMD_TYPE: 'params', CMD_WHERE: 'params', CMD_SRC: 'io' ... })
+    const categoryToKeysMap: CategoryToKeysMap = filterCategories.reduce((categoryToKeysMap, {id: categoryId, propertyIds}) => {
+        const categoryProperties = propertyIds.reduce((categoryProperties, propertyId) => ({
+            ...categoryProperties,
+            [propertyId]: categoryId
+        }), {})
+        return { ...categoryToKeysMap, ...categoryProperties };
+    }, {} as CategoryToKeysMap);
+
+    const tableData = useMemo(() => Object.entries(commandData)
+        .filter(([propertyKey]) => propertyKey in categoryToKeysMap) // Filter out properties that don't have a category (e.g., 'PROCESS_CMD_ID')
+        .map(([propertyKey, propertyValue]) => ({ // Map the property key/value pairs to the table data format
+            category_id: categoryToKeysMap[propertyKey as keyof CommandDataInterface],
+            property_name: propertyKey,
+            property_value: propertyValue
+        })), []);
+
+    const tableInstance = useTable<Data>({
+        columns: tableColumns,
+        data: tableData,
+        initialState: { hiddenColumns: ['category_id'] }
+    }, useFilters);
+
+    return tableInstance;
 }
 
 function FloatingEditButton() {
