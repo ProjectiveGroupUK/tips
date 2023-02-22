@@ -52,7 +52,6 @@ export default function EditCommandModal() {
                             <FieldPair label='Pivot by' value={selectedCommand?.CMD_PIVOT_BY} />
                             <FieldPair label='Pivot field' value={selectedCommand?.CMD_PIVOT_FIELD} />
                             <FieldPair label='DQ type' value={selectedCommand?.DQ_TYPE} />
-                            <FieldPair label='DQ type' value={selectedCommand?.DQ_TYPE} />
                             <FieldPair label='External call' value={selectedCommand?.CMD_EXTERNAL_CALL} />
                             <FieldPair label='Active' value={selectedCommand?.ACTIVE} />
                         </div>
