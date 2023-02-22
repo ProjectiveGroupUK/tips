@@ -115,38 +115,3 @@
     background-color: #fff1df;
     border-color: #f3c589;
 }
-
-/*.configContainer > .configFields {
-    padding: 0.4rem 0;
-    display: flex;
-    flex-direction: column;
-    row-gap: 1rem;
-    width: 100%;
-}
-
-.configContainer > .configFields > .fieldPair {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--primary);
-    border-radius: 0.25rem;
-    overflow: hidden;
-}
-
-.configContainer > .configFields > .fieldPair > .fieldLabel {
-    font-weight: 500;
-    background-color: #3D5A73;
-    color: var(--dirty-white);
-    padding: 0.4rem;
-    font-size: 0.8rem;
-}
-
-.configContainer > .configFields > .fieldPair > .fieldValue {
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: var(--primary);
-    padding: 0.4rem;
-}
-
-.configContainer > .configFields > .fieldPair > .fieldLabel::after {
-    content: ':';
-}*/
