@@ -56,7 +56,6 @@ export default function ProcessTable() {
                     const isSelected = row.id === selectedProcess?.id.toString();
                     const expandedRowExistsAbove = rows.some((row, i) => i < index && row.isExpanded); // Used for styling purposes to determine colour of row (since :even and :odd selectors don't work with expanded rows the way I need them to)
                     const dynamicIndexIsEven = (index - (Number(expandedRowExistsAbove) * 2)) % 2 === 0;
-                    console.log(`dynamicIndexIsEven ${index}: ${dynamicIndexIsEven}`);
                     
                     return (
                         <Fragment key={row.id}>
