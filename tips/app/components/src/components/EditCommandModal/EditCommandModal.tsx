@@ -233,9 +233,8 @@ function generateTableData({ commandData, filterCategories }: {
     return tableInstance;
 
     function renderCell(cell: any) {
-        const isEmptyString = cell.value === '';
-        return isEmptyString ?
-            <span className={styles.emptyCell}>EMPTY</span> // If empty string, return 'EMPTY'
-            : cell.value ?? <span className={styles.emptyCell}>NULL</span>; // Return cell value, or if undefined, return 'NULL'
+        if(!cell.value) return <div className={styles.emptyCell}>NULL</div>; // If undefined, return 'NULL'
+        if(cell.value === '') return <div className={styles.emptyCell}>EMPTY</div>; // If empty string, return 'EMPTY'
+        return <div>{cell.value}</div>;
     }
 }

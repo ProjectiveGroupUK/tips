@@ -113,10 +113,6 @@
     border-color: #f3c589;
 }
 
-.configParent table {
-    width: fit-content;
-}
-
 .configParent table .categoryLabel > div {
     font-size: 1.3rem;
     font-weight: 500;
@@ -148,17 +144,24 @@
     vertical-align: middle;
 }
 
-.configParent table tr > :not(.categoryLabel):nth-child(1)::after {
+.configParent table tr > :not(.categoryLabel):nth-child(1) > div::after {
     content: ':';
 }
 
 .configParent table tr td .emptyCell {
     font-style: italic;
-    color: lightgray;
-    font-size: 0.85rem;
+    color: rgb(190, 190, 190);
+    font-size: 0.9rem;
 }
 
-.configParent table th, td {
-    position: relative;
-    overflow: hidden;
+.configParent table {
+    border-spacing: 0;
+}
+
+.configParent table tr:has(td:not(.categoryLabel)):nth-child(odd) {
+    background-color: #f7f7f7;
+}
+
+.configParent table tr td:not(.categoryLabel) > div {
+    padding: 0.1rem 0;
 }
