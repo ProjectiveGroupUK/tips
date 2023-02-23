@@ -82,6 +82,11 @@
     left: 0.5rem;
     margin: auto 0;
     pointer-events: none;
+    transition: stroke 150ms ease;
+}
+
+.configParent > .configHeader > .searchBox.active > svg {
+    stroke: #f1a849;
 }
 
 .configParent > .configHeader > .searchBox > .searchInput {

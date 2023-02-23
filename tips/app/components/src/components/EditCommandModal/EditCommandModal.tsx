@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 
 // React-table
 import { useTable, useFilters } from 'react-table';
-import { Row, Cell } from "react-table";
+import { Row } from "react-table";
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
@@ -103,8 +103,8 @@ export default function EditCommandModal() {
                         <div className={styles.configHeader}>
 
                             {/* Search box */}
-                            <div className={styles.searchBox}>
-                                <Search size={15} strokeWidth={2} color={'black'} />
+                            <div className={`${styles.searchBox} ${filterText.length && styles.active}`}>
+                                <Search size={15} strokeWidth={2} color='var(--primary)' />
                                 <input className={styles.searchInput} value={filterText} onChange={(e) => setFilterText(e.target.value)} />
                             </div>
 
