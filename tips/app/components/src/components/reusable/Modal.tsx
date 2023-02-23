@@ -23,6 +23,17 @@ interface ModalDisplayPropsInterface {
 const fadeDuration = 300; // Duration of fade-in/fade-out effect in milliseconds (needs to match CSS transition duration)
 
 export default function Modal({ isOpen, onFadeOutBegin, onFadeOutComplete, noPadding, children}: PropsInterface) {
+    
+    useEffect(() => { // Close modal when escape key is pressed (but ignore if an input element is currently focused)
+        function handleEscapeKey(event: KeyboardEvent) {
+            if(event.key === 'Escape') {
+                if(document.activeElement?.tagName === 'INPUT') (document.activeElement as HTMLInputElement).blur(); //  If an input element is currently focused, blur it
+                else handleCloseModal(); // If user wasn't focusing on input element, close the modal
+            }
+        }
+        window.addEventListener('keydown', handleEscapeKey);
+        return () => window.removeEventListener('keydown', handleEscapeKey);
+    }, []);
 
     const [modalDisplayProps, setModalDisplayProps] = useState<ModalDisplayPropsInterface>({
         isVisible: undefined,
