@@ -1,6 +1,9 @@
 // React
 import { useEffect, useState } from "react";
 
+// Framer motion
+import { motion } from "framer-motion";
+
 // CSS
 import styles from "@/styles/processTable/modal.module.css";
 
@@ -80,11 +83,11 @@ export default function Modal({ isOpen, onFadeOutBegin, onFadeOutComplete, noPad
             style={modalDisplayProps.modalOpacityStyle}
             onClick={handleCloseModal}
         >
-            <div className={`${styles.contentContainer} ${noPadding && styles.noPadding}`}>
+            <motion.div layout className={`${styles.contentContainer} ${noPadding && styles.noPadding}`}>
                 <div className={styles.content} onClick={(e) => e.stopPropagation()}>
                     { children }
                 </div>
-            </div>
+            </motion.div>
         </div>
     )
 }

@@ -5,6 +5,9 @@ import { useState, useMemo } from "react";
 import { useTable, useFilters } from 'react-table';
 import { TableInstance } from "react-table";
 
+// Framer motion
+import { AnimatePresence, motion } from "framer-motion";
+
 // Contexts
 import { useSharedData } from "@/components/reusable/contexts/SharedDataContext";
 
@@ -57,57 +60,61 @@ export default function EditCommandModal() {
             onFadeOutComplete={() => setSelectedCommandId(null)}
             noPadding={true}
         >
-            <>
-                <div className={styles.container}>
-                    <div className={styles.header}>
-                        <div className={styles.headerLeft}>
-                            <h1>Command {selectedCommand?.PROCESS_CMD_ID}</h1>
-                            <h2>From the {selectedProcess?.name} process</h2>
-                        </div>
-                        <div className={styles.separator} />
-                        <div className={styles.headerRight} data-active-status={selectedCommand?.ACTIVE}>
-                            {selectedCommand?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
-                        </div>
+            <div className={styles.container}>
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <h1>Command {selectedCommand?.PROCESS_CMD_ID}</h1>
+                        <h2>From the {selectedProcess?.name} process</h2>
                     </div>
-                    <div className={styles.configContainer}>
-                        <div className={styles.verticalBar} />
-
-                        <div className={styles.configParent}>
-
-                            {/* Header */}
-                            <div className={styles.configHeader}>
-
-                                {/* Search box */}
-                                <div className={styles.searchBox}>
-                                    <Search size={15} strokeWidth={2} color={'black'} />
-                                    <input className={styles.searchInput} />
-                                </div>
-
-                                {/* Category selection */}
-                                <div className={styles.categorySelector}>
-                                { filterCategories.map((category) => (
-                                    <button 
-                                        key={category.id}
-                                        className={`${styles.categoryItem} ${category.active && styles.active}`}
-                                        onClick={() => handleCategoryClick(category.id)}
-                                    >
-                                        {category.label}
-                                    </button>
-                                ))}
-                                </div>
-                            </div>
-
-                            { /* Tables */}
-                            { filterCategories.map((category) => (
-                                <TableForCategory key={category.id} category={category} tableInstance={tableInstance} />
-                            )) }
-                            
-                        </div>
+                    <div className={styles.separator} />
+                    <div className={styles.headerRight} data-active-status={selectedCommand?.ACTIVE}>
+                        {selectedCommand?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
                     </div>
                 </div>
+                <div className={styles.configContainer}>
+                    <div className={styles.verticalBar} />
 
-                <FloatingEditButtons />
-            </>
+                    <div className={styles.configParent}>
+
+                        {/* Header */}
+                        <div className={styles.configHeader}>
+
+                            {/* Search box */}
+                            <div className={styles.searchBox}>
+                                <Search size={15} strokeWidth={2} color={'black'} />
+                                <input className={styles.searchInput} />
+                            </div>
+
+                            {/* Category selection */}
+                            <div className={styles.categorySelector}>
+                            { filterCategories.map((category) => (
+                                <button 
+                                    key={category.id}
+                                    className={`${styles.categoryItem} ${category.active && styles.active}`}
+                                    onClick={() => handleCategoryClick(category.id)}
+                                >
+                                    {category.label}
+                                </button>
+                            ))}
+                            </div>
+                        </div>
+
+                        { /* Tables */}
+                        <AnimatePresence mode='popLayout'>
+                            { filterCategories.some((category) => category.active) ? ( // A filtering category has been selected - show only the relevant table
+                                <TableForCategory key={filterCategories.find((category) => category.active)!.id} category={filterCategories.find((category) => category.active)!} tableInstance={tableInstance} />
+                            ) : ( // No filtering category has been selected - show all tables
+                                filterCategories.map((category) => (
+                                    <TableForCategory key={category.id} category={category} tableInstance={tableInstance} />
+                                ))
+                            )}
+                        </AnimatePresence>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <FloatingEditButtons />
         </Modal>
     );
 }
@@ -124,7 +131,12 @@ function TableForCategory({ category, tableInstance }: {
 }) {
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
     return (
-        <table>
+        <motion.table
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+        >
             {/* Table header */}
             <thead><tr><td colSpan={100}>{category.label}</td></tr></thead>
 
@@ -143,7 +155,7 @@ function TableForCategory({ category, tableInstance }: {
                 })}
             </>
             </tbody>
-        </table>
+        </motion.table>
     )
 }
 
