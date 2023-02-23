@@ -233,7 +233,7 @@ function generateTableData({ commandData, filterCategories }: {
     return tableInstance;
 
     function renderCell(cell: any) {
-        if(!cell.value) return <div className={styles.emptyCell}>NULL</div>; // If undefined, return 'NULL'
+        if(cell.value == undefined) return <div className={styles.emptyCell}>NULL</div>; // If undefined, return 'NULL'
         if(cell.value === '') return <div className={styles.emptyCell}>EMPTY</div>; // If empty string, return 'EMPTY'
         return <div>{cell.value}</div>;
     }
