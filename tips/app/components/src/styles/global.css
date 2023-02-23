@@ -31,3 +31,7 @@ button, input[type="submit"], input[type="reset"] { /* Remove default styling fo
     --fail-red: #b40000;
     --fail-red-light: #ff4949;
 }
+
+html, body, #root { /* Make background transparent so that Modal element rendered by Streamlit within an iframe can be see-through */
+    background-color: transparent !important;
+}
