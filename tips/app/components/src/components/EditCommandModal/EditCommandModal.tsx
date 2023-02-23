@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 
 // React-table
 import { useTable, useFilters } from 'react-table';
-import { TableInstance } from "react-table";
+import { Row, Cell } from "react-table";
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
@@ -40,11 +40,34 @@ export default function EditCommandModal() {
         { id: 'additional_fields_and_processing', label: 'Additional fields & processing', active: false, propertyIds: ['ADDITIONAL_FIELDS', 'TEMP_TABLE', 'CMD_PIVOT_BY', 'CMD_PIVOT_FIELD'] },
         { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL', 'ACTIVE'] }
     ])
+    const [filterText, setFilterText] = useState('');
 
     const tableInstance = generateTableData({
         commandData: selectedCommand ?? {} as CommandDataInterface,
         filterCategories
     });
+
+    // Update tableInstance to correspond to filterCategories and filterText
+    const filteredRows = useMemo(() => {
+        return tableInstance.rows.filter((row) => {
+            tableInstance.prepareRow(row);
+            return (
+                satisfiesCategoryFilter(row as Row<CommandDataInterface>) &&
+                satisfiesTextFilter(row as Row<CommandDataInterface>)
+            );
+        });
+
+        function satisfiesCategoryFilter(row: Row<CommandDataInterface>) {
+            const activeFilterCategory = filterCategories.find((iteratedCategory) => iteratedCategory.active);
+            return activeFilterCategory ? row.allCells[0].value === activeFilterCategory.id : true;
+        }
+
+        function satisfiesTextFilter(row: Row<CommandDataInterface>) {
+            const propertyName = row.allCells[1].value as keyof CommandDataInterface;
+            const propertyValue = row.allCells[2].value as string | null;
+            return propertyName.toLowerCase().includes(filterText.toLowerCase()) || propertyValue?.toLowerCase().includes(filterText.toLowerCase());
+        }
+    }, [filterCategories, filterText, tableInstance.rows]) as Row<CommandDataInterface>[];
 
     function handleCategoryClick(selectedCategoryId: string) {
         setFilterCategories(filterCategories.map((iteratedCategory) => 
@@ -82,7 +105,7 @@ export default function EditCommandModal() {
                             {/* Search box */}
                             <div className={styles.searchBox}>
                                 <Search size={15} strokeWidth={2} color={'black'} />
-                                <input className={styles.searchInput} />
+                                <input className={styles.searchInput} value={filterText} onChange={(e) => setFilterText(e.target.value)} />
                             </div>
 
                             {/* Category selection */}
@@ -100,15 +123,10 @@ export default function EditCommandModal() {
                         </div>
 
                         { /* Tables */}
-                        <AnimatePresence mode='popLayout'>
-                            { filterCategories.some((category) => category.active) ? ( // A filtering category has been selected - show only the relevant table
-                                <TableForCategory key={filterCategories.find((category) => category.active)!.id} category={filterCategories.find((category) => category.active)!} tableInstance={tableInstance} />
-                            ) : ( // No filtering category has been selected - show all tables
-                                filterCategories.map((category) => (
-                                    <TableForCategory key={category.id} category={category} tableInstance={tableInstance} />
-                                ))
-                            )}
-                        </AnimatePresence>
+                        <TableForCategory 
+                            filteredRows={filteredRows} 
+                            filterCategories={filterCategories}
+                        />
                         
                     </div>
                 </div>
@@ -125,11 +143,10 @@ type CategoryToKeysMap = {
     [K in keyof CommandDataInterface]: string;
 };
 
-function TableForCategory({ category, tableInstance }: {
-    category: FilterCategoryInterface;
-    tableInstance: TableInstance<Data>;
+function TableForCategory({ filteredRows: rows, filterCategories }: {
+    filteredRows: Row<CommandDataInterface>[];
+    filterCategories: FilterCategoryInterface[];
 }) {
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
     return (
         <motion.table
             layout
@@ -137,24 +154,34 @@ function TableForCategory({ category, tableInstance }: {
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
         >
-            {/* Table header */}
-            <thead><tr><td colSpan={100}>{category.label}</td></tr></thead>
+            <AnimatePresence>
+                { filterCategories.map((category) => {
+                    const filteredRowsForCategory = rows.filter((row) => row.allCells[0].value === category.id);
+                    return filteredRowsForCategory.length > 0 ? ( // Only render the category if there are rows within it
+                        <motion.tbody
+                            key={category.id}
+                            layout
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }}
+                        >
 
-            {/* Table body */}
-            <tbody>
-            <>
-                { rows.forEach((row) => prepareRow(row) ) } {/* Must prepare all rows before rendering, since rending logic requires to filter out columns with irrelevant category, but cell value can only be access after the row has been prepared */}
-                { rows.filter((row) => row.allCells[0].value === category.id).map((row) => {
-                    return (
-                        <tr {...row.getRowProps()}>
-                            {row.cells.map((cell) => {
-                                return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-                            })}
-                        </tr>
-                    );
+                            {/* Category header */}
+                            <tr><td colSpan={100} className={styles.categoryLabel}><div>{category.label}</div></td></tr>
+
+                            {/* Data rows for category */}
+                            { filteredRowsForCategory.map((row) => (
+                                <tr {...row.getRowProps()}>
+                                    { row.cells.map((cell) => {
+                                        return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                                    })}
+                                </tr>
+                            ))}
+                        </motion.tbody>
+                    )
+                    : null; // Don't return the category at all if there are no rows within it
                 })}
-            </>
-            </tbody>
+            </AnimatePresence>
         </motion.table>
     )
 }
@@ -166,15 +193,17 @@ function generateTableData({ commandData, filterCategories }: {
     const tableColumns = useMemo(() => [
         {
             Header: 'category_id',
-            accessor: 'category_id'
+            accessor: 'category_id',
         },
         {
             Header: 'Property Name',
-            accessor: 'property_name'
+            accessor: 'property_name',
+            Cell: renderCell
         },
         {
             Header: 'Property Value',
-            accessor: 'property_value'
+            accessor: 'property_value',
+            Cell: renderCell
         }
     ], []);
 
@@ -202,4 +231,11 @@ function generateTableData({ commandData, filterCategories }: {
     }, useFilters);
 
     return tableInstance;
+
+    function renderCell(cell: any) {
+        const isEmptyString = cell.value === '';
+        return isEmptyString ?
+            <span className={styles.emptyCell}>EMPTY</span> // If empty string, return 'EMPTY'
+            : cell.value ?? <span className={styles.emptyCell}>NULL</span>; // Return cell value, or if undefined, return 'NULL'
+    }
 }

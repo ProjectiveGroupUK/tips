@@ -117,18 +117,23 @@
     width: fit-content;
 }
 
-.configParent table thead td {
+.configParent table .categoryLabel > div {
     font-size: 1.3rem;
     font-weight: 500;
     position: relative;
     padding-bottom: 0.5rem;
 }
 
-.configParent table thead td::after {
+.configParent table tbody:not(:first-child) .categoryLabel > div {
+    margin-top: 1.5rem;
+}
+
+.configParent table .categoryLabel > div::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
+    width: 100%;
     height: 1px;
     margin-bottom: 0.3rem;
     background-color: var(--primary);
@@ -139,6 +144,21 @@
     padding-right: 1rem;
 }
 
-.configParent table tbody td:first-child:after {
+.configParent table tr > :not(.categoryLabel) {
+    vertical-align: middle;
+}
+
+.configParent table tr > :not(.categoryLabel):nth-child(1)::after {
     content: ':';
+}
+
+.configParent table tr td .emptyCell {
+    font-style: italic;
+    color: lightgray;
+    font-size: 0.85rem;
+}
+
+.configParent table th, td {
+    position: relative;
+    overflow: hidden;
 }
