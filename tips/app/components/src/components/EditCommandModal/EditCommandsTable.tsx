@@ -1,5 +1,6 @@
 // React
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { ChangeEvent } from 'react';
 
 // React-table
 import { useTable, useFilters } from 'react-table';
@@ -18,26 +19,37 @@ import { FilterCategoryInterface } from './EditCommandModal';
 // CSS
 import styles from '@/styles/processTable/editCommandsTable.module.css';
 
+interface PropsInterface {
+    filterCategories: FilterCategoryInterface[];
+    filterText: string;
+    isEditing: boolean;
+}
+
 type Data = object;
 
 type CategoryToKeysMap = {
-    [K in keyof CommandDataInterface]: string;
+    [K in keyof CommandDataInterface]: FilterCategoryInterface['id'];
 };
 
-export default function EditCommandsTable({ filterCategories, filterText }: {
-    filterCategories: FilterCategoryInterface[];
-    filterText: string;
-}) {
+type EditCommandPropertyArgs = {
+    event: ChangeEvent<HTMLInputElement>;
+    propertyName: keyof CommandDataInterface;
+    propertyValue: CommandDataInterface[keyof CommandDataInterface];
+}
+
+export default function EditCommandsTable({ filterCategories, filterText, isEditing }: PropsInterface) {
 
     const { selectedCommand } = useSharedData();
+    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(selectedCommand!);
 
     const tableInstance = generateTableData({
-        commandData: selectedCommand ?? {} as CommandDataInterface,
-        filterCategories
+        commandData: isEditing ? editedCommandValues : selectedCommand!,
+        filterCategories,
+        isEditing,
+        editCommandProperty
     });
 
-    // Update tableInstance to correspond to filterCategories and filterText
-    const filteredRows = useMemo(() => {
+    const filteredRows = useMemo(() => { // Filter available rows based on filter categories and text
         return tableInstance.rows.filter((row) => {
             tableInstance.prepareRow(row);
             return (
@@ -57,6 +69,14 @@ export default function EditCommandsTable({ filterCategories, filterText }: {
             return propertyName.toLowerCase().includes(filterText.toLowerCase()) || propertyValue?.toLowerCase().includes(filterText.toLowerCase());
         }
     }, [filterCategories, filterText, tableInstance.rows]) as Row<CommandDataInterface>[];
+
+    function editCommandProperty({ propertyName, propertyValue }: EditCommandPropertyArgs) { // Function that updates the editedCommandValues state variable with new value for the specified property
+        setEditedCommandValues((prevState) => ({
+            ...prevState,
+            [propertyName]: propertyValue
+            }
+        ));
+    }
 
     return (
         <motion.table
@@ -98,9 +118,11 @@ export default function EditCommandsTable({ filterCategories, filterText }: {
     )
 }
 
-function generateTableData({ commandData, filterCategories }: {
+function generateTableData({ commandData, filterCategories, isEditing, editCommandProperty }: {
     commandData: CommandDataInterface;
     filterCategories: FilterCategoryInterface[];
+    isEditing: boolean;
+    editCommandProperty: (args: EditCommandPropertyArgs) => void;
 }) {
     const tableColumns = useMemo(() => [
         {
@@ -110,14 +132,14 @@ function generateTableData({ commandData, filterCategories }: {
         {
             Header: 'Property Name',
             accessor: 'property_name',
-            Cell: renderCell
+            Cell: (cell: Cell) => renderCell(cell, isEditing)
         },
         {
             Header: 'Property Value',
             accessor: 'property_value',
-            Cell: renderCell
+            Cell: (cell: Cell) => renderCell(cell, isEditing)
         }
-    ], []);
+    ], [commandData, isEditing]);
 
     // Create a dictionary where there's one key for each property ID, and the value is the category ID (e.g., { CMD_TYPE: 'params', CMD_WHERE: 'params', CMD_SRC: 'io' ... })
     const categoryToKeysMap: CategoryToKeysMap = filterCategories.reduce((categoryToKeysMap, {id: categoryId, propertyIds}) => {
@@ -134,7 +156,7 @@ function generateTableData({ commandData, filterCategories }: {
             category_id: categoryToKeysMap[propertyKey as keyof CommandDataInterface],
             property_name: propertyKey,
             property_value: propertyValue
-        })), []);
+        })), [commandData]);
 
     const tableInstance = useTable<Data>({
         columns: (tableColumns as Column<Object>[]),
@@ -144,10 +166,28 @@ function generateTableData({ commandData, filterCategories }: {
 
     return tableInstance;
 
-    function renderCell(cell: Cell) {
+    function renderCell(cell: Cell, isEditing: boolean) {
+        const columnId = cell.column.id as 'property_name' | 'property_value';
+        switch(columnId) {
+            case 'property_name':
+                return <div>{cell.value}</div>
 
-        if(cell.value == undefined) return <div className={styles.emptyCell}>NULL</div>; // If undefined, return 'NULL'
-        if(cell.value === '') return <div className={styles.emptyCell}>EMPTY</div>; // If empty string, return 'EMPTY'
-        return <div>{cell.value}</div>;
+            case 'property_value':
+                return (
+                    <input
+                        value={cell.value ?? ''}
+                        onChange={(event) => (
+                            editCommandProperty({ 
+                                event,
+                                propertyName: (cell.row.original as {property_name: string}).property_name as keyof CommandDataInterface, 
+                                propertyValue: event.target.value
+                            })
+                        )}
+                        placeholder='NULL'
+                        className={!cell.value ? styles.emptyCell : ''}
+                        disabled={!isEditing} 
+                    />
+                );
+        }
     }
 }

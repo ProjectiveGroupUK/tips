@@ -1,5 +1,6 @@
 // React
 import { useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
@@ -7,21 +8,24 @@ import { AnimatePresence, motion } from "framer-motion";
 // CSS
 import styles from "@/styles/editCommandModal/floatingEditButtons.module.css";
 
-export default function FloatingEditButton() {
-    const [editing, setEditing] = useState(false);
+interface PropsInterface {
+    isEditing: boolean;
+    setIsEditing: Dispatch<SetStateAction<boolean>>;
+}
 
+export default function FloatingEditButton({ isEditing, setIsEditing }: PropsInterface) {
     return(
         <div className={styles.editButtonContainer}>
 
             <motion.button
                 layout
-                className={ editing ? styles.button_cancel : styles.button_edit}
-                onClick={() => setEditing((prev) => !prev)}
+                className={ isEditing ? styles.button_cancel : styles.button_edit}
+                onClick={() => setIsEditing((prev) => !prev)}
             >
-                { editing ? 'Cancel' : 'Edit' }
+                { isEditing ? 'Cancel' : 'Edit' }
             </motion.button>
             <AnimatePresence mode='popLayout'>
-                { editing && (
+                { isEditing && (
                     <motion.button
                         layout
                         className={styles.button_save}

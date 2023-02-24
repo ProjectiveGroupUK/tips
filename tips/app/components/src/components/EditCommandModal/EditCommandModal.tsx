@@ -36,6 +36,7 @@ export default function EditCommandModal() {
         { id: 'additional_fields_and_processing', label: 'Additional fields & processing', active: false, propertyIds: ['ADDITIONAL_FIELDS', 'TEMP_TABLE', 'CMD_PIVOT_BY', 'CMD_PIVOT_FIELD'] },
         { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL', 'ACTIVE'] }
     ])
+    const [isEditing, setIsEditing] = useState(false);
 
     function handleCategoryClick(selectedCategoryId: string) {
         setFilterCategories(filterCategories.map((iteratedCategory) => 
@@ -94,13 +95,17 @@ export default function EditCommandModal() {
                         <EditCommandsTable
                             filterText={filterText}
                             filterCategories={filterCategories}
+                            isEditing={isEditing}
                         />
                         
                     </div>
                 </div>
             </div>
 
-            <FloatingEditButtons />
+            <FloatingEditButtons
+                isEditing={isEditing}
+                setIsEditing={setIsEditing}
+            />
         </Modal>
     );
 }
