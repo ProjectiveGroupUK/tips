@@ -25,6 +25,10 @@
     border-radius: 100rem;
 }
 
+.table tr > :not(.categoryLabel):nth-child(1) { /* Add horizontal space between columns */
+    padding-right: 1rem;
+}
+
 .table tr > :not(.categoryLabel):nth-child(1) > div::after { /* Add colon after every displayed property name (e.g., 'CMD_SRC:') */
     content: ':';
 }
