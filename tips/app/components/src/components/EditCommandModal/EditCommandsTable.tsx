@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 // React-table
 import { useTable, useFilters } from 'react-table';
-import { Row } from 'react-table';
+import { Row, Column, Cell } from 'react-table';
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
@@ -137,14 +137,15 @@ function generateTableData({ commandData, filterCategories }: {
         })), []);
 
     const tableInstance = useTable<Data>({
-        columns: tableColumns,
+        columns: (tableColumns as Column<Object>[]),
         data: tableData,
         initialState: { hiddenColumns: ['category_id'] }
     }, useFilters);
 
     return tableInstance;
 
-    function renderCell(cell: any) {
+    function renderCell(cell: Cell) {
+
         if(cell.value == undefined) return <div className={styles.emptyCell}>NULL</div>; // If undefined, return 'NULL'
         if(cell.value === '') return <div className={styles.emptyCell}>EMPTY</div>; // If empty string, return 'EMPTY'
         return <div>{cell.value}</div>;
