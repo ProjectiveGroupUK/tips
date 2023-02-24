@@ -24,12 +24,8 @@ interface PropsInterface {
 type Data = object;
 
 export default function ProcessCommandsTable() {
-    const { selectedProcess, setSelectedCommandId, selectedCommand, setShowProcessCommandModal } = useSharedData();
+    const { selectedProcess, setSelectedCommandId } = useSharedData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
-
-    useEffect(() => {
-        setShowProcessCommandModal(Boolean(selectedCommand));
-    }, [selectedCommand]);
 
     return (
         <table {...getTableProps()} className={styles.table}>

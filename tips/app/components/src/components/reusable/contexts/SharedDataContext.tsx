@@ -10,12 +10,12 @@ import { CommandDataInterface, ProcessDataInterface } from '@/interfaces/Interfa
 // Mock data
 import mockDataSet from '@/mockData/mockProcessData';
 
-const useMockData = true;
+const useMockData = false;
 
 const SharedDataContext = createContext<SharedDataContextInterface>(undefined!);
 
 interface PropsInterface {
-    instructions?: {
+    instructions?: { // Instructions sent from Python to be performed by react component
         resetSelectedCommand?: boolean;
     }
     processData?: ProcessDataInterface;
@@ -32,10 +32,6 @@ interface SharedDataContextInterface {
     setSelectedProcessId: React.Dispatch<React.SetStateAction<number | null>>;
     selectedCommand: CommandDataInterface | null;
     setSelectedCommandId: React.Dispatch<React.SetStateAction<number | null>>;
-
-    // Modal appearance data
-    showProcessCommandModal: boolean;
-    setShowProcessCommandModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function useSharedData() {
@@ -62,9 +58,6 @@ export default function SharedDataContextProvider({ processData: receivedProcess
 
     const [selectedCommandId, setSelectedCommandId] = useState<number | null>(receivedSelectedCommandId ?? null);
     const [selectedCommand, setSelectedCommand] = useState<CommandDataInterface | null>(null);
-
-    // Set up modal appearance variables
-    const [showProcessCommandModal, setShowProcessCommandModal] = useState<boolean>(undefined!);
 
 
     // Configure hooks to ensure that the selected process and command are always up to date
@@ -98,15 +91,11 @@ export default function SharedDataContextProvider({ processData: receivedProcess
         setSelectedProcessId,
         selectedCommand,
         setSelectedCommandId,
-
-        // Modal appearance data
-        showProcessCommandModal,
-        setShowProcessCommandModal
     };
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [selectedProcess, selectedCommand, showProcessCommandModal]);
+    }, [selectedProcess, selectedCommand]);
 
     return (
         <SharedDataContext.Provider value={value}>
