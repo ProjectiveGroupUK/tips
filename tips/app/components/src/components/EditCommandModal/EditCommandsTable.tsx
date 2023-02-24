@@ -1,6 +1,5 @@
 // React
-import { useMemo, useState } from 'react';
-import { ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 // React-table
 import { useTable, useFilters } from 'react-table';
@@ -32,7 +31,6 @@ type CategoryToKeysMap = {
 };
 
 type EditCommandPropertyArgs = {
-    event: ChangeEvent<HTMLInputElement>;
     propertyName: keyof CommandDataInterface;
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
@@ -118,12 +116,22 @@ export default function EditCommandsTable({ filterCategories, filterText, isEdit
     )
 }
 
+type InputRefs = {
+    [K in keyof CommandDataInterface]: {
+        ref?: HTMLInputElement | null;
+        isActive?: boolean;
+        caretPosition?: number | null;
+    };
+}
+
 function generateTableData({ commandData, filterCategories, isEditing, editCommandProperty }: {
     commandData: CommandDataInterface;
     filterCategories: FilterCategoryInterface[];
     isEditing: boolean;
     editCommandProperty: (args: EditCommandPropertyArgs) => void;
 }) {
+    const inputRefs = useRef({} as InputRefs);
+
     const tableColumns = useMemo(() => [
         {
             Header: 'category_id',
@@ -163,11 +171,16 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
         data: tableData,
         initialState: { hiddenColumns: ['category_id'] }
     }, useFilters);
+    
+    useEffect(() => { // Re-focus input element if change in command data resulted in lost focus despite user still intending to edit
+        returnFocusToActiveInput();
+    }, [commandData])
 
     return tableInstance;
 
     function renderCell(cell: Cell, isEditing: boolean) {
         const columnId = cell.column.id as 'property_name' | 'property_value';
+        const propertyName = (cell.row.original as {property_name: string}).property_name as keyof CommandDataInterface
         switch(columnId) {
             case 'property_name':
                 return <div>{cell.value}</div>
@@ -175,19 +188,62 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
             case 'property_value':
                 return (
                     <input
+                        key={propertyName}
+                        ref={(ref) => captureRef(ref, propertyName)}
                         value={cell.value ?? ''}
-                        onChange={(event) => (
-                            editCommandProperty({ 
-                                event,
-                                propertyName: (cell.row.original as {property_name: string}).property_name as keyof CommandDataInterface, 
-                                propertyValue: event.target.value
-                            })
-                        )}
+                        onChange={(event) => handleInputChange(event, propertyName)}
+                        onBlur={() => handleBlur(propertyName)}
                         placeholder='NULL'
                         className={!cell.value ? styles.emptyCell : ''}
                         disabled={!isEditing} 
                     />
                 );
+        }
+    }
+
+    function handleInputChange(event: React.ChangeEvent<HTMLInputElement>, propertyName: keyof CommandDataInterface) { // Update inputRefs state variable to reflect latest input value and caret position, and update editedCommandValues state variable with new value for the specified property
+
+        // Set isActive attribute within inputRefs state variable to true since input is focused
+        inputRefs.current[propertyName] = {
+            ...inputRefs.current[propertyName],
+            isActive: true
+        };
+
+        // Update caret position within inputRefs state variable
+        inputRefs.current[propertyName] = {
+            ...inputRefs.current[propertyName],
+            caretPosition: event.target.selectionStart!
+        };
+
+        // Update the editedCommandValues state variable with the new value for the specified property
+        editCommandProperty({ 
+            propertyName, 
+            propertyValue: event.target.value
+        })
+    }
+
+    function handleBlur(propertyName: keyof CommandDataInterface) { // Update isActive attribute within inputRefs state variable to false when an input loses focus
+        inputRefs.current[propertyName] = {
+            ...inputRefs.current[propertyName],
+            isActive: false
+        };
+    }
+
+    function captureRef(ref: HTMLInputElement | null, propertyName: keyof CommandDataInterface) { // Assign the input element's ref to the inputRefs state variable for the specified property
+        inputRefs.current[propertyName] = {
+            ...inputRefs.current[propertyName],
+            ref
+        };
+    }
+
+    function returnFocusToActiveInput() { // Return focus to the input element that was active prior to unintentionally losing focus (due to re-render cause by change in commandData)
+        const activeInputRef = Object.entries(inputRefs.current).find(([, { isActive }]) => isActive);
+        if(activeInputRef) {
+            const [, { ref, caretPosition }] = activeInputRef;
+            if(ref) {
+                ref.focus(); // Focus input element
+                if(caretPosition) ref.setSelectionRange(caretPosition, caretPosition); // Put caret back to where it was prior to losing focus
+            }
         }
     }
 }
