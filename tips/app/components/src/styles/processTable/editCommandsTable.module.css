@@ -1,0 +1,48 @@
+.table {
+    border-spacing: 0;
+}
+
+.table .categoryLabel > div {
+    font-size: 1.3rem;
+    font-weight: 500;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.table tbody:not(:first-child) .categoryLabel > div {
+    margin-top: 1.5rem;
+}
+
+.table .categoryLabel > div::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    margin-bottom: 0.3rem;
+    background-color: var(--primary);
+    border-radius: 100rem;
+}
+
+.table tbody td:first-child {
+    padding-right: 1rem;
+}
+
+.table tr > :not(.categoryLabel):nth-child(1) > div::after {
+    content: ':';
+}
+
+.table tr:has(td:not(.categoryLabel)):nth-child(odd) {
+    background-color: #f7f7f7;
+}
+
+.table tr td .emptyCell {
+    font-style: italic;
+    color: rgb(190, 190, 190);
+    font-size: 0.9rem;
+}
+
+.table tr td:not(.categoryLabel) > div {
+    padding: 0.1rem 0;
+}
