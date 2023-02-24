@@ -2,7 +2,7 @@
     border-spacing: 0;
 }
 
-.table .categoryLabel > div {
+.table .categoryLabel > div { /* Format category label */
     font-size: 1.3rem;
     font-weight: 500;
     position: relative;
@@ -43,7 +43,14 @@
     padding: 0.1rem 0;
 }
 
-.table tr td > input {
+.table tr td > .inputContainer > div { /* Hide replica content of input container - it's only used to expand the input container so that longer text is not cut off by input label being too narrow */
+    padding: 0 0.3rem;
+    font-size: 0.9rem;
+    height: 0rem;
+    overflow: hidden;
+}
+
+.table tr td > .inputContainer > input { /* Style content within input element */
     width: 100%;
     height: 100%;
     border: none;

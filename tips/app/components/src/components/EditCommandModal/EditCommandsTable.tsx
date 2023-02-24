@@ -187,16 +187,19 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
 
             case 'property_value':
                 return (
-                    <input
-                        key={propertyName}
-                        ref={(ref) => captureRef(ref, propertyName)}
-                        value={cell.value ?? ''}
-                        onChange={(event) => handleInputChange(event, propertyName)}
-                        onBlur={() => handleBlur(propertyName)}
-                        placeholder='NULL'
-                        className={!cell.value ? styles.emptyCell : ''}
-                        disabled={!isEditing} 
-                    />
+                    <div className={styles.inputContainer}>
+                        <div>{cell.value || ''}</div>
+                        <input
+                            key={propertyName}
+                            ref={(ref) => captureRef(ref, propertyName)}
+                            value={cell.value ?? ''}
+                            onChange={(event) => handleInputChange(event, propertyName)}
+                            onBlur={() => handleBlur(propertyName)}
+                            placeholder='NULL'
+                            className={!cell.value ? styles.emptyCell : ''}
+                            disabled={!isEditing}
+                        />
+                    </div>
                 );
         }
     }
