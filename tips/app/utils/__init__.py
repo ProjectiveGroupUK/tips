@@ -28,11 +28,12 @@ def processesTable(key: str, processData: list, instructions = {}):
         instructions = instructions
     )
 
-def processComandsModal(key: str, processData: dict, selectedProcessId: int, selectedCommandId: int):
+def processCommandsModal(key: str, processData: dict, selectedProcessId: int, selectedCommandId: int, instructions: dict):
     return _getComponent(
         key = key,
         component = 'ProcessCommandsModal',
         processData = processData,
         selectedProcessId = selectedProcessId,
-        selectedCommandId = selectedCommandId
+        selectedCommandId = selectedCommandId,
+        instructions = instructions
     )

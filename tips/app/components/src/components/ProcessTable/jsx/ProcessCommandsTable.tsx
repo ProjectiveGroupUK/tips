@@ -1,5 +1,5 @@
 // React
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import ReactDOMServer from 'react-dom/server'
 
 // React-table
@@ -108,7 +108,7 @@ function generateTableData({ commands }: PropsInterface) {
         command_type: command.CMD_TYPE,
         command_source: command.CMD_SRC,
         command_target: command.CMD_TGT
-    })), []);
+    })), [commands]);
 
     const tableInstance = useTable<Data>({
         columns: tableColumns,

@@ -15,22 +15,25 @@ import { ProcessDataInterface } from '@/interfaces/Interfaces';
 import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
 
 interface PropsInterface_ProcessTable {
+  component: 'ProcessTable';
+  processData: ProcessDataInterface;
   instructions?: {
     resetSelectedCommand: boolean;
   }
-  component: 'ProcessTable';
-  processData: ProcessDataInterface;
 }
 
-interface PropsInterface_ProcessComandsModal {
+interface PropsInterface_ProcessCommandsModal {
   component: 'ProcessCommandsModal';
   processData: ProcessDataInterface;
   selectedProcessId: number;
   selectedCommandId: number;
+  instructions?: {
+    resetUpdateCommand: boolean;
+  }
 }
 
 interface ComponentPropsWithArgs extends ComponentProps {
-  args: PropsInterface_ProcessTable | PropsInterface_ProcessComandsModal;
+  args: PropsInterface_ProcessTable | PropsInterface_ProcessCommandsModal;
 }
 
 function App(props: ComponentPropsWithArgs) {
@@ -40,15 +43,15 @@ function App(props: ComponentPropsWithArgs) {
   if(component === 'ProcessTable') {
     const { instructions, processData } = props.args;
       return(
-        <SharedDataContextProvider instructions={instructions} processData={processData}>
+        <SharedDataContextProvider instructions={instructions} processData={processData} component={component}>
           <ProcessTable />
         </SharedDataContextProvider>
       );
   }
   else if(component === 'ProcessCommandsModal') {
-    const { processData, selectedProcessId, selectedCommandId } = props.args;
+    const { processData, selectedProcessId, selectedCommandId, instructions } = props.args;
       return(
-        <SharedDataContextProvider processData={processData} selectedProcessId={selectedProcessId} selectedCommandId={selectedCommandId}>
+        <SharedDataContextProvider processData={processData} selectedProcessId={selectedProcessId} selectedCommandId={selectedCommandId} instructions={instructions} component={component}>
           <EditCommandModal />
         </SharedDataContextProvider>
       );

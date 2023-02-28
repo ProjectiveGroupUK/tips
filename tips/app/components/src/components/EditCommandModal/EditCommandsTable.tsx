@@ -1,5 +1,5 @@
 // React
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 // React-table
 import { useTable, useFilters } from 'react-table';
@@ -7,9 +7,6 @@ import { Row, Column, Cell } from 'react-table';
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
-
-// Contexts
-import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
 
 // Interfaces
 import { CommandDataInterface } from "@/interfaces/Interfaces";
@@ -19,6 +16,9 @@ import { FilterCategoryInterface } from './EditCommandModal';
 import styles from '@/styles/processTable/editCommandsTable.module.css';
 
 interface PropsInterface {
+    selectedCommand: CommandDataInterface;
+    editedCommandValues: CommandDataInterface;
+    setEditedCommandValues: React.Dispatch<React.SetStateAction<CommandDataInterface>>;
     filterCategories: FilterCategoryInterface[];
     filterText: string;
     isEditing: boolean;
@@ -35,10 +35,7 @@ type EditCommandPropertyArgs = {
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
 
-export default function EditCommandsTable({ filterCategories, filterText, isEditing }: PropsInterface) {
-
-    const { selectedCommand } = useSharedData();
-    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(selectedCommand!);
+export default function EditCommandsTable({ selectedCommand, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing }: PropsInterface) {
 
     const tableInstance = generateTableData({
         commandData: isEditing ? editedCommandValues : selectedCommand!,

@@ -17,21 +17,23 @@ const SharedDataContext = createContext<SharedDataContextInterface>(undefined!);
 interface PropsInterface {
     instructions?: { // Instructions sent from Python to be performed by react component
         resetSelectedCommand?: boolean;
+        resetUpdateCommand?: boolean;
     }
     processData?: ProcessDataInterface;
     selectedProcessId?: ProcessDataInterface[0]['id'];
     selectedCommandId?: CommandDataInterface['PROCESS_CMD_ID'];
+    component: 'ProcessTable' | 'ProcessCommandsModal';
     children: React.ReactNode;
 }
 
 interface SharedDataContextInterface {
-
-    // Process data
     processData: ProcessDataInterface;
     selectedProcess: ProcessDataInterface[0] | null;
     setSelectedProcessId: React.Dispatch<React.SetStateAction<number | null>>;
     selectedCommand: CommandDataInterface | null;
     setSelectedCommandId: React.Dispatch<React.SetStateAction<number | null>>;
+    updateCommand: Partial<CommandDataInterface> | null;
+    setUpdateCommand: React.Dispatch<React.SetStateAction<Partial<CommandDataInterface> | null>>;
 }
 
 export function useSharedData() {
@@ -49,7 +51,7 @@ function getObjectWithoutFunctions(obj: Object): Object {
     }, {});
 }
 
-export default function SharedDataContextProvider({ processData: receivedProcessData, selectedProcessId: receivedSelectedProcessId, selectedCommandId: receivedSelectedCommandId, instructions, children }: PropsInterface) {
+export default function SharedDataContextProvider({ processData: receivedProcessData, selectedProcessId: receivedSelectedProcessId, selectedCommandId: receivedSelectedCommandId, instructions, component, children }: PropsInterface) {
 
     // Set up process data variables
     const [processData, setProcessData] = useState<ProcessDataInterface>(useMockData ? mockDataSet : (receivedProcessData ?? []));
@@ -59,6 +61,11 @@ export default function SharedDataContextProvider({ processData: receivedProcess
     const [selectedCommandId, setSelectedCommandId] = useState<number | null>(receivedSelectedCommandId ?? null);
     const [selectedCommand, setSelectedCommand] = useState<CommandDataInterface | null>(null);
 
+    const [updateCommand, setUpdateCommand] = useState<Partial<CommandDataInterface> | null>(null);
+
+    if(JSON.stringify(receivedProcessData) !== JSON.stringify(processData)) { // Update processData variable when prop passed down from Python updates (useEffect hook does not fire when prop updates)
+        setProcessData(receivedProcessData ?? []);
+    }
 
     // Configure hooks to ensure that the selected process and command are always up to date
     useMemo(() => { // Update selectedProcess when selectedProcessId changes
@@ -71,14 +78,15 @@ export default function SharedDataContextProvider({ processData: receivedProcess
         setSelectedCommand(dataset.find((process) => process.id === selectedProcessId)?.steps.find((command) => command.PROCESS_CMD_ID === selectedCommandId) || null);
     }, [selectedCommandId, selectedProcessId, (useMockData ? mockDataSet : processData)]);
 
-    useEffect(() => { setProcessData(useMockData ? mockDataSet : processData); }, [useMockData ? mockDataSet : processData]); // Update processData variable when prop passed down from Python updates
-
-    useEffect(() => {
+    useEffect(() => { // Interpret and act upon instructions sent from Python
         if(!instructions) return;
-        const { resetSelectedCommand } = instructions;
+        const { resetSelectedCommand, resetUpdateCommand} = instructions;
 
         // Reset selected command (would be instructed if modal component in different iFrame was closed)
         if(resetSelectedCommand) setSelectedCommandId(null);
+
+        // Reset update command (would be instructed if EditComandModal component instructed Python to perform SQL operation to update command parameters in database, and Python has confirmed acknowledging this instruction)
+        if(resetUpdateCommand) setUpdateCommand(null);
     }, [instructions])
 
 
@@ -91,11 +99,13 @@ export default function SharedDataContextProvider({ processData: receivedProcess
         setSelectedProcessId,
         selectedCommand,
         setSelectedCommandId,
+        updateCommand,
+        setUpdateCommand
     };
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [selectedProcess, selectedCommand]);
+    }, [selectedProcess, selectedCommand, updateCommand]);
 
     return (
         <SharedDataContext.Provider value={value}>

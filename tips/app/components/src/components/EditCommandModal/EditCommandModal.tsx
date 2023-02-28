@@ -26,7 +26,8 @@ export interface FilterCategoryInterface{
 }
 
 export default function EditCommandModal() {
-    const { selectedProcess, selectedCommand, setSelectedCommandId } = useSharedData();
+    const { selectedProcess, selectedCommand, setSelectedCommandId, setUpdateCommand } = useSharedData();
+    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(selectedCommand!);
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
@@ -44,6 +45,31 @@ export default function EditCommandModal() {
                 { ...iteratedCategory, active: !iteratedCategory.active } 
                 : { ...iteratedCategory, active: false }
         ));
+    }
+
+    function getEditedProperties(editedCommandValues: CommandDataInterface, selectedCommand: CommandDataInterface) {
+        const editedProperties: {
+            [propertyName in keyof CommandDataInterface]?: CommandDataInterface[propertyName]
+        } = Object.entries(editedCommandValues).reduce((accumulator, [_commandProperty, _commandValue]) => {
+            const commandProperty = _commandProperty as keyof CommandDataInterface;
+            const commandValue = _commandValue as CommandDataInterface[keyof CommandDataInterface];
+            const propertyHasChanged = commandValue !== selectedCommand[commandProperty];
+
+            if(propertyHasChanged) return { ...accumulator, [commandProperty]: commandValue };
+            return accumulator;
+        }, {});
+
+        return editedProperties;
+    }
+
+    function handleCancel() {
+        setEditedCommandValues(selectedCommand!);
+    }
+
+    function handleSave() {
+        const editedProperties = getEditedProperties(editedCommandValues, selectedCommand!);
+        if(Object.keys(editedProperties).length === 0) return; // No changes have been made to command
+        setUpdateCommand(editedProperties);
     }
 
     return(
@@ -93,6 +119,9 @@ export default function EditCommandModal() {
 
                         { /* Tables */}
                         <EditCommandsTable
+                            selectedCommand={selectedCommand!}
+                            editedCommandValues={editedCommandValues}
+                            setEditedCommandValues={setEditedCommandValues}
                             filterText={filterText}
                             filterCategories={filterCategories}
                             isEditing={isEditing}
@@ -105,6 +134,8 @@ export default function EditCommandModal() {
             <FloatingEditButtons
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
+                onCancel={handleCancel}
+                onSave={handleSave}
             />
         </Modal>
     );
