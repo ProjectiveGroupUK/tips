@@ -117,7 +117,7 @@ export default function EditCommandModal() {
                             </div>
                         </div>
 
-                        { /* Tables */}
+                        { /* Table */}
                         <EditCommandsTable
                             selectedCommand={selectedCommand!}
                             editedCommandValues={editedCommandValues}
