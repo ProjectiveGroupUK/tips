@@ -5,8 +5,14 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useTable, useFilters } from 'react-table';
 import { Row, Column, Cell } from 'react-table';
 
+// Contexts
+import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
+
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
+
+// Spinners
+import { PulseLoader } from 'react-spinners';
 
 // Interfaces
 import { CommandDataInterface } from "@/interfaces/Interfaces";
@@ -127,7 +133,14 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
     isEditing: boolean;
     editCommandProperty: (args: EditCommandPropertyArgs) => void;
 }) {
+
+    const { updateCommand } = useSharedData();
+    const updateCommandRef = useRef(updateCommand); // Must store latest value of updateCommand in a ref, otherwise it may be stale when accessed by table to determine if property is being updated
     const inputRefs = useRef({} as InputRefs);
+
+    useEffect(() => { // Update the ref to the latest value of updateCommand
+        updateCommandRef.current = updateCommand;
+      }, [updateCommand]);
 
     const tableColumns = useMemo(() => [
         {
@@ -155,13 +168,15 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
         return { ...categoryToKeysMap, ...categoryProperties };
     }, {} as CategoryToKeysMap);
 
-    const tableData = useMemo(() => Object.entries(commandData)
-        .filter(([propertyKey]) => propertyKey in categoryToKeysMap) // Filter out properties that don't have a category (e.g., 'PROCESS_CMD_ID')
-        .map(([propertyKey, propertyValue]) => ({ // Map the property key/value pairs to the table data format
-            category_id: categoryToKeysMap[propertyKey as keyof CommandDataInterface],
-            property_name: propertyKey,
-            property_value: propertyValue
-        })), [commandData]);
+    const tableData = useMemo(() => (
+        Object.entries(commandData)
+            .filter(([propertyKey]) => propertyKey in categoryToKeysMap) // Filter out properties that don't have a category (e.g., 'PROCESS_CMD_ID')
+            .map(([propertyKey, propertyValue]) => ({ // Map the property key/value pairs to the table data format
+                category_id: categoryToKeysMap[propertyKey as keyof CommandDataInterface],
+                property_name: propertyKey,
+                property_value: propertyValue
+            }))
+    ), [commandData, updateCommandRef.current]);
 
     const tableInstance = useTable<Data>({
         columns: (tableColumns as Column<Object>[]),
@@ -183,19 +198,39 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                 return <div>{cell.value}</div>
 
             case 'property_value':
+                const savingEditedValue = updateCommandRef.current?.[propertyName] !== undefined;
                 return (
-                    <div className={styles.inputContainer}>
-                        <div>{cell.value || ''}</div>
+                    <div className={`${styles.inputContainer} ${savingEditedValue && styles.savingInProgress}`}>
+
+                        {/* Invisible text element used to expand the input element to the width of the text */}
+                        <div>{cell.value || ''}</div> 
+
+                        {/* Input element */}
                         <input
                             key={propertyName}
                             ref={(ref) => captureRef(ref, propertyName)}
-                            value={cell.value ?? ''}
+                            value={(savingEditedValue ? updateCommandRef.current![propertyName] : cell.value) ?? ''}
                             onChange={(event) => handleInputChange(event, propertyName)}
                             onBlur={() => handleBlur(propertyName)}
                             placeholder='NULL'
                             className={!cell.value ? styles.emptyCell : ''}
                             disabled={!isEditing}
                         />
+
+                        {/* Spinner to indicate that the edited value is being saved (opacity is set to 0 when saving is not in progress) */}
+                        <AnimatePresence>
+                            { savingEditedValue && (
+                                <motion.div
+                                    key='savingIndicator'
+                                    className={styles.savingIndicator}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <PulseLoader size={5} color='var(--primary)' />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 );
         }

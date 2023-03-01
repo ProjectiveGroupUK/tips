@@ -47,6 +47,10 @@
     padding: 0.1rem 0;
 }
 
+.table tr td > .inputContainer {
+    position: relative;
+}
+
 .table tr td > .inputContainer > div { /* Hide replica content of input container - it's only used to expand the input container so that longer text is not cut off by input label being too narrow */
     padding: 0 0.3rem;
     font-size: 0.9rem;
@@ -62,4 +66,17 @@
     padding: 0.1rem 0;
     font-size: 0.9rem;
     background-color: transparent;
+    transition: opacity 0.3s;
+}
+
+.table tr td > .inputContainer.savingInProgress > input { /* Style content within input element */
+    opacity: 30%;
+}
+
+.table tr td .inputContainer > .savingIndicator { /* Saving indicator is hidden by default */
+    position: absolute;
+    top: 50%;
+    right: 0;
+    height: 100%;
+    transform: translate(-50%, -50%);
 }
