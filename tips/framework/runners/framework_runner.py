@@ -48,7 +48,7 @@ class FrameworkRunner:
             # Additional fields can be pipe delimited. Within pipledelimited values, individual values
             # contain expression and column alias delimited with a space
             additionalFields: List[AdditionalField] = list()
-            for fld in fwMetaData["ADDITIONAL_FIELDS"].split("|"):
+            for fld in (fwMetaData["ADDITIONAL_FIELDS"] if fwMetaData["ADDITIONAL_FIELDS"] is not None else '').split("|"):
                 splittedField = fld.strip()
                 # Now split column and alias
                 if splittedField is not None and splittedField != "":
@@ -62,7 +62,7 @@ class FrameworkRunner:
 
             # cmd_binds is held as pipe delimited value
             binds: List[str] = list()
-            cmdBinds = [x.strip() for x in fwMetaData["CMD_BINDS"].split("|")]
+            cmdBinds = [x.strip() for x in (fwMetaData["CMD_BINDS"] if fwMetaData["CMD_BINDS"] is not None else '').split("|")]
             for bind in cmdBinds:
                 if bind != "":
                     if bind not in self._bindVariables:
@@ -79,7 +79,7 @@ class FrameworkRunner:
 
             # merge_on_fields is held as pipe delimited value
             mergeOnFields = [
-                x.strip() for x in fwMetaData["MERGE_ON_FIELDS"].split("|")
+                x.strip() for x in (fwMetaData["MERGE_ON_FIELDS"] if fwMetaData["MERGE_ON_FIELDS"] is not None else '').split("|")
             ]
 
             generateMergeMatchedClause = (
@@ -94,14 +94,14 @@ class FrameworkRunner:
 
             actionMetaData = ActionMetadata(
                 fwMetaData["CMD_TYPE"],
-                fwMetaData["CMD_SRC"],
-                fwMetaData["CMD_TGT"],
-                fwMetaData["CMD_WHERE"],
+                fwMetaData["CMD_SRC"] if fwMetaData["CMD_SRC"] is not None else '',
+                fwMetaData["CMD_TGT"] if fwMetaData["CMD_TGT"] is not None else '',
+                fwMetaData["CMD_WHERE"] if fwMetaData["CMD_WHERE"] is not None else '',
                 additionalFields,
                 binds,
                 tempTable,
                 list(),
-                fwMetaData["BUSINESS_KEY"],
+                fwMetaData["BUSINESS_KEY"] if fwMetaData["BUSINESS_KEY"] is not None else '',
                 fwMetaData["REFRESH_TYPE"],
                 mergeOnFields,
                 generateMergeMatchedClause,

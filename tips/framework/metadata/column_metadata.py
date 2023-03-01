@@ -36,7 +36,7 @@ class ColumnMetadata:
 
             for val in frameworkMetaData:
                 # For all cmd_src
-                schemaName = val["CMD_SRC"].split(".", 1)[0]
+                schemaName = (val["CMD_SRC"] if val["CMD_SRC"] is not None else '').split(".", 1)[0]
                 ## Schema name start with alpha or underscore and only contains alphanumeric, underscore or dollar
                 if re.match("^[a-zA-Z_]+.", schemaName) and re.match(
                     "^[\w_$]+$", schemaName
@@ -44,7 +44,7 @@ class ColumnMetadata:
                     schemas.add(schemaName)
 
                 # For all cmd_tgt
-                schemaName = val["CMD_TGT"].split(".", 1)[0]
+                schemaName = (val["CMD_TGT"] if val["CMD_TGT"] is not None else '').split(".", 1)[0]
                 ## Schema name start with alpha or underscore and only contains alphanumeric, underscore or dollar
                 if re.match("^[a-zA-Z_]+.", schemaName) and re.match(
                     "^[\w_$]+$", schemaName

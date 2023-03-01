@@ -56,7 +56,7 @@ def _loadListOfProcesses():
         for row in results:
             processID: str = row["PROCESS_ID"]
             processName: str = row["PROCESS_NAME"]
-            processDescription: str = row["PROCESS_DESCRIPTION"]
+            processDescription: str | None = row["PROCESS_DESCRIPTION"]
             processStatus = "active" if row["PROCESS_ACTIVE"] == "Y" else "inactive"
             if processName != prevVal:
                 fetchedProcessData.append(
