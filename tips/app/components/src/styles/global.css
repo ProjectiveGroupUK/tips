@@ -21,6 +21,10 @@ button, input[type="submit"], input[type="reset"] { /* Remove default styling fo
     font-family: 'Open Sans';
 }
 
+button > label { /* Don't let click on labels within buttons stop propagation of click */
+    pointer-events: none;
+}
+
 /* Global colour variables */
 :root {
     --primary: #3D5A73;

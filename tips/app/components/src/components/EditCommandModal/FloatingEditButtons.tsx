@@ -1,8 +1,8 @@
-// React
-import { useState, useEffect } from "react";
-
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
+
+// Spinners
+import { PuffLoader } from "react-spinners";
 
 // CSS
 import styles from "@/styles/editCommandModal/floatingEditButtons.module.css";
@@ -10,49 +10,52 @@ import styles from "@/styles/editCommandModal/floatingEditButtons.module.css";
 interface PropsInterface {
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+    isSaving?: boolean;
     onCancel?: () => void;
     onSave?: () => void;
-    completionConfirmed?: boolean; // Feedback from component which informs whether the save action was resolved (regardless of success)
 }
 
-export default function FloatingEditButton({ isEditing, setIsEditing, onCancel, onSave, completionConfirmed }: PropsInterface) {
-
-    const [processing, setProcessing] = useState(false);
-
-    useEffect(() => { if(processing && completionConfirmed) setProcessing(false); }, [processing, completionConfirmed])
+export default function FloatingEditButton({ isEditing, setIsEditing, isSaving, onCancel, onSave }: PropsInterface) {
 
     function handleCancel() {
-        setIsEditing(false);
         onCancel?.();
     }
 
     function handleSave() {
-        setIsEditing(false);
-        setProcessing(true);
         onSave?.();
     }
 
     return(
-        <div className={styles.editButtonContainer}>
+        <div className={`${styles.editButtonContainer} ${isSaving && styles.savingInProgress}`}>
 
+            {/* Edit (or cancel) button */}
             <motion.button
                 layout
-                className={`${isEditing ? styles.button_cancel : styles.button_edit} ${processing && 'processing'}`}
+                className={isEditing ? styles.button_cancel : styles.button_edit}
                 onClick={isEditing ? handleCancel : () => setIsEditing(true)}
+                disabled={isSaving}
             >
                 { isEditing ? 'Cancel' : 'Edit' }
             </motion.button>
             <AnimatePresence mode='popLayout'>
-                { isEditing && (
+
+                {/* Save button */}
+                { (isEditing || isSaving) && (
                     <motion.button
+                        id="saveButton"
+                        className={styles.button_save}
                         onClick={handleSave}
                         layout
-                        className={styles.button_save}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }} 
                         exit={{ opacity: 0 }}
                     >
-                        Save
+
+                        {/* Label */}
+                        <label htmlFor="saveButton">Save</label>
+
+                        {/* Saving in progress spinner */}
+                        { isSaving && <PuffLoader size={20} color='var(--primary)' /> }
                     </motion.button>
                 )}
             </AnimatePresence>

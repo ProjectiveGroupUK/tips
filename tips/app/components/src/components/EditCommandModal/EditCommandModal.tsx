@@ -1,5 +1,5 @@
 // React
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Contexts
 import { useSharedData } from "@/components/reusable/contexts/SharedDataContext";
@@ -26,7 +26,7 @@ export interface FilterCategoryInterface{
 }
 
 export default function EditCommandModal() {
-    const { selectedProcess, selectedCommand, setSelectedCommandId, setUpdateCommand } = useSharedData();
+    const { selectedProcess, selectedCommand, setSelectedCommandId, updateCommand, setUpdateCommand } = useSharedData();
     const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(selectedCommand!);
 
     const [filterText, setFilterText] = useState('');
@@ -38,6 +38,10 @@ export default function EditCommandModal() {
         { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL', 'ACTIVE'] }
     ])
     const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => { // When updateCommand instruction gets cleared by Python (i.e., SQL command execution has finished), set isEditing to false
+        if(!updateCommand && isEditing) setIsEditing(false);
+    }, [updateCommand]);
 
     function handleCategoryClick(selectedCategoryId: string) {
         setFilterCategories(filterCategories.map((iteratedCategory) => 
@@ -64,11 +68,15 @@ export default function EditCommandModal() {
 
     function handleCancel() {
         setEditedCommandValues(selectedCommand!);
+        setIsEditing(false);
     }
 
     function handleSave() {
         const editedProperties = getEditedProperties(editedCommandValues, selectedCommand!);
-        if(Object.keys(editedProperties).length === 0) return; // No changes have been made to command
+        if(Object.keys(editedProperties).length === 0) { // No changes have been made to command
+            setIsEditing(false);
+            return;
+        }
         setUpdateCommand(editedProperties);
     }
 
@@ -134,6 +142,7 @@ export default function EditCommandModal() {
             <FloatingEditButtons
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
+                isSaving={updateCommand !== null}
                 onCancel={handleCancel}
                 onSave={handleSave}
             />
