@@ -102,14 +102,14 @@ class SQLRunner(Runner):
 
             except Exception as err:
                 sqlJson["status"] = "ERROR"
-                sqlJson["error_message"] = f'{err}'
+                sqlJson["error_message"] = err.replace("'","")
                 sqlJson["cmd_status"]["STATUS"] = "ERROR"
                 frameworkRunner.returnJson["steps"][-1]["commands"].append(sqlJson)                
                 ##Also propogate higher in the heirarchy
                 # frameworkRunner.returnJson["steps"][-1]["status"] = "ERROR"
                 # frameworkRunner.returnJson["steps"][-1]["error_message"] = f'{err}'
                 frameworkRunner.returnJson["status"] = "ERROR"
-                frameworkRunner.returnJson["error_message"] = f'{err}'
+                frameworkRunner.returnJson["error_message"] = err.replace("'","")
                 return 1
 
         frameworkRunner.returnJson["steps"][-1]["commands"].append(sqlJson)

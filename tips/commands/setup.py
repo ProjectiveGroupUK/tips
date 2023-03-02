@@ -234,8 +234,9 @@ COMMENT = 'This Schema holds Metadata for TIPS (Transformation In Plain SQL) too
 
         sqlCommand = """CREATE TABLE IF NOT EXISTS TIPS_MD_SCHEMA.PROCESS (
     PROCESS_ID      NUMBER(38,0) IDENTITY NOT NULL,
-    PROCESS_CODE    VARCHAR(100) NOT NULL,
-    DESCRIPTION     VARCHAR
+    PROCESS_NAME    VARCHAR(100) NOT NULL,
+    PROCESS_DESCRIPTION     VARCHAR,
+    ACTIVE       VARCHAR(1) DEFAULT 'Y'
 );"""
         results = db.executeSQL(sqlCommand=sqlCommand)
 
@@ -243,22 +244,36 @@ COMMENT = 'This Schema holds Metadata for TIPS (Transformation In Plain SQL) too
     PROCESS_ID                          NUMBER(38,0) NOT NULL,
     PROCESS_CMD_ID                      NUMBER(38,0) NOT NULL,
     CMD_TYPE                            VARCHAR(20) NOT NULL,
-    CMD_SRC                             VARCHAR(1000),
-    CMD_TGT                             VARCHAR(1000) NOT NULL,
-    CMD_WHERE                           VARCHAR(1000),
-    CMD_BINDS                           VARCHAR(1000),
+    CMD_SRC                             VARCHAR,
+    CMD_TGT                             VARCHAR NOT NULL,
+    CMD_WHERE                           VARCHAR,
+    CMD_BINDS                           VARCHAR,
     REFRESH_TYPE                        VARCHAR(10),
     BUSINESS_KEY                        VARCHAR(100),
-    ACTIVE                              VARCHAR(1),
-    MERGE_ON_FIELDS                     VARCHAR(1000),
+    MERGE_ON_FIELDS                     VARCHAR,
     GENERATE_MERGE_MATCHED_CLAUSE       VARCHAR(1),
     GENERATE_MERGE_NON_MATCHED_CLAUSE   VARCHAR(1),
-    ADDITIONAL_FIELDS                   VARCHAR(1000),
+    ADDITIONAL_FIELDS                   VARCHAR,
     TEMP_TABLE                          VARCHAR(1),
     CMD_PIVOT_BY                        VARCHAR,
     CMD_PIVOT_FIELD                     VARCHAR,
     DQ_TYPE                             VARCHAR(100),
-    CMD_EXTERNAL_CALL                   VARCHAR(1000)
+    CMD_EXTERNAL_CALL                   VARCHAR,
+    ACTIVE                              VARCHAR(1) DEFAULT 'Y'
+);"""
+        results = db.executeSQL(sqlCommand=sqlCommand)
+
+        sqlCommand = """CREATE TABLE IF NOT EXISTS TIPS_MD_SCHEMA.PROCESS_LOG (
+    PROCESS_LOG_ID                      NUMBER(38,0) IDENTITY NOT NULL,
+    PROCESS_NAME                        VARCHAR(100) NOT NULL,
+    PROCESS_LOG_CREATED_AT              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    PROCESS_START_TIME                  TIMESTAMP,
+    PROCESS_END_TIME                    TIMESTAMP,
+    PROCESS_ELAPSED_TIME_IN_SECONDS     INTEGER,
+    EXECUTE_FLAG                        VARCHAR2(1) NOT NULL DEFAULT 'Y',
+    STATUS                              VARCHAR2(100) NOT NULL,
+    ERROR_MESSAGE                       VARCHAR,
+    LOG_JSON                            VARIANT NOT NULL
 );"""
         results = db.executeSQL(sqlCommand=sqlCommand)
 
