@@ -97,9 +97,22 @@ def _updateProcessCommand(processId: int, commandId: int, updates: dict):
     if len(cleansedUpdates.keys()) == 0:
         return False
 
+    # Create a formattedUpdates dictionary from cleansedUpdates where values are wrapped in single quotes unless they are integers, booleans, or null (but if they are null then they are converted to the string 'null'), and if they are strings then make sure they are escaped
+    formattedUpdates = {}
+    for update in cleansedUpdates.keys():
+        if isinstance(cleansedUpdates[update], int) or isinstance(cleansedUpdates[update], bool):
+            formattedUpdates[update] = cleansedUpdates[update]
+        elif cleansedUpdates[update] == None:
+            formattedUpdates[update] = 'null'
+        elif isinstance(cleansedUpdates[update], str):
+            escapedValue = cleansedUpdates[update].replace("'", "''")
+            formattedUpdates[update] = f"'{escapedValue}'"
+        else:
+            raise Exception(f'Unexpected type for update value: {type(cleansedUpdates[update])}')
+
     # Construct SQL command to update process command
     updatesWithIdentifiers = {
-        **cleansedUpdates,
+        **formattedUpdates,
         "PROCESS_ID": processId,
         "PROCESS_CMD_ID": commandId
     }

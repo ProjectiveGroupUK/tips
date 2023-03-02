@@ -3,7 +3,7 @@ SET
     {% for param_key, param_value in parameters.items() %}
         {% if param_key not in ['PROCESS_ID', 'PROCESS_CMD_ID'] and param_value is not none %}
             {% if not loop.first %}, {% endif %}
-            {{param_key}} = '{{param_value}}'
+            {{param_key}} = {{param_value}}
         {% endif %}
     {% endfor %}
 WHERE

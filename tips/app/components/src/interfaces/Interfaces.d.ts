@@ -1,4 +1,4 @@
-export declare interface ProcessDataInterface extends Array <{
+export interface ProcessDataInterface extends Array <{
     id: number;
     name: string;
     description: string | null;
@@ -6,7 +6,7 @@ export declare interface ProcessDataInterface extends Array <{
     status: 'active' | 'inactive';
 }> {};
 
-export declare interface CommandDataInterface {
+export interface CommandDataInterface {
     PROCESS_CMD_ID: number;
     CMD_TYPE: 'APPEND' | 'COPY_INTO_FILE' | 'DELETE'| 'DI' | 'MERGE' | 'OI' | 'PUBLISH_SCD2_DIM' | 'REFRESH' | 'TI' | 'TRUNCATE';
     CMD_SRC: string | null;

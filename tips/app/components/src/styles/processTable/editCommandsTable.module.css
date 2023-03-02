@@ -80,3 +80,14 @@
     height: 100%;
     transform: translate(-50%, -50%);
 }
+
+.table tr td .inputContainer > .switchValueTypeButton {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    padding: 0.1rem 0.3rem;
+    transform: translate(0, -50%);
+    font-size: 0.6rem;
+    border: 1px solid var(--primary);
+    border-radius: 0.2rem;
+}

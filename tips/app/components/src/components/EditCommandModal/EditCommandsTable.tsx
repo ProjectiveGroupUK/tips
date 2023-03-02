@@ -161,10 +161,10 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
 
     // Create a dictionary where there's one key for each property ID, and the value is the category ID (e.g., { CMD_TYPE: 'params', CMD_WHERE: 'params', CMD_SRC: 'io' ... })
     const categoryToKeysMap: CategoryToKeysMap = filterCategories.reduce((categoryToKeysMap, {id: categoryId, propertyIds}) => {
-        const categoryProperties = propertyIds.reduce((categoryProperties, propertyId) => ({
-            ...categoryProperties,
+        const categoryProperties = propertyIds.reduce((accumulator, propertyId) => ({
+            ...accumulator,
             [propertyId]: categoryId
-        }), {})
+        }), {});
         return { ...categoryToKeysMap, ...categoryProperties };
     }, {} as CategoryToKeysMap);
 
@@ -181,7 +181,8 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
     const tableInstance = useTable<Data>({
         columns: (tableColumns as Column<Object>[]),
         data: tableData,
-        initialState: { hiddenColumns: ['category_id'] }
+        initialState: { hiddenColumns: ['category_id'] },
+        getRowId: (row) => (row as { property_name: keyof CommandDataInterface }).property_name
     }, useFilters);
     
     useEffect(() => { // Re-focus input element if change in command data resulted in lost focus despite user still intending to edit
@@ -199,26 +200,30 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
 
             case 'property_value':
                 const savingEditedValue = updateCommandRef.current?.[propertyName] !== undefined;
+                const cellValue = savingEditedValue ? updateCommandRef.current![propertyName] : cell.value;
+                const placeholder = cellValue === null ? 'NULL' : 'Empty String';
+
                 return (
                     <div className={`${styles.inputContainer} ${savingEditedValue && styles.savingInProgress}`}>
 
                         {/* Invisible text element used to expand the input element to the width of the text */}
-                        <div>{cell.value || ''}</div> 
+                        <div>{(cellValue && cellValue.length) ? cellValue : placeholder}</div> 
 
                         {/* Input element */}
                         <input
                             key={propertyName}
                             ref={(ref) => captureRef(ref, propertyName)}
-                            value={(savingEditedValue ? updateCommandRef.current![propertyName] : cell.value) ?? ''}
+                            value={cellValue ?? ''}
                             onChange={(event) => handleInputChange(event, propertyName)}
                             onBlur={() => handleBlur(propertyName)}
-                            placeholder='NULL'
+                            placeholder={placeholder}
                             className={!cell.value ? styles.emptyCell : ''}
                             disabled={!isEditing}
                         />
 
-                        {/* Spinner to indicate that the edited value is being saved (opacity is set to 0 when saving is not in progress) */}
                         <AnimatePresence>
+
+                            {/* Spinner to indicate that the edited value is being saved (opacity is set to 0 when saving is not in progress) */}
                             { savingEditedValue && (
                                 <motion.div
                                     key='savingIndicator'
@@ -231,6 +236,20 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {/* Button to switch value type between empty string and null (if field isn't populated) */}
+                        { isEditing && !savingEditedValue && !cell.value && (
+                            <button
+                                key='switchValueTypeButton'
+                                id='switchValueTypeButton'
+                                className={styles.switchValueTypeButton}
+                                onClick={() => editCommandProperty({ propertyName, propertyValue: cellValue === null ? '' : null })}
+                            >
+                                <label htmlFor='switchValueTypeButton'>
+                                    { cellValue === null ? 'Set empty string' : 'Set NULL' }
+                                </label>
+                            </button>
+                        )}
                     </div>
                 );
         }
@@ -251,6 +270,7 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
         };
 
         // Update the editedCommandValues state variable with the new value for the specified property
+        const propertyValue = event.target.value || null;
         editCommandProperty({ 
             propertyName, 
             propertyValue: event.target.value
