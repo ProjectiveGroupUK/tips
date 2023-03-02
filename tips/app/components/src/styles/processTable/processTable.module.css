@@ -1,0 +1,50 @@
+.table {
+    border: 1px solid var(--primary);
+    border-spacing: 0px;
+    border-radius: 5px;
+    overflow: hidden;
+    min-width: 100vw;
+}
+
+.table > thead > tr > th {
+    box-sizing: border-box;
+    padding: 10px 10px;
+    min-width: 200%;
+    background-color: var(--primary);
+    color: var(--dirty-white);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.table > tbody > tr:not(.rowSubComponent) {
+    cursor: pointer;
+    transition: background-color 0.2s linear;
+}
+
+.table > tbody > tr.dynamicIndex_even {
+    background-color: #f3f8fc;
+}
+
+.table > tbody > tr.dynamicIndex_odd {
+    background-color: #ecf2f7;
+}
+
+.table > tbody > tr:not(.rowSubComponent):not(.selected):hover {
+    background-color: #d1e2e1;
+}
+
+.table > tbody > tr:not(.rowSubComponent) > td {
+    padding: 10px;
+    font-weight: 300;
+    font-size: 0.9rem;
+}
+
+.table > tbody > tr > td {
+    font-weight: 300;
+    font-size: 0.9rem;
+}
+
+.rowSubComponent > td > pre {
+    font-size: 10px;
+}

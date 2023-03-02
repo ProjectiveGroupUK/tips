@@ -1,0 +1,94 @@
+.table {
+    text-align: center;
+    width: 100%;
+    border-spacing: 0px;
+    overflow: hidden;
+}
+
+.table > thead > tr {
+    color: #2F3D40;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.table > thead > tr > th {
+    padding: 1.5rem 0.6rem 0.6rem;
+}
+
+.table th > div {
+    padding: 0.05rem 1rem;
+    border: 1px solid #2F3D40;
+    font-size: 0.7rem;
+    border-radius: 100rem;
+    width: fit-content;
+    margin: auto;
+}
+
+.table > tbody > tr {
+    cursor: pointer;
+    transition: background-color 0.2s linear;
+    font-size: 0.82rem;
+    position: relative; /* Reqiored for odd-row background-darkening to work */
+}
+
+.table > tbody > tr > :nth-child(1) { /* Add padding vertical around command Id column */
+    padding: 0.6rem 0;
+}
+
+.table > tbody > tr:not(:last-child)::after {
+    content: "";
+    background-color: var(--primary);
+    position: absolute;
+    bottom: 0;
+    left: 3%;
+    width: 94%;
+    height: 1px;
+    margin: 0 auto;
+    border-radius: 100rem;
+}
+
+.table > tbody > tr:hover {
+    background-color: #d1e2e1;
+}
+
+.command_id > .cellValueContainer { /* Center the circle container which contains command's id */
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+}
+
+.command_id > .cellValueContainer > div { /* Add a circle around command ID (number) value */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1/1;
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 100rem;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.table .commandStatus-true > div > div { /* Colour background and border of command id's circle container to green if the command is active */
+    border-color: var(--success-green);
+    color: var(--success-green);
+    background-color: #006e0015;
+}
+
+.table .commandStatus-true p > span { /* 'active' word inside the tooltip text */
+    color: var(--success-green-light);
+    font-weight: 600;
+}
+
+.table .commandStatus-false > div > div { /* Colour background and border of command id's circle container to red if the command is inactive */
+    border-color: var(--fail-red);
+    color: var(--fail-red);
+    background-color: #b4000015;
+}
+
+.table .commandStatus-false p > span { /* 'active' word inside the tooltip text */
+    color: var(--fail-red-light);
+    font-weight: 600;
+}
