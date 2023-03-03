@@ -4,20 +4,17 @@ import logging
 # Streamlit
 import streamlit as st
 
-# Streamlit modal
-from utils.modal import Modal
-
 # TIPS
 from tips.framework.db.database_connection import DatabaseConnection
 from tips.framework.utils.sql_template import SQLTemplate
 from tips.utils.logger import Logger
-from tips.utils.utils import Globals
+from tips.utils.utils import Globals, escapeValuesForSQL
 
 # Components
-from utils import processesTable, processCommandsModal
+from utils import processesTable, createCommandModal, processCommandsModal
 
 # Enums
-from tips.app.enums import StateVariable, ProcessTableInstruction, CommandUpdateProperty, CommandModalInstruction
+from tips.app.enums import StateVariable, ProcessTableInstruction, CommandUpdateProperty, CreateCommandModalInstruction, EditCommandModalInstruction
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
@@ -31,13 +28,20 @@ def _setUpPageLayout():
 
 def _loadCustomCSS():
     st.markdown('<style>iframe[title="utils.react_component_modal"] {width: 100vw; height: 100vh}</style>', unsafe_allow_html=True) # Makes the modal full screen
+    st.markdown('<style>iframe[title="utils.react_component_processTable"] {min-height: 20rem;}</style>', unsafe_allow_html=True) # Sets minimum height for processTable iframe (othwerwise menu dropdown may be cut off if too few processes are rendered)
 
 def _setUpStateInstructions():
     if ProcessTableInstruction.RESET_SELECTED_COMMAND not in st.session_state:
         st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = False
 
-    if CommandModalInstruction.RESET_UPDATE_COMMAND not in st.session_state:
-        st.session_state[CommandModalInstruction.RESET_UPDATE_COMMAND] = False
+    if ProcessTableInstruction.RESET_CREATE_COMMAND not in st.session_state:
+        st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
+
+    if CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR not in st.session_state:
+        st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] = False
+
+    if EditCommandModalInstruction.RESET_UPDATE_COMMAND not in st.session_state:
+        st.session_state[EditCommandModalInstruction.RESET_UPDATE_COMMAND] = False
 
 def _loadListOfProcesses():
     db = DatabaseConnection()
@@ -85,6 +89,49 @@ def _stripStepDict(stepDict: dict): # Removes process keys from dictionary inten
     strippedDict.pop("PROCESS_ACTIVE")
     return strippedDict
 
+def _createProcessCommand(processId: int, commandData: dict):
+
+    # Validate that both processId has been provided and is integer
+    if not isinstance(processId, int):
+        return False
+
+    # Validate that commandData dictionary has all required keys
+    requiredKeys = [propertyKey for propertyKey in dir(CommandUpdateProperty) if not (propertyKey.startswith('__') and propertyKey.endswith('__'))]
+    cleansedCommandData = { key: commandData[key] for key in commandData.keys() if key in requiredKeys }
+    if len(cleansedCommandData.keys()) != len(requiredKeys):
+        return False
+    
+    # Escape values and store None values as NULL
+    formattedCommandData = escapeValuesForSQL(cleansedCommandData)
+
+    # Construct SQL command to create process command
+    commandDataWithIdentifiers = {
+        **formattedCommandData,
+        "PROCESS_ID": processId,
+        "PROCESS_CMD_ID": f"(SELECT MAX(PROCESS_CMD_ID) + 10 FROM process_cmd WHERE PROCESS_ID = {processId})" # Dynamically generate process command ID
+    }
+    cmdStr: str = SQLTemplate().getTemplate(
+        sqlAction = "create_process_command",
+        parameters = commandDataWithIdentifiers
+    )
+
+    # Execute SQL command
+    db = DatabaseConnection()
+    try:
+        db.executeSQL(sqlCommand=cmdStr)
+
+        # Update process data in session state
+        processData = st.session_state[StateVariable.PROCESS_DATA]
+        selectedProcess = [process for process in processData if process['id'] == processId][0]
+        selectedProcess['steps'].append(cleansedCommandData)
+        st.session_state[StateVariable.PROCESS_DATA] = processData
+
+        return True
+
+    except Exception as e:
+        logger.error(f'Error creating process command: {e}')
+        return False
+
 def _updateProcessCommand(processId: int, commandId: int, updates: dict):
 
     # Validate that both processId and commandId have been provided and are integers
@@ -97,18 +144,8 @@ def _updateProcessCommand(processId: int, commandId: int, updates: dict):
     if len(cleansedUpdates.keys()) == 0:
         return False
 
-    # Create a formattedUpdates dictionary from cleansedUpdates where values are wrapped in single quotes unless they are integers, booleans, or null (but if they are null then they are converted to the string 'null'), and if they are strings then make sure they are escaped
-    formattedUpdates = {}
-    for update in cleansedUpdates.keys():
-        if isinstance(cleansedUpdates[update], int) or isinstance(cleansedUpdates[update], bool):
-            formattedUpdates[update] = cleansedUpdates[update]
-        elif cleansedUpdates[update] == None:
-            formattedUpdates[update] = 'null'
-        elif isinstance(cleansedUpdates[update], str):
-            escapedValue = cleansedUpdates[update].replace("'", "''")
-            formattedUpdates[update] = f"'{escapedValue}'"
-        else:
-            raise Exception(f'Unexpected type for update value: {type(cleansedUpdates[update])}')
+    # Escape values and store None values as NULL
+    formattedUpdates = escapeValuesForSQL(cleansedUpdates)
 
     # Construct SQL command to update process command
     updatesWithIdentifiers = {
@@ -156,40 +193,76 @@ def main():
         key = 'processTable', 
         processData = st.session_state[StateVariable.PROCESS_DATA],
         instructions = {
+            ProcessTableInstruction.RESET_CREATE_COMMAND: st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND],
             ProcessTableInstruction.RESET_SELECTED_COMMAND: st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND]
         }
     )
-    
+
+    # Render Create New Command Modal (if user has clicked the create command button)
+    createCommandModalData = None
+    if processesTableData != None:
+        if processesTableData.get('createCommand') != None:
+            createCommandModalData = createCommandModal(
+                key = 'modal',
+                commandData = processesTableData.get('createCommand'),
+                instructions = {
+                    CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR: st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR]
+                }
+            )
+
+            # Check for instructions from the modal that require performing activities on the Python side
+            if createCommandModalData != None:
+
+                if createCommandModalData.get('createCommand') == None:
+                    st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = True
+                    st.experimental_rerun()
+
+                elif createCommandModalData.get('createCommand').get('processing') == True: # User has submitted new command data -> store new command in db
+                    if st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] != True: # Create command instructions hasn't yet been executed in db
+                        _createProcessCommand(
+                            createCommandModalData.get('createCommand').get('process').get('id'),
+                            createCommandModalData.get('createCommand').get('data')
+                        )
+                        st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] = True
+                        st.experimental_rerun()
+                    
+                    else:
+                        st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
+
+                elif createCommandModalData.get('createCommand').get('processing') == False:
+                    st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] = False
+
+        else: # Create command button has not been clicked -> reset RESET_CREATE_COMMAND instruction
+            st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
+
     # Render process commands modal component (if a command has been selected in the processes table component)
     commandModalData = None
     if processesTableData != None:
         if processesTableData.get('selectedCommand') != None:
-            modal = Modal(title="Process Comands Modal", key="processCommandsModal")
-            with modal.container():
-                commandModalData = processCommandsModal(
-                    key = 'modal',
-                    processData = processesTableData.get('processData'),
-                    selectedProcessId = processesTableData.get('selectedProcess').get('id'),
-                    selectedCommandId = processesTableData.get('selectedCommand').get('PROCESS_CMD_ID'),
-                    instructions = {
-                        CommandModalInstruction.RESET_UPDATE_COMMAND: st.session_state[CommandModalInstruction.RESET_UPDATE_COMMAND]
-                    }
-                )
+            commandModalData = processCommandsModal(
+                key = 'modal',
+                processData = processesTableData.get('processData'),
+                selectedProcessId = processesTableData.get('selectedProcess').get('id'),
+                selectedCommandId = processesTableData.get('selectedCommand').get('PROCESS_CMD_ID'),
+                instructions = {
+                    EditCommandModalInstruction.RESET_UPDATE_COMMAND: st.session_state[EditCommandModalInstruction.RESET_UPDATE_COMMAND]
+                }
+            )
 
-                # Check for instructions from the modal that require performing activities on the Python side
-                if commandModalData != None:
+            # Check for instructions from the modal that require performing activities on the Python side
+            if commandModalData != None:
 
-                    if commandModalData.get('updateCommand') != None:
-                        if st.session_state[CommandModalInstruction.RESET_UPDATE_COMMAND] != True: # Reset update command instruction hasn't yet been performed
-                            _updateProcessCommand(processId=processesTableData.get('selectedProcess').get('id'), commandId=processesTableData.get('selectedCommand').get('PROCESS_CMD_ID'), updates=commandModalData.get('updateCommand'))
-                            st.session_state[CommandModalInstruction.RESET_UPDATE_COMMAND] = True
-                            st.experimental_rerun()
-                    else: # Modal does not request update to be made to command -> reset RESET_UPDATE_COMMAND instruction (since it no longer needs to actively prevent the update command instruction from being performed)
-                        st.session_state[CommandModalInstruction.RESET_UPDATE_COMMAND] = False
-
-                    if commandModalData.get('selectedCommand') == None: # User has closed the modal -> add instruction to deselect selected command in rendered ProcessTable component on next script run
-                        st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = True
+                if commandModalData.get('updateCommand') != None:
+                    if st.session_state[EditCommandModalInstruction.RESET_UPDATE_COMMAND] != True: # Reset update command instruction hasn't yet been performed
+                        _updateProcessCommand(processId=processesTableData.get('selectedProcess').get('id'), commandId=processesTableData.get('selectedCommand').get('PROCESS_CMD_ID'), updates=commandModalData.get('updateCommand'))
+                        st.session_state[EditCommandModalInstruction.RESET_UPDATE_COMMAND] = True
                         st.experimental_rerun()
+                else: # Modal does not request update to be made to command -> reset RESET_UPDATE_COMMAND instruction (since it no longer needs to actively prevent the update command instruction from being performed)
+                    st.session_state[EditCommandModalInstruction.RESET_UPDATE_COMMAND] = False
+
+                if commandModalData.get('selectedCommand') == None: # User has closed the modal -> add instruction to deselect selected command in rendered ProcessTable component on next script run
+                    st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = True
+                    st.experimental_rerun()
 
         else: # No command has been selected -> reset RESET_SELECTED_COMMAND instruction (since it no longer needs to ask the ProcessTable component to deselect the selected command in its SharedDataContext)
             st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = False

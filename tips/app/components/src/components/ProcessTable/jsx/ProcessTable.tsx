@@ -6,6 +6,10 @@ import { Streamlit } from 'streamlit-component-lib';
 
 // React-table
 import { useTable, useExpanded } from 'react-table';
+import { Column, Cell } from 'react-table';
+
+// Mantine
+import { Menu } from '@mantine/core';
 
 // Contexts
 import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
@@ -14,27 +18,58 @@ import { useSharedData } from '@/components/reusable/contexts/SharedDataContext'
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
 // CSS
-import tableStyle from '@/styles/processTable/processTable.module.css';
+import styles from '@/styles/processTable/processTable.module.css';
 
 // Components
 import StatusPill from '@/components/ProcessTable/jsx/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
+// Icons
+import { DotsVertical, Pencil, PencilPlus } from 'tabler-icons-react';
+
 type Data = object;
 
 export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
-    const { processData, selectedProcess, setSelectedProcessId } = useSharedData();
+    const { processData, selectedProcess, setSelectedProcessId, setCreateCommand } = useSharedData();
 
-    const tableInstance = generateTableData({ processData: processData });
+    const tableInstance = generateTableData({ processData: processData, handleNewCommandClick: handleNewCommandClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
     useEffect(() => { // Expand row when clicked
         rows.forEach((row) => row.toggleRowExpanded(row.id === selectedProcess?.id.toString()))
     }, [selectedProcess?.id])
 
+    function handleNewCommandClick(rowId: ProcessDataInterface[0]['id']) {
+        const process = processData.find((process) => process.id === rowId)!;
+        setCreateCommand({
+            data: {
+                PROCESS_CMD_ID: 0, // Dummy value which will be replaced by Python script when running INSERT INTO query
+                CMD_TYPE: 'APPEND',
+                CMD_SRC: null,
+                CMD_TGT: '',
+                CMD_WHERE: null,
+                CMD_BINDS: null,
+                REFRESH_TYPE: null,
+                BUSINESS_KEY: null,
+                MERGE_ON_FIELDS: null,
+                GENERATE_MERGE_MATCHED_CLAUSE: null,
+                GENERATE_MERGE_NON_MATCHED_CLAUSE: null,
+                ADDITIONAL_FIELDS: null,
+                TEMP_TABLE: null,
+                CMD_PIVOT_BY: null,
+                CMD_PIVOT_FIELD: null,
+                DQ_TYPE: null,
+                CMD_EXTERNAL_CALL: null,
+                ACTIVE: 'Y'
+            },
+            process: process,
+            processing: false
+        });
+    }
+
     return (
-        <table {...getTableProps()} className={tableStyle.table}>
+        <table {...getTableProps()} className={styles.table}>
             <thead>
                 {
                     headerGroups.map(headerGroup => (
@@ -60,7 +95,7 @@ export default function ProcessTable() {
                     return (
                         <Fragment key={row.id}>
                             <tr
-                                className={`${isSelected && tableStyle.selected} ${dynamicIndexIsEven ? tableStyle.dynamicIndex_even : tableStyle.dynamicIndex_odd}`} // If row is expanded, add 'selected' class; and depending on dynamicIndex, add 'dynamicIndex-even' or 'dynamicIndex-odd' class
+                                className={`${isSelected && styles.selected} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`} // If row is expanded, add 'selected' class; and depending on dynamicIndex, add 'dynamicIndex-even' or 'dynamicIndex-odd' class
                                 onClick={() => { // When clicked, update expandedRowId state variable
                                     setSelectedProcessId((prev) => prev === Number(row.id) ? null : Number(row.id)) // Deslect row if already selected, otherwise select row
                             }}>
@@ -76,7 +111,7 @@ export default function ProcessTable() {
                                 })}
                             </tr>
                             { row.isExpanded && 
-                                <tr className={`${tableStyle.rowSubComponent} ${dynamicIndexIsEven ? tableStyle.dynamicIndex_even : tableStyle.dynamicIndex_odd}`}>
+                                <tr className={`${styles.rowSubComponent} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`}>
                                     <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
                                         <div>
                                             <ProcessCommandsTable />
@@ -101,8 +136,9 @@ export default function ProcessTable() {
     );
 }
 
-function generateTableData({ processData }: {
-    processData: ProcessDataInterface
+function generateTableData({ processData, handleNewCommandClick }: {
+    processData: ProcessDataInterface;
+    handleNewCommandClick: (rowId: ProcessDataInterface[0]['id']) => void;
 }) {
     const tableColumns = useMemo(() => [
         {
@@ -120,6 +156,10 @@ function generateTableData({ processData }: {
         {
             Header: 'Status',
             accessor: 'process_status'
+        },
+        {
+            accessor: 'actionsButtonColumn',
+            Cell: (cell: Cell) => renderCell(cell)
         }
     ], []);
 
@@ -131,10 +171,26 @@ function generateTableData({ processData }: {
     })), []);
 
     const tableInstance = useTable<Data>({
-        columns: tableColumns,
+        columns: (tableColumns as Column<Object>[]),
         data: tableData,
         getRowId: (row: any) => (row.process_id.toString())
     }, useExpanded);
 
     return tableInstance;
+
+    function renderCell(cell: Cell) {
+        return (
+            <Menu>
+                <Menu.Target>
+                    <button onClick={(event) => event.stopPropagation()} className={styles.actionsButton}>
+                        <DotsVertical size={20} />
+                    </button>
+                </Menu.Target>
+                <Menu.Dropdown onClick={(event) => event?.stopPropagation()}>
+                    <Menu.Item icon={<Pencil size={15} color='var(--primary)' />}>Edit process</Menu.Item>
+                    <Menu.Item icon={<PencilPlus size={15} color='var(--primary)' />} onClick={() => handleNewCommandClick(Number(cell.row.id))}>Insert new command</Menu.Item>
+                </Menu.Dropdown>
+            </Menu>   
+        )
+    }
 }

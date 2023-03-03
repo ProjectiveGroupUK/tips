@@ -86,7 +86,7 @@
 }
 
 .configParent > .configHeader > .searchBox.active > svg {
-    stroke: #f1a849;
+    stroke: var(--attention-orange);
 }
 
 .configParent > .configHeader > .searchBox > .searchInput {

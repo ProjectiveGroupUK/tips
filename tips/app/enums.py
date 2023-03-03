@@ -7,8 +7,12 @@ class StateVariable:
     
 class ProcessTableInstruction:
     RESET_SELECTED_COMMAND = 'resetSelectedCommand'
+    RESET_CREATE_COMMAND = 'resetCreateCommand'
 
-class CommandModalInstruction:
+class CreateCommandModalInstruction:
+    RESET_PROCESSING_INDICATOR = 'resetCreateCommandProcessingIndicator'
+
+class EditCommandModalInstruction:
     RESET_UPDATE_COMMAND = 'resetUpdateCommand'
 
 class CommandUpdateProperty:

@@ -8,6 +8,7 @@ import { PuffLoader } from "react-spinners";
 import styles from "@/styles/editCommandModal/floatingEditButtons.module.css";
 
 interface PropsInterface {
+    type: 'create' | 'edit';
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
     isSaving?: boolean;
@@ -15,7 +16,7 @@ interface PropsInterface {
     onSave?: () => void;
 }
 
-export default function FloatingEditButton({ isEditing, setIsEditing, isSaving, onCancel, onSave }: PropsInterface) {
+export default function FloatingEditButton({ type, isEditing, setIsEditing, isSaving, onCancel, onSave }: PropsInterface) {
 
     function handleCancel() {
         onCancel?.();
@@ -31,16 +32,16 @@ export default function FloatingEditButton({ isEditing, setIsEditing, isSaving, 
             {/* Edit (or cancel) button */}
             <motion.button
                 layout
-                className={isEditing ? styles.button_cancel : styles.button_edit}
+                className={type === 'create' ? styles.button_discard : (isEditing ? styles.button_cancel : styles.button_edit)}
                 onClick={isEditing ? handleCancel : () => setIsEditing(true)}
                 disabled={isSaving}
             >
-                { isEditing ? 'Cancel' : 'Edit' }
+                { type === 'create' ? 'Discard' : (isEditing ? 'Cancel' : 'Edit') }
             </motion.button>
             <AnimatePresence mode='popLayout'>
 
                 {/* Save button */}
-                { (isEditing || isSaving) && (
+                { (isEditing || isSaving || type === 'create') && (
                     <motion.button
                         id="saveButton"
                         className={styles.button_save}
@@ -52,7 +53,7 @@ export default function FloatingEditButton({ isEditing, setIsEditing, isSaving, 
                     >
 
                         {/* Label */}
-                        <label htmlFor="saveButton">Save</label>
+                        <label htmlFor="saveButton">{ type === 'create' ? 'Create' : 'Save' }</label>
 
                         {/* Saving in progress spinner */}
                         { isSaving && <PuffLoader size={20} color='var(--primary)' /> }

@@ -26,8 +26,8 @@ export interface FilterCategoryInterface{
 }
 
 export default function EditCommandModal() {
-    const { selectedProcess, selectedCommand, setSelectedCommandId, updateCommand, setUpdateCommand } = useSharedData();
-    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(selectedCommand!);
+    const { selectedProcess, selectedCommand, setSelectedCommandId, updateCommand, setUpdateCommand, createCommand, setCreateCommand } = useSharedData();
+    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>((createCommand?.data ?? selectedCommand)!);
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
@@ -37,11 +37,11 @@ export default function EditCommandModal() {
         { id: 'additional_fields_and_processing', label: 'Additional fields & processing', active: false, propertyIds: ['ADDITIONAL_FIELDS', 'TEMP_TABLE', 'CMD_PIVOT_BY', 'CMD_PIVOT_FIELD'] },
         { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL', 'ACTIVE'] }
     ])
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = useState(Boolean(createCommand)); // If user is creating a new command, default isEditing to true
 
-    useEffect(() => { // When updateCommand instruction gets cleared by Python (i.e., SQL command execution has finished), set isEditing to false
-        if(!updateCommand && isEditing) setIsEditing(false);
-    }, [updateCommand]);
+    useEffect(() => { // When updateCommand or createCommand instruction gets cleared by Python (i.e., SQL command execution has finished), set isEditing to false
+        if(!updateCommand && !createCommand && isEditing) setIsEditing(false);
+    }, [updateCommand, createCommand]);
 
     function handleCategoryClick(selectedCategoryId: string) {
         setFilterCategories(filterCategories.map((iteratedCategory) => 
@@ -68,33 +68,53 @@ export default function EditCommandModal() {
 
     function handleCancel() {
         setEditedCommandValues(selectedCommand!);
+        setCreateCommand(null);
         setIsEditing(false);
     }
 
     function handleSave() {
-        const editedProperties = getEditedProperties(editedCommandValues, selectedCommand!);
-        if(Object.keys(editedProperties).length === 0) { // No changes have been made to command
-            setIsEditing(false);
-            return;
+        if(createCommand) { // Create new command
+            setCreateCommand((prevState) => ({
+                ...prevState!,
+                data: editedCommandValues,
+                processing: true
+            }))
         }
-        setUpdateCommand(editedProperties);
+        else { // Update existing command
+            const editedProperties = getEditedProperties(editedCommandValues, selectedCommand!);
+            if(Object.keys(editedProperties).length === 0) { // No changes have been made to command
+                setIsEditing(false);
+                return;
+            }
+            setUpdateCommand(editedProperties);
+        }      
     }
+
+    function handleCloseModal() {
+        setSelectedCommandId(null);
+        setCreateCommand(null);
+    }
+
+
+    const process = createCommand?.process ?? selectedProcess;
+    const command = createCommand?.data ?? selectedCommand;
+    const processing = createCommand ? createCommand.processing : (updateCommand !== null);
 
     return(
         <Modal
-            isOpen={selectedCommand !== null}
-            onFadeOutComplete={() => setSelectedCommandId(null)}
+            isOpen={Boolean(command)}
+            onFadeOutComplete={handleCloseModal}
             noPadding={true}
         >
             <div className={styles.container}>
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>
-                        <h1>Command {selectedCommand?.PROCESS_CMD_ID}</h1>
-                        <h2>From the {selectedProcess?.name} process</h2>
+                        <h1>{ createCommand ? 'New command' : `Command ${command?.PROCESS_CMD_ID}` }</h1>
+                        <h2>In the {process?.name} process</h2>
                     </div>
                     <div className={styles.separator} />
-                    <div className={styles.headerRight} data-active-status={selectedCommand?.ACTIVE}>
-                        {selectedCommand?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
+                    <div className={styles.headerRight} data-active-status={command?.ACTIVE}>
+                        {command?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
                     </div>
                 </div>
                 <div className={styles.configContainer}>
@@ -127,7 +147,7 @@ export default function EditCommandModal() {
 
                         { /* Table */}
                         <EditCommandsTable
-                            selectedCommand={selectedCommand!}
+                            selectedCommand={command ?? {} as CommandDataInterface}
                             editedCommandValues={editedCommandValues}
                             setEditedCommandValues={setEditedCommandValues}
                             filterText={filterText}
@@ -140,9 +160,10 @@ export default function EditCommandModal() {
             </div>
 
             <FloatingEditButtons
+                type={createCommand ? 'create' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
-                isSaving={updateCommand !== null}
+                isSaving={processing}
                 onCancel={handleCancel}
                 onSave={handleSave}
             />

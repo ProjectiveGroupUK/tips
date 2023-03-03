@@ -1,0 +1,15 @@
+INSERT INTO tips_md_schema.process_cmd (
+    {% for param_key, param_value in parameters.items() %}
+        {% if param_value is not none %}
+            {% if not loop.first %}, {% endif %}
+            {{param_key}}
+        {% endif %}
+    {% endfor %}
+) VALUES (
+    {% for param_key, param_value in parameters.items() %}
+        {% if param_value is not none %}
+            {% if not loop.first %}, {% endif %}
+            {{param_value}}
+        {% endif %}
+    {% endfor %}
+);

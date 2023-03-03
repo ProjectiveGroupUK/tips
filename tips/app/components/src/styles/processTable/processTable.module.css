@@ -34,6 +34,16 @@
     background-color: #d1e2e1;
 }
 
+.table > tbody > tr > td > button.actionsButton {
+    padding: 0.13rem;
+    color: var(--primary);
+    transition: color 0.2s linear;
+}
+
+.table > tbody > tr > td > button.actionsButton:hover {
+    color: var(--attention-orange);
+}
+
 .table > tbody > tr:not(.rowSubComponent) > td {
     padding: 10px;
     font-weight: 300;

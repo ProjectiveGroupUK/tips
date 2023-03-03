@@ -1,6 +1,9 @@
 import os
 import streamlit.components.v1 as components
 
+# Streamlit modal
+from utils.modal import Modal
+
 _RELEASE = False
 
 def _getComponent(key: str, **kwargs):
@@ -27,13 +30,25 @@ def processesTable(key: str, processData: list, instructions = {}):
         component = 'ProcessTable',
         instructions = instructions
     )
+    
+def createCommandModal(key: str, commandData: dict, instructions: dict):
+    modal = Modal(title="Create Comand Modal", key="createCommandModal")
+    with modal.container():
+        return _getComponent(
+            key = key,
+            component = 'CreateCommandModal',
+            createCommand = commandData,
+            instructions = instructions
+    )
 
 def processCommandsModal(key: str, processData: dict, selectedProcessId: int, selectedCommandId: int, instructions: dict):
-    return _getComponent(
-        key = key,
-        component = 'ProcessCommandsModal',
-        processData = processData,
-        selectedProcessId = selectedProcessId,
-        selectedCommandId = selectedCommandId,
-        instructions = instructions
+    modal = Modal(title="Process Comands Modal", key="processCommandsModal")
+    with modal.container():
+        return _getComponent(
+            key = key,
+            component = 'ProcessCommandsModal',
+            processData = processData,
+            selectedProcessId = selectedProcessId,
+            selectedCommandId = selectedCommandId,
+            instructions = instructions
     )
