@@ -37,8 +37,11 @@ def _setUpStateInstructions():
     if ProcessTableInstruction.RESET_CREATE_COMMAND not in st.session_state:
         st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
 
-    if CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR not in st.session_state:
-        st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] = False
+    if CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED not in st.session_state:
+        st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED] = False
+
+    if CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED not in st.session_state:
+        st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED] = False
 
     if EditCommandModalInstruction.RESET_UPDATE_COMMAND not in st.session_state:
         st.session_state[EditCommandModalInstruction.RESET_UPDATE_COMMAND] = False
@@ -206,7 +209,8 @@ def main():
                 key = 'modal',
                 commandData = processesTableData.get('createCommand'),
                 instructions = {
-                    CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR: st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR]
+                    CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED: st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED],
+                    CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED: st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED]
                 }
             )
 
@@ -218,19 +222,21 @@ def main():
                     st.experimental_rerun()
 
                 elif createCommandModalData.get('createCommand').get('processing') == True: # User has submitted new command data -> store new command in db
-                    if st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] != True: # Create command instructions hasn't yet been executed in db
-                        _createProcessCommand(
+                    if (st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED] != True) and (st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED] != True) : # Create command instructions hasn't yet been executed in db
+                        result = _createProcessCommand(
                             createCommandModalData.get('createCommand').get('process').get('id'),
                             createCommandModalData.get('createCommand').get('data')
                         )
-                        st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] = True
+                        if(result == True): st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED] = True
+                        else: st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED] = True
                         st.experimental_rerun()
                     
                     else:
                         st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
 
-                elif createCommandModalData.get('createCommand').get('processing') == False:
-                    st.session_state[CreateCommandModalInstruction.RESET_PROCESSING_INDICATOR] = False
+                elif createCommandModalData.get('createCommand').get('processing') == False: # createCommand exists in createCommandModalData, but processing is False -> execution status was already sent to createCommandModal component, so reset the instructions now
+                    st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_SUCCEEDED] = False
+                    st.session_state[CreateCommandModalInstruction.CREATE_COMMAND_EXECUTION_FAILED] = False
 
         else: # Create command button has not been clicked -> reset RESET_CREATE_COMMAND instruction
             st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False

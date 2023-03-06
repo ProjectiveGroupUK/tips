@@ -117,3 +117,43 @@
     background-color: #fff1df;
     border-color: #f3c589;
 }
+
+.executionStatusMessageContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.executionStatusMessageContainer > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    row-gap: 1rem;
+    background-color: #3d5a7365;
+    backdrop-filter: blur(2px);
+    border-radius: 0.3rem;
+    padding: 1rem;
+    max-width: 200px;
+    color: white;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.executionStatusMessageContainer .executionSuccess, .executionFail {
+    font-weight: 500;
+}
+
+.executionStatusMessageContainer .executionSuccess {
+    color: var(--success-green-light);
+}
+
+.executionStatusMessageContainer .executionFail {
+    color: var(--fail-red-light);
+}

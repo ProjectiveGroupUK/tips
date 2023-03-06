@@ -38,7 +38,8 @@ interface PropsInterface_CreateCommandModal {
   component: 'CreateCommandModal';
   createCommand: CreateCommandInterface;
   instructions: {
-    resetCreateCommandProcessingIndicator: boolean;
+    createCommandExecutionSucceeded: boolean;
+    createCommandExecutionFailed: boolean;
   }
 }
 

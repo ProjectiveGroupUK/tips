@@ -10,7 +10,8 @@ class ProcessTableInstruction:
     RESET_CREATE_COMMAND = 'resetCreateCommand'
 
 class CreateCommandModalInstruction:
-    RESET_PROCESSING_INDICATOR = 'resetCreateCommandProcessingIndicator'
+    CREATE_COMMAND_EXECUTION_SUCCEEDED = 'createCommandExecutionSucceeded'
+    CREATE_COMMAND_EXECUTION_FAILED = 'createCommandExecutionFailed'
 
 class EditCommandModalInstruction:
     RESET_UPDATE_COMMAND = 'resetUpdateCommand'

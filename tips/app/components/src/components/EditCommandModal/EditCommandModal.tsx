@@ -1,6 +1,9 @@
 // React
 import { useEffect, useState } from "react";
 
+// Framer motion
+import { AnimatePresence, motion } from "framer-motion";
+
 // Contexts
 import { useSharedData } from "@/components/reusable/contexts/SharedDataContext";
 
@@ -16,7 +19,7 @@ import { CommandDataInterface } from "@/interfaces/Interfaces";
 import styles from "@/styles/processTable/editCommandModal.module.css";
 
 // Icons
-import { Search } from 'tabler-icons-react';
+import { Search, CircleCheck, AlertCircle } from 'tabler-icons-react';
 
 export interface FilterCategoryInterface{
     id: string;
@@ -26,8 +29,12 @@ export interface FilterCategoryInterface{
 }
 
 export default function EditCommandModal() {
-    const { selectedProcess, selectedCommand, setSelectedCommandId, updateCommand, setUpdateCommand, createCommand, setCreateCommand } = useSharedData();
+    const { selectedProcess, selectedCommand, setSelectedCommandId, updateCommand, setUpdateCommand, createCommand, setCreateCommand, executionStatus } = useSharedData();
     const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>((createCommand?.data ?? selectedCommand)!);
+    const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<{
+        createCommand: boolean | null;
+        updateCommand: boolean | null;
+    }>({ createCommand: null, updateCommand: null });
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
@@ -42,6 +49,15 @@ export default function EditCommandModal() {
     useEffect(() => { // When updateCommand or createCommand instruction gets cleared by Python (i.e., SQL command execution has finished), set isEditing to false
         if(!updateCommand && !createCommand && isEditing) setIsEditing(false);
     }, [updateCommand, createCommand]);
+
+    useEffect(() => { // When Python sends notification about execution of createCommand instruction, show message to user for 3 seconds
+        if(executionStatus.createCommand !== null) {
+            setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: executionStatus.createCommand });
+            setTimeout(() => {
+                setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: null })
+            }, 3000);
+        }
+    }, [executionStatus]);
 
     function handleCategoryClick(selectedCategoryId: string) {
         setFilterCategories(filterCategories.map((iteratedCategory) => 
@@ -157,6 +173,33 @@ export default function EditCommandModal() {
                         
                     </div>
                 </div>
+
+                {/* Execution status message */}
+                <AnimatePresence>
+                { showExecutionStatusMessage.createCommand !== null && (
+                    <motion.div 
+                        className={styles.executionStatusMessageContainer}
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <div>
+                            {/* Icon */}
+                            { showExecutionStatusMessage.createCommand
+                                ? <CircleCheck size={40} color='var(--success-green-light)' />
+                                : <AlertCircle size={40} color='var(--fail-red-light)' />
+                            }
+
+                            {/* Text */}
+                            { showExecutionStatusMessage.createCommand
+                                ? <div>Command created <span className={styles.executionSuccess}>sucessfully</span></div>
+                                : <div><span className={styles.executionFail}>Failed</span> to create command</div>
+                            }
+                        </div>
+                    </motion.div>
+                )}
+                </AnimatePresence>
             </div>
 
             <FloatingEditButtons

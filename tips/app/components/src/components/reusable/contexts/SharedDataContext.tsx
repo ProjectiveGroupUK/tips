@@ -17,7 +17,8 @@ const SharedDataContext = createContext<SharedDataContextInterface>(undefined!);
 interface PropsInterface {
     instructions: { // Instructions sent from Python to be performed by react component
         resetCreateCommand?: boolean;
-        resetCreateCommandProcessingIndicator?: boolean;
+        createCommandExecutionSucceeded?: boolean;
+        createCommandExecutionFailed?: boolean;
         resetSelectedCommand?: boolean;
         resetUpdateCommand?: boolean;
     }
@@ -35,10 +36,17 @@ export interface CreateCommandInterface {
     processing: boolean;
 }
 
+interface ExecutionStatusInterface {
+    createCommand: boolean | null;
+}
+
 interface SharedDataContextInterface {
 
     // Process data
     processData: ProcessDataInterface;
+
+    // Acknowledging status of executed operations
+    executionStatus: ExecutionStatusInterface;
 
     // Selecting a process
     selectedProcess: ProcessDataInterface[0] | null;
@@ -74,6 +82,9 @@ function getObjectWithoutFunctions(obj: Object): Object {
 
 export default function SharedDataContextProvider({ processData: receivedProcessData, selectedProcessId: receivedSelectedProcessId, selectedCommandId: receivedSelectedCommandId, createCommand: receivedCreateCommand, instructions, component, children }: PropsInterface) {
 
+    // Set up execution status tracker
+    const [executionStatus, setExecutionStatus] = useState<ExecutionStatusInterface>({ createCommand: null });
+    
     // Set up process data variables
     const [processData, setProcessData] = useState<ProcessDataInterface>(useMockData ? mockDataSet : (receivedProcessData ?? []));
 
@@ -104,13 +115,23 @@ export default function SharedDataContextProvider({ processData: receivedProcess
 
     useEffect(() => { // Interpret and act upon instructions sent from Python
         if(!instructions) return;
-        const { resetCreateCommand, resetCreateCommandProcessingIndicator, resetSelectedCommand, resetUpdateCommand} = instructions;
+        const { resetCreateCommand, createCommandExecutionSucceeded, createCommandExecutionFailed, resetSelectedCommand, resetUpdateCommand} = instructions;
 
         // Reset create command (would be instructed if CreateCommandModal component was closed)
         if(resetCreateCommand) setCreateCommand(null);
 
-        // Reset create command processing indicator (would be instructed if CreateCommandModal component instructed Python to perform SQL operation to create command in database, and Python has confirmed completing this instruction)
-        if(resetCreateCommandProcessingIndicator) setCreateCommand((prev) => prev ? { ...prev, processing: false } : null);
+        // Reset create command processing indicator and temporarily store executin status (would be instructed if CreateCommandModal component instructed Python to perform SQL operation to create command in database, and Python has confirmed completing this instruction)
+        if(createCommandExecutionSucceeded || createCommandExecutionFailed) {
+            setExecutionStatus((prev) => ({ ...prev, createCommand: Boolean(createCommandExecutionSucceeded) })); // No need to check for createCommandExecutionFailed, because this block of code is reached only if either success or fail are true (so if success is false, fail must be true)
+            setCreateCommand((prev) => prev
+                ? {
+                    ...prev,
+                    processing: false
+                } 
+                : null
+            );
+        }
+        else setExecutionStatus((prev) => ({ ...prev, createCommand: null })); // Reset execution status if neither execution status variables is assigned
 
         // Reset selected command (would be instructed if modal component in different iFrame was closed)
         if(resetSelectedCommand) setSelectedCommandId(null);
@@ -124,6 +145,7 @@ export default function SharedDataContextProvider({ processData: receivedProcess
     const value: SharedDataContextInterface = {
 
         // Process data
+        executionStatus,
         processData: useMockData ? mockDataSet : processData,
         selectedProcess,
         setSelectedProcessId,
