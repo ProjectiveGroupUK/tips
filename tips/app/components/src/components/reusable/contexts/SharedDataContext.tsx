@@ -16,28 +16,35 @@ const SharedDataContext = createContext<SharedDataContextInterface>(undefined!);
 
 interface PropsInterface {
     instructions: { // Instructions sent from Python to be performed by react component
-        resetCreateCommand?: boolean;
-        createCommandExecutionSucceeded?: boolean;
-        createCommandExecutionFailed?: boolean;
-        resetSelectedCommand?: boolean;
-        resetUpdateCommand?: boolean;
+        resetCreateCommand?: boolean; // Instructs the process table to consider create command modal closed
+        resetSelectedCommand?: boolean; // Instructs the process table to consider no process command selected
+        createCommandExecutionSucceeded?: boolean; // Notifies the create command modal that command has been successfuly created
+        createCommandExecutionFailed?: boolean; // Notifies the create command modal that command creation has failed
+        editCommandExecutionSucceeded?: boolean; // Notifies the edit command modal that command has been successfuly updated
+        editCommandExecutionFailed?: boolean; // Notifies the edit command modal that command update has failed
     }
     processData?: ProcessDataInterface;
-    selectedProcessId?: ProcessDataInterface[0]['id'];
-    selectedCommandId?: CommandDataInterface['PROCESS_CMD_ID'];
+    updateCommand?: UpdateCommandInterface;
     createCommand?: CreateCommandInterface;
-    component: 'ProcessTable' | 'ProcessCommandsModal' | 'CreateCommandModal';
+    component: 'ProcessTable' | 'ProcessCommandsModal' | 'CreateCommandModal' | 'EditCommandModal';
     children: React.ReactNode;
 }
 
 export interface CreateCommandInterface {
     data: CommandDataInterface;
     process: ProcessDataInterface[0];
-    processing: boolean;
+    executionStatus: 'processing' | 'succeeded' | 'failed' | undefined;
+}
+
+export interface UpdateCommandInterface {
+    data: Partial<CommandDataInterface> & Required<Pick<CommandDataInterface, 'PROCESS_CMD_ID'>>;
+    process: ProcessDataInterface[0];
+    executionStatus: 'processing' | 'succeeded' | 'failed' | undefined;
 }
 
 interface ExecutionStatusInterface {
     createCommand: boolean | null;
+    editCommand: boolean | null;
 }
 
 interface SharedDataContextInterface {
@@ -48,21 +55,13 @@ interface SharedDataContextInterface {
     // Acknowledging status of executed operations
     executionStatus: ExecutionStatusInterface;
 
-    // Selecting a process
-    selectedProcess: ProcessDataInterface[0] | null;
-    setSelectedProcessId: React.Dispatch<React.SetStateAction<number | null>>;
-
-    // Selecting a command
-    selectedCommand: CommandDataInterface | null;
-    setSelectedCommandId: React.Dispatch<React.SetStateAction<number | null>>;
-
     // Creating new command
     createCommand: CreateCommandInterface | null;
     setCreateCommand: React.Dispatch<React.SetStateAction<CreateCommandInterface | null>>;
 
     // Updating command parameters
-    updateCommand: Partial<CommandDataInterface> | null;
-    setUpdateCommand: React.Dispatch<React.SetStateAction<Partial<CommandDataInterface> | null>>;
+    updateCommand: UpdateCommandInterface | null;
+    setUpdateCommand: React.Dispatch<React.SetStateAction<UpdateCommandInterface | null>>;
 }
 
 export function useSharedData() {
@@ -80,42 +79,25 @@ function getObjectWithoutFunctions(obj: Object): Object {
     }, {});
 }
 
-export default function SharedDataContextProvider({ processData: receivedProcessData, selectedProcessId: receivedSelectedProcessId, selectedCommandId: receivedSelectedCommandId, createCommand: receivedCreateCommand, instructions, component, children }: PropsInterface) {
+export default function SharedDataContextProvider({ processData: receivedProcessData, createCommand: receivedCreateCommand, updateCommand: receivedUpdateCommand, instructions, component, children }: PropsInterface) {
 
     // Set up execution status tracker
-    const [executionStatus, setExecutionStatus] = useState<ExecutionStatusInterface>({ createCommand: null });
+    const [executionStatus, setExecutionStatus] = useState<ExecutionStatusInterface>({ createCommand: null, editCommand: null });
     
     // Set up process data variables
     const [processData, setProcessData] = useState<ProcessDataInterface>(useMockData ? mockDataSet : (receivedProcessData ?? []));
 
-    const [selectedProcessId, setSelectedProcessId] = useState<number | null>(receivedSelectedProcessId ?? null);
-    const [selectedProcess, setSelectedProcess] = useState<ProcessDataInterface[0] | null>(null);
-
-    const [selectedCommandId, setSelectedCommandId] = useState<number | null>(receivedSelectedCommandId ?? null);
-    const [selectedCommand, setSelectedCommand] = useState<CommandDataInterface | null>(null);
-
     const [createCommand, setCreateCommand] = useState<CreateCommandInterface | null>(receivedCreateCommand ? receivedCreateCommand : null);
 
-    const [updateCommand, setUpdateCommand] = useState<Partial<CommandDataInterface> | null>(null);
+    const [updateCommand, setUpdateCommand] = useState<UpdateCommandInterface | null>(receivedUpdateCommand ? receivedUpdateCommand : null);
 
     if(JSON.stringify(receivedProcessData ?? []) !== JSON.stringify(processData)) { // Update processData variable when prop passed down from Python updates (useEffect hook does not fire when prop updates)
         setProcessData(receivedProcessData ?? []);
     }
 
-    // Configure hooks to ensure that the selected process and command are always up to date
-    useMemo(() => { // Update selectedProcess when selectedProcessId changes
-        const dataset = useMockData ? mockDataSet : processData;
-        setSelectedProcess(dataset.find((process) => process.id === selectedProcessId) || null);
-    }, [selectedProcessId, (useMockData ? mockDataSet : processData)]);
-
-    useMemo(() => { // Update selectedCommand when selectedCommandId changes
-        const dataset = useMockData ? mockDataSet : processData;
-        setSelectedCommand(dataset.find((process) => process.id === selectedProcessId)?.steps.find((command) => command.PROCESS_CMD_ID === selectedCommandId) || null);
-    }, [selectedCommandId, selectedProcessId, (useMockData ? mockDataSet : processData)]);
-
     useEffect(() => { // Interpret and act upon instructions sent from Python
         if(!instructions) return;
-        const { resetCreateCommand, createCommandExecutionSucceeded, createCommandExecutionFailed, resetSelectedCommand, resetUpdateCommand} = instructions;
+        const { resetCreateCommand, createCommandExecutionSucceeded, createCommandExecutionFailed, resetSelectedCommand, editCommandExecutionSucceeded, editCommandExecutionFailed} = instructions;
 
         // Reset create command (would be instructed if CreateCommandModal component was closed)
         if(resetCreateCommand) setCreateCommand(null);
@@ -126,18 +108,27 @@ export default function SharedDataContextProvider({ processData: receivedProcess
             setCreateCommand((prev) => prev
                 ? {
                     ...prev,
-                    processing: false
+                    executionStatus: undefined
                 } 
                 : null
             );
         }
         else setExecutionStatus((prev) => ({ ...prev, createCommand: null })); // Reset execution status if neither execution status variables is assigned
 
-        // Reset selected command (would be instructed if modal component in different iFrame was closed)
-        if(resetSelectedCommand) setSelectedCommandId(null);
+        // Reset update command processing indicator (would be instructed if EditComandModal component instructed Python to perform SQL operation to update command parameters in database, and Python has confirmed completing this instruction)
+        if(editCommandExecutionSucceeded || editCommandExecutionFailed) {
+            setExecutionStatus((prev) => ({ ...prev, editCommand: Boolean(editCommandExecutionSucceeded) })); // No need to check for editCommandExecutionFailed, because this block of code is reached only if either success or fail are true (so if success is false, fail must be true)
+            setUpdateCommand((prev) => prev
+                ? {
+                    ...prev,
+                    executionStatus: undefined
+                } 
+                : null
+            );
+        }
 
-        // Reset update command (would be instructed if EditComandModal component instructed Python to perform SQL operation to update command parameters in database, and Python has confirmed acknowledging this instruction)
-        if(resetUpdateCommand) setUpdateCommand(null);
+        // Reset selected command (would be instructed if modal component in different iFrame was closed)
+        if(resetSelectedCommand) setUpdateCommand(null);
     }, [instructions])
 
 
@@ -147,10 +138,6 @@ export default function SharedDataContextProvider({ processData: receivedProcess
         // Process data
         executionStatus,
         processData: useMockData ? mockDataSet : processData,
-        selectedProcess,
-        setSelectedProcessId,
-        selectedCommand,
-        setSelectedCommandId,
         createCommand,
         setCreateCommand,
         updateCommand,
@@ -159,7 +146,7 @@ export default function SharedDataContextProvider({ processData: receivedProcess
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [selectedProcess, selectedCommand, updateCommand, createCommand]);
+    }, [createCommand, updateCommand]);
 
     return (
         <SharedDataContext.Provider value={value}>

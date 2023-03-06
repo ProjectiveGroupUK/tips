@@ -41,14 +41,13 @@ def createCommandModal(key: str, commandData: dict, instructions: dict):
             instructions = instructions
     )
 
-def processCommandsModal(key: str, processData: dict, selectedProcessId: int, selectedCommandId: int, instructions: dict):
-    modal = Modal(title="Process Comands Modal", key="processCommandsModal")
+def editCommandModal(key: str, processData: dict, commandData: dict, instructions: dict):
+    modal = Modal(title="Edit Comand Modal", key="editCommandModal")
     with modal.container():
         return _getComponent(
             key = key,
-            component = 'ProcessCommandsModal',
+            component = 'EditCommandModal',
             processData = processData,
-            selectedProcessId = selectedProcessId,
-            selectedCommandId = selectedCommandId,
+            updateCommand = commandData,
             instructions = instructions
     )

@@ -199,8 +199,9 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                 return <div>{cell.value}</div>
 
             case 'property_value':
-                const savingEditedValue = updateCommandRef.current?.[propertyName] !== undefined;
-                const cellValue = savingEditedValue ? updateCommandRef.current![propertyName] : cell.value;
+                const originalCommand = updateCommandRef.current?.process.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === updateCommandRef.current?.data.PROCESS_CMD_ID);
+                const savingEditedValue = updateCommandRef.current?.executionStatus === 'processing' && updateCommandRef.current?.data[propertyName] !== originalCommand?.[propertyName];
+                const cellValue = savingEditedValue ? updateCommandRef.current!.data[propertyName] : cell.value;
                 const placeholder = cellValue === null ? 'NULL' : 'Empty String';
 
                 return (

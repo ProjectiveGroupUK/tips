@@ -29,8 +29,8 @@ export interface FilterCategoryInterface{
 }
 
 export default function EditCommandModal() {
-    const { selectedProcess, selectedCommand, setSelectedCommandId, updateCommand, setUpdateCommand, createCommand, setCreateCommand, executionStatus } = useSharedData();
-    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>((createCommand?.data ?? selectedCommand)!);
+    const { updateCommand, setUpdateCommand, createCommand, setCreateCommand, executionStatus } = useSharedData();
+    const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(getNonEditedCommandData()!);
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<{
         createCommand: boolean | null;
         updateCommand: boolean | null;
@@ -50,14 +50,29 @@ export default function EditCommandModal() {
         if(!updateCommand && !createCommand && isEditing) setIsEditing(false);
     }, [updateCommand, createCommand]);
 
-    useEffect(() => { // When Python sends notification about execution of createCommand instruction, show message to user for 3 seconds
+    useEffect(() => { // When Python sends notification about execution of createCommand or updateCommand instruction, show message to user for 3 seconds
+
+        // createCommand
         if(executionStatus.createCommand !== null) {
             setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: executionStatus.createCommand });
             setTimeout(() => {
                 setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: null })
             }, 3000);
         }
+
+        // updateCommand
+        if(executionStatus.editCommand !== null) {
+            setShowExecutionStatusMessage({ ...showExecutionStatusMessage, updateCommand: executionStatus.editCommand });
+            setTimeout(() => {
+                setShowExecutionStatusMessage({ ...showExecutionStatusMessage, updateCommand: null })
+            }, 3000);
+        }
     }, [executionStatus]);
+
+    function getNonEditedCommandData() {
+        return createCommand?.data // If creating new command, return default data that the new command was initialised with
+        ?? updateCommand?.process?.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === updateCommand.data.PROCESS_CMD_ID); // If editing existing command, obtain selected command ID from updateCommand instruction and return data for that command from the process property
+    }
 
     function handleCategoryClick(selectedCategoryId: string) {
         setFilterCategories(filterCategories.map((iteratedCategory) => 
@@ -83,7 +98,7 @@ export default function EditCommandModal() {
     }
 
     function handleCancel() {
-        setEditedCommandValues(selectedCommand!);
+        setEditedCommandValues(getNonEditedCommandData()!);
         setCreateCommand(null);
         setIsEditing(false);
     }
@@ -93,28 +108,35 @@ export default function EditCommandModal() {
             setCreateCommand((prevState) => ({
                 ...prevState!,
                 data: editedCommandValues,
-                processing: true
+                executionStatus: 'processing'
             }))
         }
         else { // Update existing command
-            const editedProperties = getEditedProperties(editedCommandValues, selectedCommand!);
+            const editedProperties = getEditedProperties(editedCommandValues, getNonEditedCommandData()!);
             if(Object.keys(editedProperties).length === 0) { // No changes have been made to command
                 setIsEditing(false);
                 return;
             }
-            setUpdateCommand(editedProperties);
+            setUpdateCommand((prevState) => ({
+                ...prevState!,
+                data: {
+                    ...prevState!.data,
+                    ...editedProperties
+                    
+                },
+                executionStatus: 'processing'
+            }));
         }      
     }
 
     function handleCloseModal() {
-        setSelectedCommandId(null);
+        setUpdateCommand(null);
         setCreateCommand(null);
     }
 
-
-    const process = createCommand?.process ?? selectedProcess;
-    const command = createCommand?.data ?? selectedCommand;
-    const processing = createCommand ? createCommand.processing : (updateCommand !== null);
+    const process = createCommand?.process ?? updateCommand?.process;
+    const command = getNonEditedCommandData();
+    const processing = Boolean(createCommand?.executionStatus === 'processing' ?? updateCommand?.executionStatus === 'processing');
 
     return(
         <Modal
@@ -176,7 +198,7 @@ export default function EditCommandModal() {
 
                 {/* Execution status message */}
                 <AnimatePresence>
-                { showExecutionStatusMessage.createCommand !== null && (
+                { (showExecutionStatusMessage.createCommand || executionStatus.editCommand) && (
                     <motion.div 
                         className={styles.executionStatusMessageContainer}
                         initial={{ opacity: 0, y: -20 }}
@@ -193,8 +215,8 @@ export default function EditCommandModal() {
 
                             {/* Text */}
                             { showExecutionStatusMessage.createCommand
-                                ? <div>Command created <span className={styles.executionSuccess}>sucessfully</span></div>
-                                : <div><span className={styles.executionFail}>Failed</span> to create command</div>
+                                ? <div>Command { showExecutionStatusMessage.createCommand ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
+                                : <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.createCommand ? 'create' : 'update' } command</div>
                             }
                         </div>
                     </motion.div>

@@ -14,7 +14,8 @@ class CreateCommandModalInstruction:
     CREATE_COMMAND_EXECUTION_FAILED = 'createCommandExecutionFailed'
 
 class EditCommandModalInstruction:
-    RESET_UPDATE_COMMAND = 'resetUpdateCommand'
+    EDIT_COMMAND_EXECUTION_SUCCEEDED = 'editCommandExecutionSucceeded'
+    EDIT_COMMAND_EXECUTION_FAILED = 'editCommandExecutionFailed'
 
 class CommandUpdateProperty:
     CMD_TYPE = 'cmd_type'

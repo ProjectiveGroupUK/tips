@@ -23,8 +23,10 @@ interface PropsInterface {
 
 type Data = object;
 
-export default function ProcessCommandsTable() {
-    const { selectedProcess, setSelectedCommandId } = useSharedData();
+export default function ProcessCommandsTable({ selectedProcess }: { 
+    selectedProcess: ProcessDataInterface[0];
+}) {
+    const { setUpdateCommand } = useSharedData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
 
     return (
@@ -51,7 +53,11 @@ export default function ProcessCommandsTable() {
                         <tr 
                             key={row.id} 
                             onClick={() => { // When clicked, update expandedRowId state variable
-                                setSelectedCommandId(Number(row.id));
+                                setUpdateCommand(() => ({
+                                    data: selectedProcess.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID = Number(row.id))!,
+                                    process: selectedProcess,
+                                    executionStatus: undefined
+                                }))
                             }}
                         >
                             { row.cells.map(cell => {

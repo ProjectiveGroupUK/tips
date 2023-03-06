@@ -1,5 +1,5 @@
 // React
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 // StreamLit
 import { Streamlit } from 'streamlit-component-lib';
@@ -31,14 +31,16 @@ type Data = object;
 
 export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
-    const { processData, selectedProcess, setSelectedProcessId, setCreateCommand } = useSharedData();
+    const { processData, setCreateCommand } = useSharedData();
 
     const tableInstance = generateTableData({ processData: processData, handleNewCommandClick: handleNewCommandClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
+    const [selectedProcessId, setSelectedProcessId] = useState<ProcessDataInterface[0]['id'] | null>(null);
+
     useEffect(() => { // Expand row when clicked
-        rows.forEach((row) => row.toggleRowExpanded(row.id === selectedProcess?.id.toString()))
-    }, [selectedProcess?.id])
+        rows.forEach((row) => row.toggleRowExpanded(row.id === selectedProcessId?.toString()))
+    }, [selectedProcessId])
 
     function handleNewCommandClick(rowId: ProcessDataInterface[0]['id']) {
         const process = processData.find((process) => process.id === rowId)!;
@@ -64,7 +66,7 @@ export default function ProcessTable() {
                 ACTIVE: 'Y'
             },
             process: process,
-            processing: false
+            executionStatus: undefined
         });
     }
 
@@ -88,7 +90,7 @@ export default function ProcessTable() {
             {
                 rows.map((row, index) => {
                     prepareRow(row)
-                    const isSelected = row.id === selectedProcess?.id.toString();
+                    const isSelected = row.id === selectedProcessId?.toString();
                     const expandedRowExistsAbove = rows.some((row, i) => i < index && row.isExpanded); // Used for styling purposes to determine colour of row (since :even and :odd selectors don't work with expanded rows the way I need them to)
                     const dynamicIndexIsEven = (index - (Number(expandedRowExistsAbove) * 2)) % 2 === 0;
                     
@@ -114,7 +116,7 @@ export default function ProcessTable() {
                                 <tr className={`${styles.rowSubComponent} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`}>
                                     <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
                                         <div>
-                                            <ProcessCommandsTable />
+                                            <ProcessCommandsTable selectedProcess={processData.find((iteratedProcess) => iteratedProcess.id === selectedProcessId)!} />
                                         </div>
                                     </td>
                                 </tr>

@@ -10,7 +10,7 @@ import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
-import { CreateCommandInterface } from '@/components/reusable/contexts/SharedDataContext';
+import { UpdateCommandInterface, CreateCommandInterface } from '@/components/reusable/contexts/SharedDataContext';
 
 // CSS
 import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
@@ -24,13 +24,13 @@ interface PropsInterface_ProcessTable {
   }
 }
 
-interface PropsInterface_ProcessCommandsModal {
-  component: 'ProcessCommandsModal';
+interface PropsInterface_EditCommandModal {
+  component: 'EditCommandModal';
   processData: ProcessDataInterface;
-  selectedProcessId: number;
-  selectedCommandId: number;
+  updateCommand: UpdateCommandInterface;
   instructions: {
-    resetUpdateCommand: boolean;
+    editCommandExecutionSucceeded: boolean;
+    editCommandExecutionFailed: boolean;
   }
 }
 
@@ -44,7 +44,7 @@ interface PropsInterface_CreateCommandModal {
 }
 
 interface ComponentPropsWithArgs extends ComponentProps {
-  args: PropsInterface_ProcessTable | PropsInterface_ProcessCommandsModal | PropsInterface_CreateCommandModal;
+  args: PropsInterface_ProcessTable | /*PropsInterface_ProcessCommandsModal | */PropsInterface_CreateCommandModal | PropsInterface_EditCommandModal;
 }
 
 function App(props: ComponentPropsWithArgs) {
@@ -54,15 +54,15 @@ function App(props: ComponentPropsWithArgs) {
   if(component === 'ProcessTable') {
     const { instructions, processData } = props.args;
     return(
-      <SharedDataContextProvider instructions={instructions} processData={processData} component={component}>
+      <SharedDataContextProvider component={component} instructions={instructions} processData={processData}>
         <ProcessTable />
       </SharedDataContextProvider>
     );
   }
-  else if(component === 'ProcessCommandsModal') {
-    const { processData, selectedProcessId, selectedCommandId, instructions } = props.args;
+  else if (component === 'EditCommandModal') {
+    const { processData, updateCommand, instructions } = props.args;
     return(
-      <SharedDataContextProvider processData={processData} selectedProcessId={selectedProcessId} selectedCommandId={selectedCommandId} instructions={instructions} component={component}>
+      <SharedDataContextProvider component={component} processData={processData} updateCommand={updateCommand} instructions={instructions}>
         <EditCommandModal />
       </SharedDataContextProvider>
     );
