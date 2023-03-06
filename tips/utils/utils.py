@@ -75,7 +75,7 @@ class Globals:
         self.setProjectDir(Path.cwd())
         self.setProjectID(projectID=projectID)
 
-def escapeValuesForSQL(dataDict: dict[str, int | str | None], fieldsToSkip: list[str] = []) -> dict:
+def escapeValuesForSQL(dataDict: dict, fieldsToSkip: list = []) -> dict: # Python 3.9+ parameter types: dataDict: dict[str, int | str | None], fieldsToSkip: list[str]
     formattedUpdates = {}
     for update in dataDict.keys():
         if update in fieldsToSkip:
