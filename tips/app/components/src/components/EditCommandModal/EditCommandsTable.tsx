@@ -18,6 +18,9 @@ import { PulseLoader } from 'react-spinners';
 import { CommandDataInterface } from "@/interfaces/Interfaces";
 import { FilterCategoryInterface } from './EditCommandModal';
 
+// Enums
+import { ExecutionStatus } from '@/enums/enums';
+
 // CSS
 import styles from '@/styles/processTable/editCommandsTable.module.css';
 
@@ -200,7 +203,7 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
 
             case 'property_value':
                 const originalCommand = updateCommandRef.current?.process.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === updateCommandRef.current?.data.PROCESS_CMD_ID);
-                const savingEditedValue = updateCommandRef.current?.executionStatus === 'processing' && updateCommandRef.current?.data[propertyName] !== originalCommand?.[propertyName];
+                const savingEditedValue = updateCommandRef.current?.executionStatus === ExecutionStatus.RUNNING && updateCommandRef.current?.data[propertyName] !== originalCommand?.[propertyName];
                 const cellValue = savingEditedValue ? updateCommandRef.current!.data[propertyName] : cell.value;
                 const placeholder = cellValue === null ? 'NULL' : 'Empty String';
 

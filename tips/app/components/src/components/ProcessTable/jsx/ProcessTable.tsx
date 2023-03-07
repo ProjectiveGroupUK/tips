@@ -17,6 +17,9 @@ import { useSharedData } from '@/components/reusable/contexts/SharedDataContext'
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
+// Enums
+import { ExecutionStatus } from '@/enums/enums';
+
 // CSS
 import styles from '@/styles/processTable/processTable.module.css';
 
@@ -66,7 +69,7 @@ export default function ProcessTable() {
                 ACTIVE: 'Y'
             },
             process: process,
-            executionStatus: undefined
+            executionStatus: ExecutionStatus.NONE
         });
     }
 

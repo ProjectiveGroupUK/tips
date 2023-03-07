@@ -14,6 +14,9 @@ import { useSharedData } from '@/components/reusable/contexts/SharedDataContext'
 // Interfaces
 import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
 
+// Enums
+import { ExecutionStatus } from '@/enums/enums';
+
 // CSS
 import styles from '@/styles/processTable/commandsTable.module.css';
 
@@ -54,9 +57,9 @@ export default function ProcessCommandsTable({ selectedProcess }: {
                             key={row.id} 
                             onClick={() => { // When clicked, update expandedRowId state variable
                                 setUpdateCommand(() => ({
-                                    data: selectedProcess.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID = Number(row.id))!,
+                                    data: selectedProcess.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === Number(row.id))!,
                                     process: selectedProcess,
-                                    executionStatus: undefined
+                                    executionStatus: ExecutionStatus.NONE
                                 }))
                             }}
                         >

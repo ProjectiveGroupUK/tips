@@ -10,12 +10,16 @@ class ProcessTableInstruction:
     RESET_CREATE_COMMAND = 'resetCreateCommand'
 
 class CreateCommandModalInstruction:
-    CREATE_COMMAND_EXECUTION_SUCCEEDED = 'createCommandExecutionSucceeded'
-    CREATE_COMMAND_EXECUTION_FAILED = 'createCommandExecutionFailed'
+    EXECUTION_STATUS = 'createCommandExecutionStatus'
 
 class EditCommandModalInstruction:
-    EDIT_COMMAND_EXECUTION_SUCCEEDED = 'editCommandExecutionSucceeded'
-    EDIT_COMMAND_EXECUTION_FAILED = 'editCommandExecutionFailed'
+    EXECUTION_STATUS = 'editCommandExecutionStatus'
+
+class ExecutionStatus:
+    RUNNING = 'running'
+    SUCCESS = 'success'
+    FAIL = 'fail'
+    NONE = 'none'
 
 class CommandUpdateProperty:
     CMD_TYPE = 'cmd_type'

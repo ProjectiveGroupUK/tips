@@ -15,6 +15,9 @@ import FloatingEditButtons from "./FloatingEditButtons";
 // Interfaces
 import { CommandDataInterface } from "@/interfaces/Interfaces";
 
+// Enums
+import { ExecutionStatus } from "@/enums/enums";
+
 // CSS
 import styles from "@/styles/processTable/editCommandModal.module.css";
 
@@ -32,9 +35,9 @@ export default function EditCommandModal() {
     const { updateCommand, setUpdateCommand, createCommand, setCreateCommand, executionStatus } = useSharedData();
     const [editedCommandValues, setEditedCommandValues] = useState<CommandDataInterface>(getNonEditedCommandData()!);
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<{
-        createCommand: boolean | null;
-        updateCommand: boolean | null;
-    }>({ createCommand: null, updateCommand: null });
+        createCommand: Exclude<ExecutionStatus, ExecutionStatus.RUNNING>;
+        updateCommand: Exclude<ExecutionStatus, ExecutionStatus.RUNNING>;
+    }>({ createCommand: ExecutionStatus.NONE, updateCommand: ExecutionStatus.NONE });
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
@@ -53,18 +56,18 @@ export default function EditCommandModal() {
     useEffect(() => { // When Python sends notification about execution of createCommand or updateCommand instruction, show message to user for 3 seconds
 
         // createCommand
-        if(executionStatus.createCommand !== null) {
+        if(executionStatus.createCommand === ExecutionStatus.SUCCESS || executionStatus.createCommand === ExecutionStatus.FAIL) {
             setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: executionStatus.createCommand });
             setTimeout(() => {
-                setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: null })
+                setShowExecutionStatusMessage({ ...showExecutionStatusMessage, createCommand: ExecutionStatus.NONE })
             }, 3000);
         }
 
         // updateCommand
-        if(executionStatus.editCommand !== null) {
+        if(executionStatus.editCommand === ExecutionStatus.SUCCESS || executionStatus.editCommand === ExecutionStatus.FAIL) {
             setShowExecutionStatusMessage({ ...showExecutionStatusMessage, updateCommand: executionStatus.editCommand });
             setTimeout(() => {
-                setShowExecutionStatusMessage({ ...showExecutionStatusMessage, updateCommand: null })
+                setShowExecutionStatusMessage({ ...showExecutionStatusMessage, updateCommand: ExecutionStatus.NONE })
             }, 3000);
         }
     }, [executionStatus]);
@@ -108,7 +111,7 @@ export default function EditCommandModal() {
             setCreateCommand((prevState) => ({
                 ...prevState!,
                 data: editedCommandValues,
-                executionStatus: 'processing'
+                executionStatus: ExecutionStatus.RUNNING
             }))
         }
         else { // Update existing command
@@ -124,7 +127,7 @@ export default function EditCommandModal() {
                     ...editedProperties
                     
                 },
-                executionStatus: 'processing'
+                executionStatus: ExecutionStatus.RUNNING
             }));
         }      
     }
@@ -136,7 +139,7 @@ export default function EditCommandModal() {
 
     const process = createCommand?.process ?? updateCommand?.process;
     const command = getNonEditedCommandData();
-    const processing = Boolean(createCommand?.executionStatus === 'processing' ?? updateCommand?.executionStatus === 'processing');
+    const processing = Boolean(createCommand?.executionStatus === ExecutionStatus.RUNNING ?? updateCommand?.executionStatus === ExecutionStatus.RUNNING);
 
     return(
         <Modal
@@ -198,7 +201,7 @@ export default function EditCommandModal() {
 
                 {/* Execution status message */}
                 <AnimatePresence>
-                { (showExecutionStatusMessage.createCommand || executionStatus.editCommand) && (
+                { ((showExecutionStatusMessage.createCommand === ExecutionStatus.SUCCESS || showExecutionStatusMessage.createCommand === ExecutionStatus.FAIL) || (executionStatus.editCommand === ExecutionStatus.SUCCESS || executionStatus.editCommand == ExecutionStatus.FAIL)) && (
                     <motion.div 
                         className={styles.executionStatusMessageContainer}
                         initial={{ opacity: 0, y: -20 }}

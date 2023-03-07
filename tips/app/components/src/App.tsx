@@ -12,6 +12,9 @@ import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
 import { UpdateCommandInterface, CreateCommandInterface } from '@/components/reusable/contexts/SharedDataContext';
 
+// Enums
+import { ExecutionStatus } from './enums/enums';
+
 // CSS
 import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
 
@@ -24,27 +27,25 @@ interface PropsInterface_ProcessTable {
   }
 }
 
+interface PropsInterface_CreateCommandModal {
+  component: 'CreateCommandModal';
+  createCommand: CreateCommandInterface;
+  instructions: {
+    createCommandExecutionStatus: ExecutionStatus;
+  }
+}
+
 interface PropsInterface_EditCommandModal {
   component: 'EditCommandModal';
   processData: ProcessDataInterface;
   updateCommand: UpdateCommandInterface;
   instructions: {
-    editCommandExecutionSucceeded: boolean;
-    editCommandExecutionFailed: boolean;
-  }
-}
-
-interface PropsInterface_CreateCommandModal {
-  component: 'CreateCommandModal';
-  createCommand: CreateCommandInterface;
-  instructions: {
-    createCommandExecutionSucceeded: boolean;
-    createCommandExecutionFailed: boolean;
+    editCommandExecutionStatus: ExecutionStatus;
   }
 }
 
 interface ComponentPropsWithArgs extends ComponentProps {
-  args: PropsInterface_ProcessTable | /*PropsInterface_ProcessCommandsModal | */PropsInterface_CreateCommandModal | PropsInterface_EditCommandModal;
+  args: PropsInterface_ProcessTable | PropsInterface_CreateCommandModal | PropsInterface_EditCommandModal;
 }
 
 function App(props: ComponentPropsWithArgs) {

@@ -1,11 +1,14 @@
 // React
-import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 // Streamlit
 import { Streamlit } from 'streamlit-component-lib';
 
 // Interfaces
 import { CommandDataInterface, ProcessDataInterface } from '@/interfaces/Interfaces';
+
+// Enums
+import { ExecutionStatus } from '@/enums/enums';
 
 // Mock data
 import mockDataSet from '@/mockData/mockProcessData';
@@ -18,33 +21,32 @@ interface PropsInterface {
     instructions: { // Instructions sent from Python to be performed by react component
         resetCreateCommand?: boolean; // Instructs the process table to consider create command modal closed
         resetSelectedCommand?: boolean; // Instructs the process table to consider no process command selected
-        createCommandExecutionSucceeded?: boolean; // Notifies the create command modal that command has been successfuly created
-        createCommandExecutionFailed?: boolean; // Notifies the create command modal that command creation has failed
-        editCommandExecutionSucceeded?: boolean; // Notifies the edit command modal that command has been successfuly updated
-        editCommandExecutionFailed?: boolean; // Notifies the edit command modal that command update has failed
+        createCommandExecutionStatus?: ExecutionStatus; // Notifies the create command modal whether SQL operation has concluded and whether it was successful or not
+        editCommandExecutionStatus?: ExecutionStatus; // Notifies the edit command modal whether SQL operation has concluded and whether it was successful or not
     }
     processData?: ProcessDataInterface;
     updateCommand?: UpdateCommandInterface;
     createCommand?: CreateCommandInterface;
-    component: 'ProcessTable' | 'ProcessCommandsModal' | 'CreateCommandModal' | 'EditCommandModal';
+    component: 'ProcessTable' | 'CreateCommandModal' | 'EditCommandModal';
     children: React.ReactNode;
 }
 
 export interface CreateCommandInterface {
     data: CommandDataInterface;
     process: ProcessDataInterface[0];
-    executionStatus: 'processing' | 'succeeded' | 'failed' | undefined;
+    executionStatus: ExecutionStatus;
+    createdCommandId?: number | undefined;
 }
 
 export interface UpdateCommandInterface {
     data: Partial<CommandDataInterface> & Required<Pick<CommandDataInterface, 'PROCESS_CMD_ID'>>;
     process: ProcessDataInterface[0];
-    executionStatus: 'processing' | 'succeeded' | 'failed' | undefined;
+    executionStatus: ExecutionStatus;
 }
 
 interface ExecutionStatusInterface {
-    createCommand: boolean | null;
-    editCommand: boolean | null;
+    createCommand: ExecutionStatus;
+    editCommand: ExecutionStatus;
 }
 
 interface SharedDataContextInterface {
@@ -82,7 +84,7 @@ function getObjectWithoutFunctions(obj: Object): Object {
 export default function SharedDataContextProvider({ processData: receivedProcessData, createCommand: receivedCreateCommand, updateCommand: receivedUpdateCommand, instructions, component, children }: PropsInterface) {
 
     // Set up execution status tracker
-    const [executionStatus, setExecutionStatus] = useState<ExecutionStatusInterface>({ createCommand: null, editCommand: null });
+    const [executionStatus, setExecutionStatus] = useState<ExecutionStatusInterface>({ createCommand: ExecutionStatus.NONE, editCommand: ExecutionStatus.NONE });
     
     // Set up process data variables
     const [processData, setProcessData] = useState<ProcessDataInterface>(useMockData ? mockDataSet : (receivedProcessData ?? []));
@@ -97,35 +99,36 @@ export default function SharedDataContextProvider({ processData: receivedProcess
 
     useEffect(() => { // Interpret and act upon instructions sent from Python
         if(!instructions) return;
-        const { resetCreateCommand, createCommandExecutionSucceeded, createCommandExecutionFailed, resetSelectedCommand, editCommandExecutionSucceeded, editCommandExecutionFailed} = instructions;
+        const { resetCreateCommand, resetSelectedCommand, createCommandExecutionStatus, editCommandExecutionStatus } = instructions;
 
         // Reset create command (would be instructed if CreateCommandModal component was closed)
         if(resetCreateCommand) setCreateCommand(null);
 
         // Reset create command processing indicator and temporarily store executin status (would be instructed if CreateCommandModal component instructed Python to perform SQL operation to create command in database, and Python has confirmed completing this instruction)
-        if(createCommandExecutionSucceeded || createCommandExecutionFailed) {
-            setExecutionStatus((prev) => ({ ...prev, createCommand: Boolean(createCommandExecutionSucceeded) })); // No need to check for createCommandExecutionFailed, because this block of code is reached only if either success or fail are true (so if success is false, fail must be true)
+        if(createCommandExecutionStatus === ExecutionStatus.SUCCESS || createCommandExecutionStatus === ExecutionStatus.FAIL) {
+            setExecutionStatus((prev) => ({ ...prev, createCommand: createCommandExecutionStatus }));
             setCreateCommand((prev) => prev
                 ? {
                     ...prev,
-                    executionStatus: undefined
+                    executionStatus: ExecutionStatus.NONE
                 } 
                 : null
             );
         }
-        else setExecutionStatus((prev) => ({ ...prev, createCommand: null })); // Reset execution status if neither execution status variables is assigned
+        else setExecutionStatus((prev) => ({ ...prev, createCommand: ExecutionStatus.NONE })); // Reset execution status if neither execution status variables is assigned
 
         // Reset update command processing indicator (would be instructed if EditComandModal component instructed Python to perform SQL operation to update command parameters in database, and Python has confirmed completing this instruction)
-        if(editCommandExecutionSucceeded || editCommandExecutionFailed) {
-            setExecutionStatus((prev) => ({ ...prev, editCommand: Boolean(editCommandExecutionSucceeded) })); // No need to check for editCommandExecutionFailed, because this block of code is reached only if either success or fail are true (so if success is false, fail must be true)
+        if(editCommandExecutionStatus === ExecutionStatus.SUCCESS || editCommandExecutionStatus === ExecutionStatus.FAIL) {
+            setExecutionStatus((prev) => ({ ...prev, editCommand: editCommandExecutionStatus }));
             setUpdateCommand((prev) => prev
                 ? {
                     ...prev,
-                    executionStatus: undefined
+                    executionStatus: ExecutionStatus.NONE
                 } 
                 : null
             );
         }
+        else setExecutionStatus((prev) => ({ ...prev, editCommand: ExecutionStatus.NONE })); // Reset execution status if neither execution status variables is assigned
 
         // Reset selected command (would be instructed if modal component in different iFrame was closed)
         if(resetSelectedCommand) setUpdateCommand(null);
