@@ -14,7 +14,8 @@ from tips.utils.utils import Globals, escapeValuesForSQL
 from utils import processesTable, createCommandModal, editCommandModal
 
 # Enums
-from tips.app.enums import StateVariable, ProcessTableInstruction, CommandUpdateProperty, CreateCommandModalInstruction, EditCommandModalInstruction, ExecutionStatus
+from tips.app.enums import StateVariable, ProcessDataProperty, CommandDataProperty
+from tips.app.enums import ProcessTableInstruction, CreateCommandModalInstruction, EditCommandModalInstruction, ExecutionStatus
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
@@ -58,10 +59,10 @@ def _loadListOfProcesses():
         # Iterate through keys in dictionary 'results' and for each unique process name, capture process details in 'fetchedProcessData'
         prevVal = ""
         for row in results:
-            processID: str = row["PROCESS_ID"]
-            processName: str = row["PROCESS_NAME"]
-            processDescription: str | None = row["PROCESS_DESCRIPTION"]
-            processStatus = "active" if row["PROCESS_ACTIVE"] == "Y" else "inactive"
+            processID: str = row[ProcessDataProperty.PROCESS_ID]
+            processName: str = row[ProcessDataProperty.PROCESS_NAME]
+            processDescription: str | None = row[ProcessDataProperty.PROCESS_DESCRIPTION]
+            processStatus = "active" if row[ProcessDataProperty.PROCESS_ACTIVE] == "Y" else "inactive"
             if processName != prevVal:
                 fetchedProcessData.append(
                     {
@@ -83,22 +84,24 @@ def _loadListOfProcesses():
 
 def _stripStepDict(stepDict: dict): # Removes process keys from dictionary intended to store data on process's command, since the command dictionary is nested within the process dictionary (which contains the process's details already)
     strippedDict = stepDict.copy()
-    strippedDict.pop("PROCESS_ID")
-    strippedDict.pop("PROCESS_NAME")
-    strippedDict.pop("PROCESS_DESCRIPTION")
-    strippedDict.pop("PROCESS_ACTIVE")
+    strippedDict.pop(ProcessDataProperty.PROCESS_ID)
+    strippedDict.pop(ProcessDataProperty.PROCESS_NAME)
+    strippedDict.pop(ProcessDataProperty.PROCESS_DESCRIPTION)
+    strippedDict.pop(ProcessDataProperty.PROCESS_ACTIVE)
     return strippedDict
 
 def _createProcessCommand(processId: int, commandData: dict):
 
     # Validate that both processId has been provided and is integer
     if not isinstance(processId, int):
+        logger.error(f"Process ID is not an integer: '{processId}' (type: {type(processId)})")
         return True
 
-    # Validate that commandData dictionary has all required keys
-    requiredKeys = [propertyKey for propertyKey in dir(CommandUpdateProperty) if not (propertyKey.startswith('__') and propertyKey.endswith('__'))]
-    cleansedCommandData = { key: commandData[key] for key in commandData.keys() if key in requiredKeys }
-    if len(cleansedCommandData.keys()) != len(requiredKeys):
+    # Cleanse commandData dictionary so that it contains only properties which are allowed to be updated
+    allowedProperties = [propertyKey for propertyKey in dir(CommandDataProperty) if not (propertyKey.startswith('__') and propertyKey.endswith('__'))]
+    cleansedCommandData = { key: commandData[key] for key in commandData.keys() if key in allowedProperties }
+    if len(allowedProperties) == 0:
+        logger.error("No valid updates provided")
         return False
     
     # Escape values and store None values as NULL
@@ -122,15 +125,15 @@ def _createProcessCommand(processId: int, commandData: dict):
         
         # Retrieve process ID of newly-created process command
         response = db.executeSQL(sqlCommand=f"SELECT MAX(PROCESS_CMD_ID) AS PROCESS_CMD_ID FROM process_cmd WHERE PROCESS_ID = {processId}")
-        newCommandId = response[0]['PROCESS_CMD_ID']
+        newCommandId = response[0][CommandDataProperty.PROCESS_CMD_ID]
 
         # Update PROCESS_CMD_ID of newly-created command in commandDataWithIdentifiers (since it'll be added to the PROCESS_DATA session state)
-        commandDataWithIdentifiers['PROCESS_CMD_ID'] = newCommandId
+        commandDataWithIdentifiers[CommandDataProperty.PROCESS_CMD_ID] = newCommandId
 
         # Update process data in session state
         processData = st.session_state[StateVariable.PROCESS_DATA]
         selectedProcess = [process for process in processData if process['id'] == processId][0]
-        selectedProcess['steps'].append(commandDataWithIdentifiers)
+        selectedProcess['steps'].append({propertyName: (processId if propertyName == ProcessDataProperty.PROCESS_ID else newCommandId if propertyName == CommandDataProperty.PROCESS_CMD_ID else propertyValue) for propertyName, propertyValue in cleansedCommandData.items()}) # Insert command data prior to when it was escaped (i.e., cleansedCommandData), and add process and command Ids
         st.session_state[StateVariable.PROCESS_DATA] = processData
 
         return True
@@ -143,12 +146,14 @@ def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
 
     # Validate that both processId and commandId have been provided and are integers
     if not isinstance(processId, int) or not isinstance(commandId, int):
+        logger.error(f"Process ID ('{processId}' {type(processId)}) and/or command ID ('{commandId}' {type(commandId)}) is not an integer")
         return False
 
-    # Validate that updates dictionary has at least one update where the update key is a value in the CommandUpdateProperty enum
-    validPropertyKeys = [propertyKey for propertyKey in dir(CommandUpdateProperty) if not (propertyKey.startswith('__') and propertyKey.endswith('__'))]
+    # Validate that updates dictionary has at least one update where the update key is a value in the CommandDataProperty enum
+    validPropertyKeys = [propertyKey for propertyKey in dir(CommandDataProperty) if not ((propertyKey.startswith('__') and propertyKey.endswith('__')) or (propertyKey == CommandDataProperty.PROCESS_ID or propertyKey == CommandDataProperty.PROCESS_CMD_ID))] # Exclude default properties (__propertyName__) and properties which shouldn't be updated via this command (i.e., process id and process command id)
     cleansedUpdates = { key: updatedData[key] for key in updatedData.keys() if key in validPropertyKeys }
     if len(cleansedUpdates.keys()) == 0:
+        logger.error('No valid updates provided')
         return False
 
     # Escape values and store None values as NULL
@@ -157,8 +162,8 @@ def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
     # Construct SQL command to update process command
     updatesWithIdentifiers = {
         **formattedUpdates,
-        "PROCESS_ID": processId,
-        "PROCESS_CMD_ID": commandId
+        CommandDataProperty.PROCESS_ID: processId,
+        CommandDataProperty.PROCESS_CMD_ID: commandId
     }
     cmdStr: str = SQLTemplate().getTemplate(
         sqlAction = "update_process_command",
@@ -173,7 +178,7 @@ def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
         # Update process data in session state
         processData = st.session_state[StateVariable.PROCESS_DATA]
         selectedProcess = [process for process in processData if process['id'] == processId][0]
-        selectedCommand = [command for command in selectedProcess['steps'] if command['PROCESS_CMD_ID'] == commandId][0]
+        selectedCommand = [command for command in selectedProcess['steps'] if command[CommandDataProperty.PROCESS_CMD_ID] == commandId][0]
         for update in cleansedUpdates.keys():
             selectedCommand[update] = cleansedUpdates[update]
         st.session_state[StateVariable.PROCESS_DATA] = processData
@@ -225,12 +230,10 @@ def main():
                     st.experimental_rerun()
 
                 elif createCommandModalData.get('createCommand').get('executionStatus') == ExecutionStatus.RUNNING and st.session_state[CreateCommandModalInstruction.EXECUTION_STATUS] == ExecutionStatus.NONE: # User has submitted new command data -> store new command in db
-
                     result = _createProcessCommand(
-                        createCommandModalData.get('createCommand').get('process').get('id'),
-                        createCommandModalData.get('createCommand').get('data')
+                        processId = createCommandModalData.get('createCommand').get('process').get('id'),
+                        commandData = createCommandModalData.get('createCommand').get('data')
                     )
-
                     st.session_state[CreateCommandModalInstruction.EXECUTION_STATUS] = ExecutionStatus.SUCCESS if result == True else ExecutionStatus.FAIL
                     st.experimental_rerun()
 
