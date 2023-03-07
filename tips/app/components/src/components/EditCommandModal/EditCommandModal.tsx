@@ -211,13 +211,13 @@ export default function EditCommandModal() {
                     >
                         <div>
                             {/* Icon */}
-                            { showExecutionStatusMessage.createCommand
+                            { (showExecutionStatusMessage.createCommand === ExecutionStatus.SUCCESS || executionStatus.editCommand === ExecutionStatus.SUCCESS)
                                 ? <CircleCheck size={40} color='var(--success-green-light)' />
                                 : <AlertCircle size={40} color='var(--fail-red-light)' />
                             }
 
                             {/* Text */}
-                            { showExecutionStatusMessage.createCommand
+                            { (showExecutionStatusMessage.createCommand === ExecutionStatus.SUCCESS || executionStatus.editCommand === ExecutionStatus.SUCCESS)
                                 ? <div>Command { showExecutionStatusMessage.createCommand ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
                                 : <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.createCommand ? 'create' : 'update' } command</div>
                             }
