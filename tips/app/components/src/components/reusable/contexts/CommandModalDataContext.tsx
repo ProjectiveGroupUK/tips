@@ -9,21 +9,16 @@ import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfa
 import { PropsInterface_CommandModal } from '@/App';
 
 // Enums
-import { ExecutionStatus } from '@/enums/enums';
+import { ExecutionStatus, OperationType } from '@/enums/enums';
 
 const CommandModalDataContext = createContext<ContextInterface>(undefined!);
 
 interface ContextInterface {
-    executionStatus: ExecutionStatusInterface;
-    setExecutionStatus: React.Dispatch<React.SetStateAction<ExecutionStatusInterface>>;
+    executionStatus: ExecutionStatusInterface; // Internal (react) use only
+    setExecutionStatus: React.Dispatch<React.SetStateAction<ExecutionStatusInterface>>; // Internal (react) use only
     command: CommandInterface | null;
     setCommand: React.Dispatch<React.SetStateAction<CommandInterface | null>>;
 }
-
-interface ExecutionStatusInterface {
-    status: ExecutionStatus;
-    createdCommandId?: number | undefined;
-};
 
 interface CommandInterface {
     operation: {
@@ -31,10 +26,14 @@ interface CommandInterface {
     }
     process: ProcessDataInterface[0];
     command: Partial<CommandDataInterface> | null;
-    executionStatus: {
-      status: ExecutionStatus;
-      createdCommandId?: number | undefined;
-    };
+    executionStatus: ExecutionStatus;
+}
+
+export type ExecutionStatusInterface = {
+    status: ExecutionStatus.RUNNING | ExecutionStatus.SUCCESS | ExecutionStatus.FAIL;
+    operationType: OperationType;
+} | {
+    status: ExecutionStatus.NONE;
 }
 
 export function useCommandModalData() {
@@ -43,31 +42,44 @@ export function useCommandModalData() {
 
 export default function CommandModalDataContextProvider({ commandData: receivedCommandData, instructions, children }: PropsInterface_CommandModal & { children: React.ReactNode }) {
     const [executionStatus, setExecutionStatus] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
-    const [command, setCommand] = useState<CommandInterface | null>(receivedCommandData ? receivedCommandData : null);
+    const [command, setCommand] = useState<CommandInterface | null>(receivedCommandData ? { ...receivedCommandData, executionStatus: ExecutionStatus.NONE } : null);
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
     }, [executionStatus, command]);
 
+    if(command !== null && ((receivedCommandData.command?.PROCESS_CMD_ID !== command?.command?.PROCESS_CMD_ID) || (receivedCommandData.operation.type !== command?.operation.type))) { // Update command if receivedCommandData has updated and is pushing override of PROCESS_CMD_ID and/or operatin type (happens when new command has just been created and Python instructs react to render the new command in editing mode)
+        setCommand((prev) => prev 
+            ? ({
+                ...prev, 
+                command: {
+                    ...prev.command,
+                    PROCESS_CMD_ID: receivedCommandData.command?.PROCESS_CMD_ID
+                },
+                operation: {
+                    ...prev!.operation,
+                    type: receivedCommandData.operation.type
+                }
+            })
+            : null
+        );
+    }
+
     useEffect(() => { // Interpret and act upon instructions sent from Python
         const { commandExecutionStatus } = instructions;
 
         // Reset command processing indicator and temporarily store executing status (would be instructed if CommandModal component instructed Python to perform SQL operation to create/update command in database, and Python has confirmed completing this instruction)
-        if(commandExecutionStatus === ExecutionStatus.SUCCESS || commandExecutionStatus === ExecutionStatus.FAIL) {
-            setExecutionStatus({ status: commandExecutionStatus });
+        if(commandExecutionStatus.status === ExecutionStatus.SUCCESS || commandExecutionStatus.status === ExecutionStatus.FAIL) {
+            setExecutionStatus(commandExecutionStatus);
             setCommand((prev) => prev
                 ? {
                     ...prev,
-                    executionStatus: { status: ExecutionStatus.NONE } // Reset the external execution status indicator so that Python knows that instruction was acknowledged
+                    executionStatus: ExecutionStatus.NONE // Reset the external execution status indicator so that Python knows that instruction was acknowledged
                 } 
                 : null
             );
         }
-        else setExecutionStatus((prevState) => { // Reset execution status if neither execution status variables is assigned
-            const newExecutionStatus = { status: ExecutionStatus.NONE }
-            if(JSON.stringify(prevState) === JSON.stringify(newExecutionStatus)) return prevState; // If object contents were the same, return previous object to prevent infinite re-rendering
-            return newExecutionStatus;
-        })
+        else setExecutionStatus((prev) =>  prev.status === ExecutionStatus.NONE ? prev : { status: ExecutionStatus.NONE }); // Check if execution status is NONE already prior to resetting to avoid infinite re-rendering
     }, [instructions])
 
     const value: ContextInterface = {

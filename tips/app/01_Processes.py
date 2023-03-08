@@ -15,7 +15,7 @@ from utils import processesTable, commandModal
 
 # Enums
 from tips.app.enums import StateVariable, ProcessDataProperty, CommandDataProperty
-from tips.app.enums import ProcessTableInstruction, CommandModalInstruction, ExecutionStatus
+from tips.app.enums import ProcessTableInstruction, CommandModalInstruction, ExecutionStatus, CommandOperationType
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
@@ -38,8 +38,11 @@ def _setUpStateInstructions():
     if ProcessTableInstruction.RESET_CREATE_COMMAND not in st.session_state:
         st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
 
+    if CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND not in st.session_state:
+        st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] = None
+
     if CommandModalInstruction.EXECUTION_STATUS not in st.session_state:
-        st.session_state[CommandModalInstruction.EXECUTION_STATUS] = ExecutionStatus.NONE
+        st.session_state[CommandModalInstruction.EXECUTION_STATUS] = { 'status': ExecutionStatus.NONE }
 
 def _loadListOfProcesses():
     db = DatabaseConnection()
@@ -92,14 +95,14 @@ def _createProcessCommand(processId: int, commandData: dict):
     # Validate that both processId has been provided and is integer
     if not isinstance(processId, int):
         logger.error(f"Process ID is not an integer: '{processId}' (type: {type(processId)})")
-        return True
+        return ExecutionStatus.FAIL
 
     # Cleanse commandData dictionary so that it contains only properties which are allowed to be updated
     allowedProperties = [propertyKey for propertyKey in dir(CommandDataProperty) if not (propertyKey.startswith('__') and propertyKey.endswith('__'))]
     cleansedCommandData = { key: commandData[key] for key in commandData.keys() if key in allowedProperties }
     if len(allowedProperties) == 0:
         logger.error("No valid updates provided")
-        return False
+        return ExecutionStatus.FAIL
     
     # Escape values and store None values as NULL
     formattedCommandData = escapeValuesForSQL(cleansedCommandData)
@@ -122,7 +125,7 @@ def _createProcessCommand(processId: int, commandData: dict):
         
         # Retrieve process ID of newly-created process command
         response = db.executeSQL(sqlCommand=f"SELECT MAX(PROCESS_CMD_ID) AS PROCESS_CMD_ID FROM process_cmd WHERE PROCESS_ID = {processId}")
-        newCommandId = response[0][CommandDataProperty.PROCESS_CMD_ID]
+        newCommandId: int = response[0][CommandDataProperty.PROCESS_CMD_ID]
 
         # Update PROCESS_CMD_ID of newly-created command in commandDataWithIdentifiers (since it'll be added to the PROCESS_DATA session state)
         commandDataWithIdentifiers[CommandDataProperty.PROCESS_CMD_ID] = newCommandId
@@ -133,25 +136,25 @@ def _createProcessCommand(processId: int, commandData: dict):
         selectedProcess['steps'].append({propertyName: (processId if propertyName == ProcessDataProperty.PROCESS_ID else newCommandId if propertyName == CommandDataProperty.PROCESS_CMD_ID else propertyValue) for propertyName, propertyValue in cleansedCommandData.items()}) # Insert command data prior to when it was escaped (i.e., cleansedCommandData), and add process and command Ids
         st.session_state[StateVariable.PROCESS_DATA] = processData
 
-        return True
+        return (ExecutionStatus.SUCCESS, newCommandId)
 
     except Exception as e:
         logger.error(f'Error creating process command: {e}')
-        return False
+        return ExecutionStatus.FAIL
 
 def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
 
     # Validate that both processId and commandId have been provided and are integers
     if not isinstance(processId, int) or not isinstance(commandId, int):
         logger.error(f"Process ID ('{processId}' {type(processId)}) and/or command ID ('{commandId}' {type(commandId)}) is not an integer")
-        return False
+        return ExecutionStatus.FAIL
 
     # Validate that updates dictionary has at least one update where the update key is a value in the CommandDataProperty enum
     validPropertyKeys = [propertyKey for propertyKey in dir(CommandDataProperty) if not ((propertyKey.startswith('__') and propertyKey.endswith('__')) or (propertyKey == CommandDataProperty.PROCESS_ID or propertyKey == CommandDataProperty.PROCESS_CMD_ID))] # Exclude default properties (__propertyName__) and properties which shouldn't be updated via this command (i.e., process id and process command id)
     cleansedUpdates = { key: updatedData[key] for key in updatedData.keys() if key in validPropertyKeys }
     if len(cleansedUpdates.keys()) == 0:
         logger.error('No valid updates provided')
-        return False
+        return ExecutionStatus.FAIL
 
     # Escape values and store None values as NULL
     formattedUpdates = escapeValuesForSQL(cleansedUpdates)
@@ -180,10 +183,10 @@ def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
             selectedCommand[update] = cleansedUpdates[update]
         st.session_state[StateVariable.PROCESS_DATA] = processData
 
-        return True
+        return ExecutionStatus.SUCCESS
     except Exception as e:
         logger.error(f'Error updating process command: {e}')
-        return False
+        return ExecutionStatus.FAIL
 
 
 def main():
@@ -203,7 +206,7 @@ def main():
         processData = st.session_state[StateVariable.PROCESS_DATA],
         instructions = {
             ProcessTableInstruction.RESET_CREATE_COMMAND: st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND],
-            ProcessTableInstruction.RESET_SELECTED_COMMAND: st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND]
+            ProcessTableInstruction.RESET_SELECTED_COMMAND: st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND],
         }
     )
 
@@ -214,14 +217,22 @@ def main():
         updateCommand = processesTableData.get('updateCommand')
 
         if createCommand != None or updateCommand != None:
+
+            # Prepare modal parameters
+            preparedOperationType = 'create' if (createCommand != None and st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] == None) else 'edit'
+            preparedCommand = createCommand.get('data') if createCommand != None else updateCommand.get('data')
+            if st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] != None:
+                preparedCommand[CommandDataProperty.PROCESS_CMD_ID] = st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND]
+
+            # Render commandModal
             commandModalData = commandModal(
                 key = 'modal',
-                operationType = 'create' if createCommand != None else 'edit',
+                operationType = preparedOperationType,
                 process = createCommand.get('process') if createCommand != None else updateCommand.get('process'),
-                command = createCommand.get('data') if createCommand != None else updateCommand.get('data'),
+                command = preparedCommand,
                 instructions = {
-                    CommandModalInstruction.EXECUTION_STATUS: st.session_state[CommandModalInstruction.EXECUTION_STATUS]
-                }   
+                    CommandModalInstruction.EXECUTION_STATUS: st.session_state[CommandModalInstruction.EXECUTION_STATUS],
+                }
             )
 
             # Check for instructions from the modal that require performing activities on the Python side
@@ -233,28 +244,40 @@ def main():
                     st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = True
                     st.experimental_rerun()
 
-                elif command.get('executionStatus').get('status') == ExecutionStatus.RUNNING and st.session_state[CommandModalInstruction.EXECUTION_STATUS] == ExecutionStatus.NONE: # Execution of operation has been requested, but Python hasn't started executing it yet -> execute operation
-                    result = None
-                    if command.get('operation').get('type') == 'create':
-                        result = _createProcessCommand(
-                            processId = command.get('process').get('id'),
-                            commandData = command.get('command')
-                        )
-                    elif command.get('operation').get('type') == 'edit':
-                        result = _updateProcessCommand(
-                            processId = command.get('process').get('id'),
-                            commandId = command.get('command').get(CommandDataProperty.PROCESS_CMD_ID),
-                            updatedData = command.get('command')
-                        )
-                    st.session_state[CommandModalInstruction.EXECUTION_STATUS] = ExecutionStatus.SUCCESS if result else ExecutionStatus.FAIL
-                    st.experimental_rerun()
+                elif command.get('executionStatus') == ExecutionStatus.RUNNING and st.session_state[CommandModalInstruction.EXECUTION_STATUS].get('status') == ExecutionStatus.NONE: # Execution of operation has been requested, but Python hasn't started executing it yet -> execute operation
+                        result = None
+                        if command.get('operation').get('type') == 'create':
+                            result = _createProcessCommand(
+                                processId = command.get('process').get('id'),
+                                commandData = command.get('command')
+                            )
+                        elif command.get('operation').get('type') == 'edit':
+                            result = _updateProcessCommand(
+                                processId = command.get('process').get('id'),
+                                commandId = command.get('command').get(CommandDataProperty.PROCESS_CMD_ID),
+                                updatedData = command.get('command')
+                            )
 
-                else:
-                    st.session_state[CommandModalInstruction.EXECUTION_STATUS] = ExecutionStatus.NONE
+                        resultStatus = result[0] if isinstance(result, tuple) else result # A successful create command operation returns a tuple where first element is execution status and second is the ID of the newly-created command
+                        newCommandId = result[1] if isinstance(result, tuple) else None
+                        st.session_state[CommandModalInstruction.EXECUTION_STATUS] = { 'status': resultStatus, 'operationType': CommandOperationType.CREATE if command.get('operation').get('type') == 'create' else CommandOperationType.EDIT }
+
+                        if newCommandId != None:
+                            st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] = newCommandId
+
+                        st.experimental_rerun()
+
+                elif command.get('executionStatus') == ExecutionStatus.NONE:
+                    st.session_state[CommandModalInstruction.EXECUTION_STATUS] = { 'status': ExecutionStatus.NONE }
 
         else: # Process table does not instruct command modal to appear -> reset instructions to be used again when modal is present
             st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
             st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = False
+
+            # Comand modal is not showing -> reset CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND instruction
+            logger.warning('resetting instruction')
+            st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] = None
+            
 
 if __name__ == "__main__":
     # tips_project.toml file is needed for next command to run

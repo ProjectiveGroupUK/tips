@@ -2,8 +2,8 @@
 import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
 // Contexts
-import ProcessTableDataContextProvider from './components/reusable/contexts/ProcessTableDataContext';
-import CommandModalDataContextProvider from './components/reusable/contexts/CommandModalDataContext';
+import ProcessTableDataContextProvider from '@/components/reusable/contexts/ProcessTableDataContext';
+import CommandModalDataContextProvider from '@/components/reusable/contexts/CommandModalDataContext';
 
 // Components
 import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
@@ -11,9 +11,10 @@ import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
 
 // Interfaces
 import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
+import { ExecutionStatusInterface as CommandModalExecutionStatusInterface } from '@/components/reusable/contexts/CommandModalDataContext';
 
 // Enums
-import { ExecutionStatus } from './enums/enums';
+import { OperationType } from '@/enums/enums';
 
 // CSS
 import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
@@ -31,17 +32,13 @@ export interface PropsInterface_CommandModal {
   component: 'CommandModal';
   commandData: {
     operation: {
-      type: 'create' | 'edit';
+      type: OperationType;
     }
     process: ProcessDataInterface[0];
     command: Partial<CommandDataInterface> | null;
-    executionStatus: {
-      status: ExecutionStatus;
-      createdCommandId?: number | undefined;
-    };
   },
   instructions: {
-    commandExecutionStatus: ExecutionStatus;
+    commandExecutionStatus: CommandModalExecutionStatusInterface;
   }
 }
 

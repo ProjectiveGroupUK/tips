@@ -14,9 +14,10 @@ import FloatingEditButtons from "./FloatingEditButtons";
 
 // Interfaces
 import { CommandDataInterface } from "@/interfaces/Interfaces";
+import { ExecutionStatusInterface } from "@/components/reusable/contexts/CommandModalDataContext";
 
 // Enums
-import { ExecutionStatus } from "@/enums/enums";
+import { ExecutionStatus, OperationType } from "@/enums/enums";
 
 // CSS
 import styles from "@/styles/processTable/editCommandModal.module.css";
@@ -35,7 +36,7 @@ export default function EditCommandModal() {
 
     const { command, setCommand, executionStatus } = useCommandModalData();
     const [editedCommandValues, setEditedCommandValues] = useState<Partial<CommandDataInterface>>(command?.command!);
-    const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState(ExecutionStatus.NONE);
+    const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
@@ -49,9 +50,9 @@ export default function EditCommandModal() {
 
     useEffect(() => { // When Python sends notification about execution of SQL instruction, show message to user for 3 seconds
         if([ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(executionStatus.status)) {
-            setShowExecutionStatusMessage(executionStatus.status);
+            setShowExecutionStatusMessage(executionStatus);
             setTimeout(() => {
-                setShowExecutionStatusMessage(ExecutionStatus.NONE);
+                setShowExecutionStatusMessage({ status: ExecutionStatus.NONE });
             }, 3000);
         }
     }, [executionStatus]);
@@ -96,9 +97,7 @@ export default function EditCommandModal() {
         setCommand((prevState) => ({
             ...prevState!,
             command: editedCommandValues,
-            executionStatus: {
-                status: ExecutionStatus.RUNNING
-            }
+            executionStatus: ExecutionStatus.RUNNING
         }));
     }
 
@@ -106,7 +105,7 @@ export default function EditCommandModal() {
         setCommand(null)
     }
 
-    const processing = Boolean(command?.executionStatus.status === ExecutionStatus.RUNNING);
+    const processing = Boolean(command?.executionStatus === ExecutionStatus.RUNNING);
 
     return(
         <Modal
@@ -168,7 +167,7 @@ export default function EditCommandModal() {
 
                 {/* Execution status message */}
                 <AnimatePresence>
-                { [ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(showExecutionStatusMessage) && (
+                { [ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(showExecutionStatusMessage.status) && (
                     <motion.div 
                         className={styles.executionStatusMessageContainer}
                         initial={{ opacity: 0, y: -20 }}
@@ -178,15 +177,16 @@ export default function EditCommandModal() {
                     >
                         <div>
                             {/* Icon */}
-                            { showExecutionStatusMessage === ExecutionStatus.SUCCESS
+                            { showExecutionStatusMessage.status === ExecutionStatus.SUCCESS
                                 ? <CircleCheck size={40} color='var(--success-green-light)' />
                                 : <AlertCircle size={40} color='var(--fail-red-light)' />
                             }
 
                             {/* Text */}
-                            { showExecutionStatusMessage === ExecutionStatus.SUCCESS
-                                ? <div>Command { command?.operation.type === 'create' ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
-                                : <div><span className={styles.executionFail}>Failed</span> to { command?.operation.type === 'create' ? 'create' : 'update' } command</div>
+                            { 
+                                showExecutionStatusMessage.status === ExecutionStatus.SUCCESS ? <div>Command { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
+                                : showExecutionStatusMessage.status === ExecutionStatus.FAIL ? <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'create' : 'update' } command</div>
+                                : null
                             }
                         </div>
                     </motion.div>

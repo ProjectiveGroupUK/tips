@@ -4,3 +4,8 @@ export enum ExecutionStatus {
     FAIL = 'fail',
     NONE = 'none'
 }
+
+export enum OperationType {
+    CREATE = 'create',
+    EDIT = 'edit'
+}

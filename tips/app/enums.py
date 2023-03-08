@@ -11,6 +11,7 @@ class ProcessTableInstruction:
 
 class CommandModalInstruction:
     EXECUTION_STATUS = 'commandExecutionStatus'
+    CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND = 'changeUpdateCommandToCreateCommand'
 
 class ExecutionStatus:
     RUNNING = 'running'
@@ -44,3 +45,7 @@ class CommandDataProperty:
     DQ_TYPE = 'DQ_TYPE'
     CMD_EXTERNAL_CALL = 'CMD_EXTERNAL_CALL'
     ACTIVE = 'ACTIVE'
+
+class CommandOperationType:
+    CREATE = 'create'
+    EDIT = 'edit'

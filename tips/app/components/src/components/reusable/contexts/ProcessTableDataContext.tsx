@@ -25,7 +25,6 @@ interface CreateCommandInterface {
     data: CommandDataInterface;
     process: ProcessDataInterface[0];
     executionStatus: ExecutionStatus;
-    createdCommandId?: number | undefined;
 }
 
 interface UpdateCommandInterface {

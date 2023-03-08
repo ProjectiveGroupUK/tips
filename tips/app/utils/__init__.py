@@ -45,10 +45,7 @@ def commandModal(key: str, operationType: str, process: dict, command: dict, ins
                     'type': operationType # 'create' or 'edit'
                 },
                 'process': process,
-                'command': command,
-                'executionStatus': {
-                    'status': ExecutionStatus.NONE
-                }
+                'command': command
             },
             instructions = instructions
         )
