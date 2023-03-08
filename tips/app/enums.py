@@ -9,11 +9,8 @@ class ProcessTableInstruction:
     RESET_SELECTED_COMMAND = 'resetSelectedCommand'
     RESET_CREATE_COMMAND = 'resetCreateCommand'
 
-class CreateCommandModalInstruction:
-    EXECUTION_STATUS = 'createCommandExecutionStatus'
-
-class EditCommandModalInstruction:
-    EXECUTION_STATUS = 'editCommandExecutionStatus'
+class CommandModalInstruction:
+    EXECUTION_STATUS = 'commandExecutionStatus'
 
 class ExecutionStatus:
     RUNNING = 'running'

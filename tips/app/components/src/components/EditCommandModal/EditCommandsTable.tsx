@@ -6,7 +6,7 @@ import { useTable, useFilters } from 'react-table';
 import { Row, Column, Cell } from 'react-table';
 
 // Contexts
-import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
+import { useCommandModalData } from '@/components/reusable/contexts/CommandModalDataContext';
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,9 +25,9 @@ import { ExecutionStatus } from '@/enums/enums';
 import styles from '@/styles/processTable/editCommandsTable.module.css';
 
 interface PropsInterface {
-    selectedCommand: CommandDataInterface;
-    editedCommandValues: CommandDataInterface;
-    setEditedCommandValues: React.Dispatch<React.SetStateAction<CommandDataInterface>>;
+    selectedCommand: Partial<CommandDataInterface>;
+    editedCommandValues: Partial<CommandDataInterface>;
+    setEditedCommandValues: React.Dispatch<React.SetStateAction<Partial<CommandDataInterface>>>;
     filterCategories: FilterCategoryInterface[];
     filterText: string;
     isEditing: boolean;
@@ -131,19 +131,19 @@ type InputRefs = {
 }
 
 function generateTableData({ commandData, filterCategories, isEditing, editCommandProperty }: {
-    commandData: CommandDataInterface;
+    commandData: Partial<CommandDataInterface>;
     filterCategories: FilterCategoryInterface[];
     isEditing: boolean;
     editCommandProperty: (args: EditCommandPropertyArgs) => void;
 }) {
 
-    const { updateCommand } = useSharedData();
-    const updateCommandRef = useRef(updateCommand); // Must store latest value of updateCommand in a ref, otherwise it may be stale when accessed by table to determine if property is being updated
+    const { command } = useCommandModalData();
+    const commandRef = useRef(command); // Must store latest value of updateCommand in a ref, otherwise it may be stale when accessed by table to determine if property is being updated
     const inputRefs = useRef({} as InputRefs);
 
     useEffect(() => { // Update the ref to the latest value of updateCommand
-        updateCommandRef.current = updateCommand;
-      }, [updateCommand]);
+        commandRef.current = command;
+      }, [command]);
 
     const tableColumns = useMemo(() => [
         {
@@ -179,7 +179,7 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                 property_name: propertyKey,
                 property_value: propertyValue
             }))
-    ), [commandData, updateCommandRef.current]);
+    ), [commandData, commandRef.current]);
 
     const tableInstance = useTable<Data>({
         columns: (tableColumns as Column<Object>[]),
@@ -202,9 +202,9 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                 return <div>{cell.value}</div>
 
             case 'property_value':
-                const originalCommand = updateCommandRef.current?.process.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === updateCommandRef.current?.data.PROCESS_CMD_ID);
-                const savingEditedValue = updateCommandRef.current?.executionStatus === ExecutionStatus.RUNNING && updateCommandRef.current?.data[propertyName] !== originalCommand?.[propertyName];
-                const cellValue = savingEditedValue ? updateCommandRef.current!.data[propertyName] : cell.value;
+                const originalCommand = commandRef.current?.command;
+                const savingEditedValue = commandRef.current?.executionStatus.status === ExecutionStatus.RUNNING && commandRef.current.command?.[propertyName] !== originalCommand?.[propertyName];
+                const cellValue = savingEditedValue ? commandRef.current!.command?.[propertyName] : cell.value;
                 const placeholder = cellValue === null ? 'NULL' : 'Empty String';
 
                 return (

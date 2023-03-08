@@ -2,15 +2,15 @@
 import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
 // Contexts
-import SharedDataContextProvider from './components/reusable/contexts/SharedDataContext';
+import ProcessTableDataContextProvider from './components/reusable/contexts/ProcessTableDataContext';
+import CommandModalDataContextProvider from './components/reusable/contexts/CommandModalDataContext';
 
 // Components
 import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
 import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
 
 // Interfaces
-import { ProcessDataInterface } from '@/interfaces/Interfaces';
-import { UpdateCommandInterface, CreateCommandInterface } from '@/components/reusable/contexts/SharedDataContext';
+import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
 
 // Enums
 import { ExecutionStatus } from './enums/enums';
@@ -18,7 +18,7 @@ import { ExecutionStatus } from './enums/enums';
 // CSS
 import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
 
-interface PropsInterface_ProcessTable {
+export interface PropsInterface_ProcessTable {
   component: 'ProcessTable';
   processData: ProcessDataInterface;
   instructions: {
@@ -27,57 +27,48 @@ interface PropsInterface_ProcessTable {
   }
 }
 
-interface PropsInterface_CreateCommandModal {
-  component: 'CreateCommandModal';
-  createCommand: CreateCommandInterface;
+export interface PropsInterface_CommandModal {
+  component: 'CommandModal';
+  commandData: {
+    operation: {
+      type: 'create' | 'edit';
+    }
+    process: ProcessDataInterface[0];
+    command: Partial<CommandDataInterface> | null;
+    executionStatus: {
+      status: ExecutionStatus;
+      createdCommandId?: number | undefined;
+    };
+  },
   instructions: {
-    createCommandExecutionStatus: ExecutionStatus;
-  }
-}
-
-interface PropsInterface_EditCommandModal {
-  component: 'EditCommandModal';
-  processData: ProcessDataInterface;
-  updateCommand: UpdateCommandInterface;
-  instructions: {
-    editCommandExecutionStatus: ExecutionStatus;
+    commandExecutionStatus: ExecutionStatus;
   }
 }
 
 interface ComponentPropsWithArgs extends ComponentProps {
-  args: PropsInterface_ProcessTable | PropsInterface_CreateCommandModal | PropsInterface_EditCommandModal;
+  args: PropsInterface_ProcessTable | PropsInterface_CommandModal;
 }
 
 function App(props: ComponentPropsWithArgs) {
   const { component } = props.args;
 
-  // Cannot use switch case statement because destructuring 'processData' from 'props.args' in both 'ProcessTable' and 'ProcessCommandsModal' cases causes an error: "Cannot redeclare block-scoped variable"
-  if(component === 'ProcessTable') {
-    const { instructions, processData } = props.args;
-    return(
-      <SharedDataContextProvider component={component} instructions={instructions} processData={processData}>
-        <ProcessTable />
-      </SharedDataContextProvider>
-    );
-  }
-  else if (component === 'EditCommandModal') {
-    const { processData, updateCommand, instructions } = props.args;
-    return(
-      <SharedDataContextProvider component={component} processData={processData} updateCommand={updateCommand} instructions={instructions}>
-        <EditCommandModal />
-      </SharedDataContextProvider>
-    );
-  }
-  else if(component === 'CreateCommandModal') {
-    const { createCommand, instructions } = props.args;
-    return(
-      <SharedDataContextProvider component={component} createCommand={createCommand} instructions={instructions}>
-        <EditCommandModal />
-      </SharedDataContextProvider>
-    );
-  }
-  else {
-    return <p>Invalid component name</p>;
+  switch (component) {
+    case 'ProcessTable':
+      return (
+        <ProcessTableDataContextProvider {...props.args}>
+          <ProcessTable />
+        </ProcessTableDataContextProvider>
+      );
+
+    case 'CommandModal':
+      return (
+        <CommandModalDataContextProvider {...props.args}>
+          <EditCommandModal />
+        </CommandModalDataContextProvider>
+      );
+
+      default:
+        return <p>Invalid component name</p>;
   }
 }
 

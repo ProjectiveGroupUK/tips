@@ -9,7 +9,7 @@ import { useTable } from 'react-table';
 import { Tooltip } from 'react-tooltip';
 
 // Contexts
-import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
+import { useProcessTableData } from '@/components/reusable/contexts/ProcessTableDataContext';
 
 // Interfaces
 import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
@@ -29,7 +29,7 @@ type Data = object;
 export default function ProcessCommandsTable({ selectedProcess }: { 
     selectedProcess: ProcessDataInterface[0];
 }) {
-    const { setUpdateCommand } = useSharedData();
+    const { setUpdateCommand } = useProcessTableData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
 
     return (

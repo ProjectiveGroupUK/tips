@@ -12,7 +12,7 @@ import { Column, Cell } from 'react-table';
 import { Menu } from '@mantine/core';
 
 // Contexts
-import { useSharedData } from '@/components/reusable/contexts/SharedDataContext';
+import { useProcessTableData } from '@/components/reusable/contexts/ProcessTableDataContext';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -34,7 +34,7 @@ type Data = object;
 
 export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
-    const { processData, setCreateCommand } = useSharedData();
+    const { processData, setCreateCommand } = useProcessTableData();
 
     const tableInstance = generateTableData({ processData: processData, handleNewCommandClick: handleNewCommandClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;

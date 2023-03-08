@@ -4,6 +4,9 @@ import streamlit.components.v1 as components
 # Streamlit modal
 from utils.modal import Modal
 
+# Enums
+from enums import ExecutionStatus
+
 _RELEASE = False
 
 def _getComponent(key: str, **kwargs):
@@ -30,24 +33,22 @@ def processesTable(key: str, processData: list, instructions = {}):
         component = 'ProcessTable',
         instructions = instructions
     )
-    
-def createCommandModal(key: str, commandData: dict, instructions: dict):
-    modal = Modal(title="Create Comand Modal", key="createCommandModal")
-    with modal.container():
-        return _getComponent(
-            key = key,
-            component = 'CreateCommandModal',
-            createCommand = commandData,
-            instructions = instructions
-    )
 
-def editCommandModal(key: str, processData: dict, commandData: dict, instructions: dict):
+def commandModal(key: str, operationType: str, process: dict, command: dict, instructions: dict):
     modal = Modal(title="Edit Comand Modal", key="editCommandModal")
     with modal.container():
         return _getComponent(
             key = key,
-            component = 'EditCommandModal',
-            processData = processData,
-            updateCommand = commandData,
+            component = 'CommandModal',
+            commandData = {
+                'operation': {
+                    'type': operationType # 'create' or 'edit'
+                },
+                'process': process,
+                'command': command,
+                'executionStatus': {
+                    'status': ExecutionStatus.NONE
+                }
+            },
             instructions = instructions
-    )
+        )
