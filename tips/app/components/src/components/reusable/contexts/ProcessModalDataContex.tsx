@@ -38,7 +38,7 @@ export default function ProcessModalDataContextProvider({ process: receivedProce
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [/*executionStatus, */process]);
+    }, [process]);
 
     if(process !== null && ((receivedProcess.process.PROCESS_ID !== process.process.PROCESS_ID) || (receivedProcess.operation.type !== process.operation.type))) { // Update process if receivedProcessData has updated and is pushing override of id and/or operation type (happens when new process has just been created and Python instructs react to render the new process in editing mode)
         setProcess((prev) => prev 
@@ -46,7 +46,7 @@ export default function ProcessModalDataContextProvider({ process: receivedProce
                 ...prev, 
                 process: {
                     ...prev.process,
-                    id: receivedProcess.process.PROCESS_ID
+                    PROCESS_ID: receivedProcess.process.PROCESS_ID
                 },
                 operation: {
                     ...prev.operation,

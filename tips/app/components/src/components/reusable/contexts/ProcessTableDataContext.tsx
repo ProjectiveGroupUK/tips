@@ -55,7 +55,7 @@ export default function ProcessTableDataContextProvider({ processData: receivedP
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [/*executionStatus, */createCommand, updateCommand, editedProcess]);
+    }, [createCommand, updateCommand, editedProcess]);
 
     if(JSON.stringify(receivedProcessData ?? []) !== JSON.stringify(processData)) { // Update processData variable when prop passed down from Python updates (useEffect hook does not fire when prop updates)
         setProcessData(receivedProcessData ?? []);

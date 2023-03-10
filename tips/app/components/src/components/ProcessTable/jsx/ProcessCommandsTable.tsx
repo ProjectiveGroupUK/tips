@@ -1,12 +1,11 @@
 // React
 import { useMemo } from 'react';
-import ReactDOMServer from 'react-dom/server'
 
 // React-table
 import { useTable } from 'react-table';
 
-// React-toolip
-import { Tooltip } from 'react-tooltip';
+// Mantine
+import { Tooltip } from '@mantine/core';
 
 // Contexts
 import { useProcessTableData } from '@/components/reusable/contexts/ProcessTableDataContext';
@@ -122,7 +121,7 @@ function generateTableData({ commands }: PropsInterface) {
     const tableInstance = useTable<Data>({
         columns: tableColumns,
         data: tableData,
-        getRowId: (row: any) => (row.command_id.toString())
+        getRowId: (row: any) => row.command_id.toString()
     });
 
     return tableInstance;
@@ -135,16 +134,11 @@ function generateTableData({ commands }: PropsInterface) {
         const tooltipContent = <p>Command is <span>{isActive? 'active' : 'inactive'}</span></p>
 
         return (
-            <>
-                <div 
-                    className={styles.cellValueContainer}
-                    data-tooltip-id={`command-${value}`}
-                    data-tooltip-html={ReactDOMServer.renderToStaticMarkup(tooltipContent)}
-                >
+            <Tooltip label={tooltipContent} transitionProps={{ transition: 'scale' }}>
+                <div className={styles.cellValueContainer}>
                     <div>{value}</div>
                 </div>
-                <Tooltip id={`command-${value}`} />
-            </>
+            </Tooltip>
         )
     }
 }

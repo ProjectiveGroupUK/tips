@@ -58,3 +58,20 @@
 .rowSubComponent > td > pre {
     font-size: 10px;
 }
+
+.table > thead .createProcessButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.1rem;
+    transition: color 0.3s linear;
+}
+
+.table > thead .createProcessButton:hover {
+    color: var(--attention-orange);
+}
+
+.tooltip {
+    font-weight: 400;
+    font-size: 0.9rem;
+}

@@ -87,7 +87,7 @@ export default function ProcessModal() {
     function handleSave() {
         if(process!.operation.type == OperationType.EDIT) {
             const editedProperties = getEditedProperties(editedProcessValues!, process!.process);
-            if(Object.keys(editedProperties).length === 0) { // No changes have been made to command
+            if(Object.keys(editedProperties).length === 0) { // No changes have been made to process
                 setIsEditing(false);
                 return;
             }
@@ -226,8 +226,8 @@ export default function ProcessModal() {
 
                             {/* Text */}
                             { 
-                                showExecutionStatusMessage.status === ExecutionStatus.SUCCESS ? <div>Command { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
-                                : showExecutionStatusMessage.status === ExecutionStatus.FAIL ? <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'create' : 'update' } command</div>
+                                showExecutionStatusMessage.status === ExecutionStatus.SUCCESS ? <div>Process { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
+                                : showExecutionStatusMessage.status === ExecutionStatus.FAIL ? <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'create' : 'update' } process</div>
                                 : null
                             }
                         </div>

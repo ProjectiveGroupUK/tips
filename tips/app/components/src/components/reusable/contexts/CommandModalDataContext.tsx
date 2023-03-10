@@ -39,7 +39,7 @@ export default function CommandModalDataContextProvider({ commandData: receivedC
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [/*executionStatus, */command]);
+    }, [command]);
 
     if(command !== null && ((receivedCommandData.command?.PROCESS_CMD_ID !== command?.command?.PROCESS_CMD_ID) || (receivedCommandData.operation.type !== command?.operation.type))) { // Update command if receivedCommandData has updated and is pushing override of PROCESS_CMD_ID and/or operation type (happens when new command has just been created and Python instructs react to render the new command in editing mode)
         setCommand((prev) => prev 

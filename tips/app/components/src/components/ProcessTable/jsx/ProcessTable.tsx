@@ -9,7 +9,7 @@ import { useTable, useExpanded } from 'react-table';
 import { Column, Cell } from 'react-table';
 
 // Mantine
-import { Menu } from '@mantine/core';
+import { Menu, Tooltip } from '@mantine/core';
 
 // Contexts
 import { useProcessTableData } from '@/components/reusable/contexts/ProcessTableDataContext';
@@ -28,7 +28,7 @@ import StatusPill from '@/components/ProcessTable/jsx/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
 // Icons
-import { DotsVertical, Pencil, PencilPlus } from 'tabler-icons-react';
+import { CirclePlus, DotsVertical, Pencil, PencilPlus } from 'tabler-icons-react';
 
 type Data = object;
 
@@ -36,7 +36,7 @@ export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
     const { processData, setCreateCommand, setEditedProcess } = useProcessTableData();
 
-    const tableInstance = generateTableData({ processData: processData, handleNewCommandClick: handleNewCommandClick, handleEditProcessClick });
+    const tableInstance = generateTableData({ processData: processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
     const [selectedProcessId, setSelectedProcessId] = useState<ProcessDataInterface['PROCESS_ID'] | null>(null);
@@ -44,6 +44,22 @@ export default function ProcessTable() {
     useEffect(() => { // Expand row when clicked
         rows.forEach((row) => row.toggleRowExpanded(row.id === selectedProcessId?.toString()))
     }, [selectedProcessId])
+
+    function handleNewProcessClick() {
+        setEditedProcess({
+            operation: {
+                type: OperationType.CREATE
+            },
+            process: {
+                PROCESS_ID: 0, // Dummy value which will be replaced by Python script when running INSERT INTO query
+                PROCESS_NAME: '',
+                PROCESS_DESCRIPTION: '',
+                steps: [],
+                ACTIVE: 'Y'
+            },
+            executionStatus: ExecutionStatus.NONE
+        });
+    }
 
     function handleNewCommandClick(rowId: ProcessDataInterface['PROCESS_ID']) {
         const process = processData.find((process) => process.PROCESS_ID === rowId)!;
@@ -152,8 +168,9 @@ export default function ProcessTable() {
     );
 }
 
-function generateTableData({ processData, handleNewCommandClick, handleEditProcessClick }: {
+function generateTableData({ processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick }: {
     processData: ProcessDataInterface[];
+    handleNewProcessClick: () => void;
     handleNewCommandClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
     handleEditProcessClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
 }) {
@@ -175,6 +192,13 @@ function generateTableData({ processData, handleNewCommandClick, handleEditProce
             accessor: 'process_status'
         },
         {
+            Header: (
+                <Tooltip label='Create new process' classNames={{ tooltip: styles.tooltip }} transitionProps={{ transition: 'scale' }}>
+                    <button onClick={handleNewProcessClick} className={styles.createProcessButton}>
+                        <CirclePlus width={20} />
+                    </button>
+                </Tooltip>
+            ),
             accessor: 'actionsButtonColumn',
             Cell: (cell: Cell) => renderCell(cell)
         }

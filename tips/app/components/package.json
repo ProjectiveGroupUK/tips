@@ -17,7 +17,6 @@
     "react-dom": "^18.2.0",
     "react-spinners": "^0.13.8",
     "react-table": "^7.8.0",
-    "react-tooltip": "^5.8.1",
     "streamlit-component-lib": "^1.4.0",
     "tabler-icons-react": "^1.56.0"
   },

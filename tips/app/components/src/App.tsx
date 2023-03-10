@@ -17,9 +17,6 @@ import { ProcessDataInterface, CommandDataInterface, ExecutionStatusInterface } 
 // Enums
 import { OperationType } from '@/enums/enums';
 
-// CSS
-import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
-
 interface ComponentPropsWithArgs extends ComponentProps {
   args: PropsInterface_ProcessTable | PropsInterface_ProcessModal | PropsInterface_CommandModal;
 }

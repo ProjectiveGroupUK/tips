@@ -67,13 +67,18 @@ def _loadListOfProcesses():
 
             indexOfExistingProcess = [i for i, process in enumerate(fetchedProcessData) if process[ProcessDataProperty.PROCESS_ID] == row[ProcessDataProperty.PROCESS_ID]]
             if len(indexOfExistingProcess) == 0: # If process id hasn't been captured yet, load whole record as new process with a command
-                fetchedProcessData.append({
+                processHasCommands = row[CommandDataProperty.PROCESS_CMD_ID] is not None
+                processRecord = {
                         ProcessDataProperty.PROCESS_ID: row[ProcessDataProperty.PROCESS_ID],
                         ProcessDataProperty.PROCESS_NAME: row[ProcessDataProperty.PROCESS_NAME],
                         ProcessDataProperty.PROCESS_DESCRIPTION: row[ProcessDataProperty.PROCESS_DESCRIPTION],
-                        "steps": [_stripStepDict(row)],
                         ProcessDataProperty.ACTIVE: row['PROCESS_ACTIVE'],
-                })
+                }
+                if processHasCommands:
+                    processRecord["steps"] = [_stripStepDict(row)]
+                else:
+                    processRecord["steps"] = []
+                fetchedProcessData.append(processRecord)
             else: # If iterating over row for already-captured proces, just capture the command information within the commands array of the already-captured process
                 fetchedProcessData[indexOfExistingProcess[0]]["steps"].append(_stripStepDict(row))
             
@@ -82,13 +87,59 @@ def _loadListOfProcesses():
 
     return fetchedProcessData
 
-def _stripStepDict(stepDict: dict): # Removes process keys from dictionary intended to store data on process's command, since the command dictionary is nested within the process dictionary (which contains the process's details already)
+def _stripStepDict(stepDict: dict): # Removes process keys from dictionary intended to store data on process's command, since the command dictionary is nested within the process dictionary (which contains the process's details already)    
     strippedDict = stepDict.copy()
     strippedDict.pop(ProcessDataProperty.PROCESS_ID)
     strippedDict.pop(ProcessDataProperty.PROCESS_NAME)
     strippedDict.pop(ProcessDataProperty.PROCESS_DESCRIPTION)
     strippedDict.pop('PROCESS_ACTIVE')
     return strippedDict
+
+def _createProcess(newProcessData: dict):
+
+    # Validate that newProcessData has been provided and is a dictionary
+    if not isinstance(newProcessData, dict):
+        logger.error(f"newProcessData is not an integer: '{newProcessData}' (type: {type(newProcessData).__name__})")
+        return ExecutionStatus.FAIL
+
+    # Cleanse newProcessData dictionary so that it contains only properties which are allowed to be updated
+    allowedProperties = [propertyKey for propertyKey in dir(ProcessDataProperty) if not ((propertyKey.startswith('__') and propertyKey.endswith('__')) or propertyKey == ProcessDataProperty.PROCESS_ID)]
+    cleansedCommandData = { key: newProcessData[key] for key in newProcessData.keys() if key in allowedProperties }
+    if len(allowedProperties) == 0:
+        logger.error("No valid updates provided")
+        return ExecutionStatus.FAIL
+    
+    # Escape values and store None values as NULL
+    formattedCommandData = escapeValuesForSQL(cleansedCommandData)
+
+    # Construct SQL command to create process command
+    cmdStr: str = SQLTemplate().getTemplate(
+        sqlAction = "create_process",
+        parameters = formattedCommandData
+    )
+
+    # Execute SQL command
+    db = DatabaseConnection()
+    try:
+        db.executeSQL(sqlCommand=cmdStr)
+        
+        # Retrieve PROCESS_ID of newly-created process command
+        response = db.executeSQL(sqlCommand=f"SELECT MAX({ProcessDataProperty.PROCESS_ID}) AS {ProcessDataProperty.PROCESS_ID} FROM tips_md_schema.process")
+        newProcessId: int = response[0][ProcessDataProperty.PROCESS_ID]
+
+        # Update PROCESS_ID of newly-created process in cleansedCommandData (since it'll be added to the PROCESS_DATA session state)
+        cleansedCommandData[ProcessDataProperty.PROCESS_ID] = newProcessId
+
+        # Update process data in session state
+        processData = st.session_state[StateVariable.PROCESS_DATA]
+        processData.append(cleansedCommandData)
+        st.session_state[StateVariable.PROCESS_DATA] = processData
+
+        return (ExecutionStatus.SUCCESS, newProcessId)
+
+    except Exception as e:
+        logger.error(f'Error creating process: {e}')
+        return ExecutionStatus.FAIL
 
 def _updateProcess(processId: int, updatedData: dict):
 
@@ -135,9 +186,9 @@ def _updateProcess(processId: int, updatedData: dict):
 
 def _createProcessCommand(processId: int, commandData: dict):
 
-    # Validate that both processId has been provided and is integer
+    # Validate that processId has been provided and is integer
     if not isinstance(processId, int):
-        logger.error(f"processId is not an integer: '{processId}' (type: {type(processId)})")
+        logger.error(f"processId is not an integer: '{processId}' (type: {type(processId).__name__})")
         return ExecutionStatus.FAIL
 
     # Cleanse commandData dictionary so that it contains only properties which are allowed to be updated
@@ -154,7 +205,7 @@ def _createProcessCommand(processId: int, commandData: dict):
     commandDataWithIdentifiers = {
         **formattedCommandData,
         ProcessDataProperty.PROCESS_ID: processId,
-        CommandDataProperty.PROCESS_CMD_ID: f"(SELECT MAX(PROCESS_CMD_ID) + 10 FROM process_cmd WHERE PROCESS_ID = {processId})" # Dynamically generate process command ID
+        CommandDataProperty.PROCESS_CMD_ID: f"SELECT COALESCE(MAX({CommandDataProperty.PROCESS_CMD_ID}) + 10, 10)" # Dynamically generate process command ID as highest existing command ID that exists for process (or 0 if none exists yet), + 10
     }
     cmdStr: str = SQLTemplate().getTemplate(
         sqlAction = "create_process_command",
@@ -166,8 +217,8 @@ def _createProcessCommand(processId: int, commandData: dict):
     try:
         db.executeSQL(sqlCommand=cmdStr)
         
-        # Retrieve process ID of newly-created process command
-        response = db.executeSQL(sqlCommand=f"SELECT MAX({CommandDataProperty.PROCESS_CMD_ID}) AS {CommandDataProperty.PROCESS_CMD_ID} FROM process_cmd WHERE {ProcessDataProperty.PROCESS_ID} = {processId}")
+        # Retrieve PROCESS_CMD_ID of newly-created process command
+        response = db.executeSQL(sqlCommand=f"SELECT MAX({CommandDataProperty.PROCESS_CMD_ID}) AS {CommandDataProperty.PROCESS_CMD_ID} FROM tips_md_schema.process_cmd WHERE {ProcessDataProperty.PROCESS_ID} = {processId}")
         newCommandId: int = response[0][CommandDataProperty.PROCESS_CMD_ID]
 
         # Update PROCESS_CMD_ID of newly-created command in commandDataWithIdentifiers (since it'll be added to the PROCESS_DATA session state)
@@ -261,11 +312,17 @@ def main():
 
         if process != None:
 
+            # Prepare modal parameters
+            preparedOperationType = OperationType.CREATE if (process.get('operation').get('type') == OperationType.CREATE and st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] == None) else OperationType.EDIT
+            preparedProcess = process.get('process')
+            if st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] != None:
+                preparedProcess[ProcessDataProperty.PROCESS_ID] = st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS]
+
             # Render processModal
             processModalData = processModal(
                 key = 'modal',
-                operationType = process.get('operation').get('type'),
-                process = process.get('process'),
+                operationType = preparedOperationType,
+                process = preparedProcess,
                 instructions = {
                     ProcessModalInstruction.EXECUTION_STATUS: st.session_state[ProcessModalInstruction.EXECUTION_STATUS]
                 }
@@ -281,7 +338,11 @@ def main():
 
                 elif processData.get('executionStatus') == ExecutionStatus.RUNNING and st.session_state[ProcessModalInstruction.EXECUTION_STATUS].get('status') == ExecutionStatus.NONE: # Execution of operation has been requested, but Python hasn't started executing it yet -> execute operation
                     result = None
-                    if processData.get('operation').get('type') == OperationType.EDIT:
+                    if processData.get('operation').get('type') == OperationType.CREATE:
+                        result = _createProcess(
+                            newProcessData = processData.get('process')
+                        )
+                    elif processData.get('operation').get('type') == OperationType.EDIT:
                         result = _updateProcess(
                             processId = processData.get('process').get(ProcessDataProperty.PROCESS_ID),
                             updatedData = processData.get('process')
@@ -292,7 +353,7 @@ def main():
                     st.session_state[ProcessModalInstruction.EXECUTION_STATUS] = { 'status': resultStatus, 'operationType': processData.get('operation').get('type') }
 
                     if newProcessId != None:
-                        st.session_state[ProcessModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] = newProcessId
+                        st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] = newProcessId
 
                     st.experimental_rerun()   
 
