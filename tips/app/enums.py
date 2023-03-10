@@ -6,8 +6,13 @@ class StateVariable:
     PROCESS_DATA = 'processData'
     
 class ProcessTableInstruction:
+    RESET_EDIT_PROCESS = 'resetEditProcess'
     RESET_SELECTED_COMMAND = 'resetSelectedCommand'
     RESET_CREATE_COMMAND = 'resetCreateCommand'
+
+class ProcessModalInstruction:
+    EXECUTION_STATUS = 'processExecutionStatus'
+    CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS = 'changeUpdateProcessToCreateProcess'
 
 class CommandModalInstruction:
     EXECUTION_STATUS = 'commandExecutionStatus'
@@ -23,7 +28,7 @@ class ProcessDataProperty:
     PROCESS_ID = 'PROCESS_ID'
     PROCESS_NAME = 'PROCESS_NAME'
     PROCESS_DESCRIPTION = 'PROCESS_DESCRIPTION'
-    PROCESS_ACTIVE = 'PROCESS_ACTIVE'
+    ACTIVE = 'ACTIVE'
 
 class CommandDataProperty:
     PROCESS_ID = 'PROCESS_ID'
@@ -46,6 +51,6 @@ class CommandDataProperty:
     CMD_EXTERNAL_CALL = 'CMD_EXTERNAL_CALL'
     ACTIVE = 'ACTIVE'
 
-class CommandOperationType:
+class OperationType:
     CREATE = 'create'
     EDIT = 'edit'

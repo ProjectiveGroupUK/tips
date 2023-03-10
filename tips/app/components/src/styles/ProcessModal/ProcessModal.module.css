@@ -1,5 +1,6 @@
 .container {
     padding: 1.5rem;
+    min-width: min(60vw, 40rem);
 }
 
 .header {
@@ -19,10 +20,32 @@
     font-weight: 500;
 }
 
-.header > .headerLeft > h2 {
+.header > .headerLeft > .processNameContainer {
+    position: relative;
+}
+
+.header > .headerLeft > .processNameContainer > * {
     font-size: 1.1rem;
     font-weight: 400;
-    min-width: max-content;
+}
+
+.header > .headerLeft > .processNameContainer > .invisibleExpander {
+    min-width: fit-content;
+    height: 0;
+    overflow: hidden;
+}
+
+.header .processNameContainer > input {
+    width: 100%;
+    border: none;
+    color: var(--primary);
+    outline-color: transparent;
+    background-color: transparent;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.header .processNameContainer > input[data-editing = "true"] {
+    margin-left: 10px;
 }
 
 .header > .separator {
@@ -50,72 +73,36 @@
 }
 
 .configContainer {
-    display: flex;
-    column-gap: 0.8rem;
     margin-top: 3rem;
+    color: var(--primary);
+    border-collapse: collapse;
 }
 
-.configContainer > .verticalBar {
-    width: 3px;
-    border-radius: 100rem;
-    background-color: var(--primary);
+.configContainer > .descriptionContainer > h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
 }
 
-.configParent {
-    padding: 0.4rem 0;
-    display: flex;
-    flex-direction: column;
-    row-gap: 2rem;
-}
-
-.configParent > .configHeader > .searchBox {
-    border: 1px solid var(--primary);
-    border-radius: 100rem;
+.configContainer > .descriptionContainer > div {
     position: relative;
-    margin-bottom: 1rem;
 }
 
-.configParent > .configHeader > .searchBox > svg {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0.5rem;
-    margin: auto 0;
-    pointer-events: none;
-    transition: stroke 150ms ease;
-}
-
-.configParent > .configHeader > .searchBox.active > svg {
-    stroke: var(--attention-orange);
-}
-
-.configParent > .configHeader > .searchBox > .searchInput {
+.configContainer > .descriptionContainer textarea {
     width: 100%;
-    height: 1.5rem;
-    background-color: transparent;
     border: none;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--primary);
     outline-color: transparent;
-    padding: 0 0.5rem;
-    padding-left: 2rem; /* Explicit padding-left for input text not to clash with magnifying glass icon */
+    overflow: hidden;
+    resize: none;
+    background-color: transparent;
+    transition: margin-left 0.3s ease-in-out;
 }
 
-.configParent > .configHeader > .categorySelector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.configParent > .configHeader > .categorySelector > .categoryItem {
-    font-size: 0.8rem;
-    border: 1px solid var(--primary);
-    border-radius: 0.3rem;
-    padding: 0.3rem 0.6rem;
-    transition: border-color 150ms ease, background-color 150ms ease;
-}
-
-.configParent > .configHeader > .categorySelector > .categoryItem.active {
-    background-color: #fff1df;
-    border-color: #f3c589;
+.configContainer > .descriptionContainer textarea[data-editing = "true"] {
+    margin-left: 10px;
 }
 
 .executionStatusMessageContainer {
@@ -156,4 +143,25 @@
 
 .executionStatusMessageContainer .executionFail {
     color: var(--fail-red-light);
+}
+
+/* Focus indicator bar */
+.focusIndicatorBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    border-radius: 100rem;
+    background-color: var(--primary);
+    opacity: 0;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.focusIndicatorBar[data-editing = "true"] {
+    opacity: 1;
+}
+
+.focusIndicatorBar:has(+ input:focus, + textarea:focus) {
+    background-color: var(--attention-orange);
 }

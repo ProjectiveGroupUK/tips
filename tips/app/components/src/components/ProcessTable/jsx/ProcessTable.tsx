@@ -18,7 +18,7 @@ import { useProcessTableData } from '@/components/reusable/contexts/ProcessTable
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
 
 // Enums
-import { ExecutionStatus } from '@/enums/enums';
+import { ExecutionStatus, OperationType } from '@/enums/enums';
 
 // CSS
 import styles from '@/styles/processTable/processTable.module.css';
@@ -34,19 +34,19 @@ type Data = object;
 
 export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
-    const { processData, setCreateCommand } = useProcessTableData();
+    const { processData, setCreateCommand, setEditedProcess } = useProcessTableData();
 
-    const tableInstance = generateTableData({ processData: processData, handleNewCommandClick: handleNewCommandClick });
+    const tableInstance = generateTableData({ processData: processData, handleNewCommandClick: handleNewCommandClick, handleEditProcessClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
-    const [selectedProcessId, setSelectedProcessId] = useState<ProcessDataInterface[0]['id'] | null>(null);
+    const [selectedProcessId, setSelectedProcessId] = useState<ProcessDataInterface['PROCESS_ID'] | null>(null);
 
     useEffect(() => { // Expand row when clicked
         rows.forEach((row) => row.toggleRowExpanded(row.id === selectedProcessId?.toString()))
     }, [selectedProcessId])
 
-    function handleNewCommandClick(rowId: ProcessDataInterface[0]['id']) {
-        const process = processData.find((process) => process.id === rowId)!;
+    function handleNewCommandClick(rowId: ProcessDataInterface['PROCESS_ID']) {
+        const process = processData.find((process) => process.PROCESS_ID === rowId)!;
         setCreateCommand({
             data: {
                 PROCESS_CMD_ID: 0, // Dummy value which will be replaced by Python script when running INSERT INTO query
@@ -67,6 +67,17 @@ export default function ProcessTable() {
                 DQ_TYPE: null,
                 CMD_EXTERNAL_CALL: null,
                 ACTIVE: 'Y'
+            },
+            process: process,
+            executionStatus: ExecutionStatus.NONE
+        });
+    }
+
+    function handleEditProcessClick(rowId: ProcessDataInterface['PROCESS_ID']) {
+        const process = processData.find((process) => process.PROCESS_ID === rowId)!;
+        setEditedProcess({
+            operation: {
+                type: OperationType.EDIT
             },
             process: process,
             executionStatus: ExecutionStatus.NONE
@@ -119,7 +130,7 @@ export default function ProcessTable() {
                                 <tr className={`${styles.rowSubComponent} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`}>
                                     <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
                                         <div>
-                                            <ProcessCommandsTable selectedProcess={processData.find((iteratedProcess) => iteratedProcess.id === selectedProcessId)!} />
+                                            <ProcessCommandsTable selectedProcess={processData.find((iteratedProcess) => iteratedProcess.PROCESS_ID === selectedProcessId)!} />
                                         </div>
                                     </td>
                                 </tr>
@@ -141,9 +152,10 @@ export default function ProcessTable() {
     );
 }
 
-function generateTableData({ processData, handleNewCommandClick }: {
-    processData: ProcessDataInterface;
-    handleNewCommandClick: (rowId: ProcessDataInterface[0]['id']) => void;
+function generateTableData({ processData, handleNewCommandClick, handleEditProcessClick }: {
+    processData: ProcessDataInterface[];
+    handleNewCommandClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
+    handleEditProcessClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
 }) {
     const tableColumns = useMemo(() => [
         {
@@ -166,19 +178,19 @@ function generateTableData({ processData, handleNewCommandClick }: {
             accessor: 'actionsButtonColumn',
             Cell: (cell: Cell) => renderCell(cell)
         }
-    ], []);
+    ], [processData]); // Setting processData as dependency because otherwise if process gets updated, the handle click functions called in renderCell() would use outdated processData 
 
     const tableData = useMemo(() => processData.map((process) => ({
-        process_id: process.id,
-        process_name: process.name,
-        process_description: process.description,
-        process_status: process.status
-    })), []);
+        process_id: process.PROCESS_ID,
+        process_name: process.PROCESS_NAME,
+        process_description: process.PROCESS_DESCRIPTION,
+        process_status: process.ACTIVE =='Y' ? 'Active' : 'Inactive'
+    })), [processData]);
 
     const tableInstance = useTable<Data>({
-        columns: (tableColumns as Column<Object>[]),
+        columns: tableColumns as Column<Object>[],
         data: tableData,
-        getRowId: (row: any) => (row.process_id.toString())
+        getRowId: (row: any) => row.process_id.toString()
     }, useExpanded);
 
     return tableInstance;
@@ -192,7 +204,7 @@ function generateTableData({ processData, handleNewCommandClick }: {
                     </button>
                 </Menu.Target>
                 <Menu.Dropdown onClick={(event) => event?.stopPropagation()}>
-                    <Menu.Item icon={<Pencil size={15} color='var(--primary)' />}>Edit process</Menu.Item>
+                    <Menu.Item icon={<Pencil size={15} color='var(--primary)' />} onClick={() => handleEditProcessClick(Number(cell.row.id))}>Edit process</Menu.Item>
                     <Menu.Item icon={<PencilPlus size={15} color='var(--primary)' />} onClick={() => handleNewCommandClick(Number(cell.row.id))}>Insert new command</Menu.Item>
                 </Menu.Dropdown>
             </Menu>   

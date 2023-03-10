@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { Streamlit } from 'streamlit-component-lib';
 
 // Interfaces
-import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
+import { ProcessDataInterface, CommandDataInterface, ExecutionStatusInterface } from '@/interfaces/Interfaces';
 import { PropsInterface_CommandModal } from '@/App';
 
 // Enums
@@ -22,18 +22,11 @@ interface ContextInterface {
 
 interface CommandInterface {
     operation: {
-        type: 'create' | 'edit';
+        type: OperationType;
     }
-    process: ProcessDataInterface[0];
+    process: ProcessDataInterface;
     command: Partial<CommandDataInterface> | null;
     executionStatus: ExecutionStatus;
-}
-
-export type ExecutionStatusInterface = {
-    status: ExecutionStatus.RUNNING | ExecutionStatus.SUCCESS | ExecutionStatus.FAIL;
-    operationType: OperationType;
-} | {
-    status: ExecutionStatus.NONE;
 }
 
 export function useCommandModalData() {
@@ -46,9 +39,9 @@ export default function CommandModalDataContextProvider({ commandData: receivedC
 
     useEffect(() => { // Update Streamlit when any of the values in the context change
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
-    }, [executionStatus, command]);
+    }, [/*executionStatus, */command]);
 
-    if(command !== null && ((receivedCommandData.command?.PROCESS_CMD_ID !== command?.command?.PROCESS_CMD_ID) || (receivedCommandData.operation.type !== command?.operation.type))) { // Update command if receivedCommandData has updated and is pushing override of PROCESS_CMD_ID and/or operatin type (happens when new command has just been created and Python instructs react to render the new command in editing mode)
+    if(command !== null && ((receivedCommandData.command?.PROCESS_CMD_ID !== command?.command?.PROCESS_CMD_ID) || (receivedCommandData.operation.type !== command?.operation.type))) { // Update command if receivedCommandData has updated and is pushing override of PROCESS_CMD_ID and/or operation type (happens when new command has just been created and Python instructs react to render the new command in editing mode)
         setCommand((prev) => prev 
             ? ({
                 ...prev, 

@@ -21,13 +21,13 @@ import { ExecutionStatus } from '@/enums/enums';
 import styles from '@/styles/processTable/commandsTable.module.css';
 
 interface PropsInterface {
-    commands: ProcessDataInterface[0]['steps'];
+    commands: ProcessDataInterface['steps'];
 }
 
 type Data = object;
 
 export default function ProcessCommandsTable({ selectedProcess }: { 
-    selectedProcess: ProcessDataInterface[0];
+    selectedProcess: ProcessDataInterface;
 }) {
     const { setUpdateCommand } = useProcessTableData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });

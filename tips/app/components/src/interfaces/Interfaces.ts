@@ -1,10 +1,13 @@
-export interface ProcessDataInterface extends Array <{
-    id: number;
-    name: string;
-    description: string | null;
+// Enums
+import { ExecutionStatus, OperationType } from "@/enums/enums";
+
+export interface ProcessDataInterface {
+    PROCESS_ID: number;
+    PROCESS_NAME: string;
+    PROCESS_DESCRIPTION: string | null;
     steps: Array<CommandDataInterface>;
-    status: 'active' | 'inactive';
-}> {};
+    ACTIVE: 'Y' | 'N' ;
+};
 
 export interface CommandDataInterface {
     PROCESS_CMD_ID: number;
@@ -25,4 +28,11 @@ export interface CommandDataInterface {
     DQ_TYPE: 'DUPS' | 'SCD2' | null;
     CMD_EXTERNAL_CALL: string | null;
     ACTIVE: 'Y' | 'N' | null;
+}
+
+export type ExecutionStatusInterface = {
+    status: ExecutionStatus.RUNNING | ExecutionStatus.SUCCESS | ExecutionStatus.FAIL;
+    operationType: OperationType;
+} | {
+    status: ExecutionStatus.NONE;
 }

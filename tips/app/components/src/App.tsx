@@ -3,15 +3,16 @@ import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib
 
 // Contexts
 import ProcessTableDataContextProvider from '@/components/reusable/contexts/ProcessTableDataContext';
+import ProcessModalDataContextProvider from '@/components/reusable/contexts/ProcessModalDataContex';
 import CommandModalDataContextProvider from '@/components/reusable/contexts/CommandModalDataContext';
 
 // Components
 import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
+import ProcessModal from './components/ProcessModal/ProcessModal';
 import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
 
 // Interfaces
-import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
-import { ExecutionStatusInterface as CommandModalExecutionStatusInterface } from '@/components/reusable/contexts/CommandModalDataContext';
+import { ProcessDataInterface, CommandDataInterface, ExecutionStatusInterface } from '@/interfaces/Interfaces';
 
 // Enums
 import { OperationType } from '@/enums/enums';
@@ -19,12 +20,30 @@ import { OperationType } from '@/enums/enums';
 // CSS
 import '../node_modules/react-tooltip/dist/react-tooltip.css' // CSS for default styling of react-tooltip components
 
+interface ComponentPropsWithArgs extends ComponentProps {
+  args: PropsInterface_ProcessTable | PropsInterface_ProcessModal | PropsInterface_CommandModal;
+}
+
 export interface PropsInterface_ProcessTable {
   component: 'ProcessTable';
-  processData: ProcessDataInterface;
+  processData: ProcessDataInterface[];
   instructions: {
+    resetEditProcess: boolean;
     resetCreateCommand: boolean;
     resetSelectedCommand: boolean;
+  }
+}
+
+export interface PropsInterface_ProcessModal {
+  component: 'ProcessModal';
+  process: {
+    operation: {
+      type: OperationType;
+    }
+    process: ProcessDataInterface;
+  }
+  instructions: {
+    processExecutionStatus: ExecutionStatusInterface;
   }
 }
 
@@ -34,16 +53,12 @@ export interface PropsInterface_CommandModal {
     operation: {
       type: OperationType;
     }
-    process: ProcessDataInterface[0];
+    process: ProcessDataInterface;
     command: Partial<CommandDataInterface> | null;
   },
   instructions: {
-    commandExecutionStatus: CommandModalExecutionStatusInterface;
+    commandExecutionStatus: ExecutionStatusInterface;
   }
-}
-
-interface ComponentPropsWithArgs extends ComponentProps {
-  args: PropsInterface_ProcessTable | PropsInterface_CommandModal;
 }
 
 function App(props: ComponentPropsWithArgs) {
@@ -55,6 +70,13 @@ function App(props: ComponentPropsWithArgs) {
         <ProcessTableDataContextProvider {...props.args}>
           <ProcessTable />
         </ProcessTableDataContextProvider>
+      );
+
+    case 'ProcessModal':
+      return (
+        <ProcessModalDataContextProvider {...props.args}>
+          <ProcessModal />
+        </ProcessModalDataContextProvider>
       );
 
     case 'CommandModal':

@@ -13,8 +13,7 @@ import EditCommandsTable from "./EditCommandsTable";
 import FloatingEditButtons from "./FloatingEditButtons";
 
 // Interfaces
-import { CommandDataInterface } from "@/interfaces/Interfaces";
-import { ExecutionStatusInterface } from "@/components/reusable/contexts/CommandModalDataContext";
+import { CommandDataInterface, ExecutionStatusInterface } from "@/interfaces/Interfaces";
 
 // Enums
 import { ExecutionStatus, OperationType } from "@/enums/enums";
@@ -34,9 +33,10 @@ export interface FilterCategoryInterface{
 
 export default function EditCommandModal() {
 
-    const { command, setCommand, executionStatus } = useCommandModalData();
-    const [editedCommandValues, setEditedCommandValues] = useState<Partial<CommandDataInterface>>(command?.command!);
+    const { executionStatus, command, setCommand } = useCommandModalData();
+    const [originalCommand, setOriginalCommand] = useState(command); // Stores command as it was prior to saving -> allows table cells to determine which cells have been edited and display PulseLoader only on relevant fields while saving operation is in progress
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
+    const [editedCommandValues, setEditedCommandValues] = useState<Partial<CommandDataInterface>>(command?.command!);
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
@@ -87,18 +87,23 @@ export default function EditCommandModal() {
 
     function handleSave() {
         setIsEditing(false);
-        if(command?.operation.type === 'edit') { // If user is saving an edited version of existing command, ensure that actual changes have been made prior to requesting SQL execution
+        if(command?.operation.type === OperationType.EDIT) { // If user is saving an edited version of existing command, ensure that actual changes have been made prior to requesting SQL execution
             const editedProperties = getEditedProperties(editedCommandValues!, command.command!);
             if(Object.keys(editedProperties).length === 0) { // No changes have been made to command
                 return;
             }
         }
 
-        setCommand((prevState) => ({
-            ...prevState!,
-            command: editedCommandValues,
-            executionStatus: ExecutionStatus.RUNNING
-        }));
+        setCommand((prevState) => {
+
+            setOriginalCommand(prevState)
+
+            return {
+                ...prevState!,
+                command: editedCommandValues,
+                executionStatus: ExecutionStatus.RUNNING
+            }
+        });
     }
 
     function handleCloseModal() {
@@ -107,20 +112,20 @@ export default function EditCommandModal() {
 
     const processing = Boolean(command?.executionStatus === ExecutionStatus.RUNNING);
 
-    return(
+    return (
         <Modal
             isOpen={Boolean(command)}
             onFadeOutComplete={handleCloseModal}
-            noPadding={true}
+            noPadding
         >
             <div className={styles.container}>
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>
-                        <h1>{ command?.operation.type === 'create' ? 'New command' : `Command ${command?.command?.PROCESS_CMD_ID}` }</h1>
-                        <h2>In the {command?.process.name} process</h2>
+                        <h1>{ command?.operation.type === OperationType.CREATE ? 'New command' : `Command ${command?.command?.PROCESS_CMD_ID}` }</h1>
+                        <h2>In the {command?.process.PROCESS_NAME} process</h2>
                     </div>
                     <div className={styles.separator} />
-                    <div className={styles.headerRight} data-active-status={command?.command?.ACTIVE}>
+                    <div className={styles.headerRight} data-active-status={command?.command?.ACTIVE == 'Y'}>
                         {command?.command?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
                     </div>
                 </div>
@@ -160,6 +165,7 @@ export default function EditCommandModal() {
                             filterText={filterText}
                             filterCategories={filterCategories}
                             isEditing={isEditing}
+                            isProcessing={processing}
                         />
                         
                     </div>
@@ -195,7 +201,7 @@ export default function EditCommandModal() {
             </div>
 
             <FloatingEditButtons
-                type={command?.operation.type === 'create' ? 'create' : 'edit'}
+                type={command?.operation.type === OperationType.CREATE ? 'create' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 isSaving={processing}

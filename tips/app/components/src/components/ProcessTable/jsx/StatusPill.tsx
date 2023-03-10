@@ -7,7 +7,7 @@ declare interface StatusPillPropsInterface {
 
 export default function StatusPill({ status }: StatusPillPropsInterface) {
     return (
-        <div className={`${styles.parent} ${ status === 'active' ? styles.active : styles.inactive }`}>
+        <div className={`${styles.parent} ${ status ? styles.active : styles.inactive }`}>
             <p>{ status }</p>
         </div>
     )

@@ -31,6 +31,7 @@ interface PropsInterface {
     filterCategories: FilterCategoryInterface[];
     filterText: string;
     isEditing: boolean;
+    isProcessing: boolean;
 }
 
 type Data = object;
@@ -44,12 +45,13 @@ type EditCommandPropertyArgs = {
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
 
-export default function EditCommandsTable({ selectedCommand, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing }: PropsInterface) {
+export default function EditCommandsTable({ selectedCommand, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
 
     const tableInstance = generateTableData({
         commandData: isEditing ? editedCommandValues : selectedCommand!,
         filterCategories,
         isEditing,
+        isProcessing,
         editCommandProperty
     });
 
@@ -130,20 +132,16 @@ type InputRefs = {
     };
 }
 
-function generateTableData({ commandData, filterCategories, isEditing, editCommandProperty }: {
+function generateTableData({ commandData, filterCategories, isEditing, isProcessing, editCommandProperty }: {
     commandData: Partial<CommandDataInterface>;
     filterCategories: FilterCategoryInterface[];
     isEditing: boolean;
+    isProcessing: boolean;
     editCommandProperty: (args: EditCommandPropertyArgs) => void;
 }) {
 
     const { command } = useCommandModalData();
-    const commandRef = useRef(command); // Must store latest value of updateCommand in a ref, otherwise it may be stale when accessed by table to determine if property is being updated
     const inputRefs = useRef({} as InputRefs);
-
-    useEffect(() => { // Update the ref to the latest value of updateCommand
-        commandRef.current = command;
-      }, [command]);
 
     const tableColumns = useMemo(() => [
         {
@@ -160,7 +158,7 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
             accessor: 'property_value',
             Cell: (cell: Cell) => renderCell(cell, isEditing)
         }
-    ], [commandData, isEditing]);
+    ], [command, commandData, isEditing]);
 
     // Create a dictionary where there's one key for each property ID, and the value is the category ID (e.g., { CMD_TYPE: 'params', CMD_WHERE: 'params', CMD_SRC: 'io' ... })
     const categoryToKeysMap: CategoryToKeysMap = filterCategories.reduce((categoryToKeysMap, {id: categoryId, propertyIds}) => {
@@ -179,7 +177,7 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                 property_name: propertyKey,
                 property_value: propertyValue
             }))
-    ), [commandData, commandRef.current]);
+    ), [commandData, command]);
 
     const tableInstance = useTable<Data>({
         columns: (tableColumns as Column<Object>[]),
@@ -202,9 +200,9 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                 return <div>{cell.value}</div>
 
             case 'property_value':
-                const originalCommand = commandRef.current?.command;
-                const savingEditedValue = commandRef.current?.executionStatus.status === ExecutionStatus.RUNNING && commandRef.current.command?.[propertyName] !== originalCommand?.[propertyName];
-                const cellValue = savingEditedValue ? commandRef.current!.command?.[propertyName] : cell.value;
+                const originalCommand = command?.command;
+                const savingEditedValue = command?.executionStatus === ExecutionStatus.RUNNING && command.command?.[propertyName] !== originalCommand?.[propertyName];
+                const cellValue = savingEditedValue ? command!.command?.[propertyName] : cell.value;
                 const placeholder = cellValue === null ? 'NULL' : 'Empty String';
 
                 return (
@@ -222,7 +220,7 @@ function generateTableData({ commandData, filterCategories, isEditing, editComma
                             onBlur={() => handleBlur(propertyName)}
                             placeholder={placeholder}
                             className={!cell.value ? styles.emptyCell : ''}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isProcessing}
                         />
 
                         <AnimatePresence>
