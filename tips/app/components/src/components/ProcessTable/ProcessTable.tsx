@@ -21,7 +21,7 @@ import { ProcessDataInterface } from '@/interfaces/Interfaces';
 import { ExecutionStatus, OperationType } from '@/enums/enums';
 
 // CSS
-import styles from '@/styles/processTable/processTable.module.css';
+import styles from '@/styles/ProcessTable/ProcessTable.module.css';
 
 // Components
 import StatusPill from '@/components/ProcessTable/StatusPill';

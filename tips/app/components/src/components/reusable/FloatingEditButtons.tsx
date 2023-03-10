@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PuffLoader } from "react-spinners";
 
 // CSS
-import styles from "@/styles/editCommandModal/floatingEditButtons.module.css";
+import styles from "@/styles/FloatingEditButtons/FloatingEditButtons.module.css";
 
 interface PropsInterface {
     type: 'create' | 'edit';

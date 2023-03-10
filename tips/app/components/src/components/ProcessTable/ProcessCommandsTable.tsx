@@ -17,7 +17,7 @@ import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfa
 import { ExecutionStatus } from '@/enums/enums';
 
 // CSS
-import styles from '@/styles/processTable/commandsTable.module.css';
+import styles from '@/styles/ProcessTable/CommandsTable.module.css';
 
 interface PropsInterface {
     commands: ProcessDataInterface['steps'];

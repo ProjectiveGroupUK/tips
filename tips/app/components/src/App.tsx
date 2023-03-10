@@ -2,12 +2,12 @@
 import { withStreamlitConnection, ComponentProps } from 'streamlit-component-lib';
 
 // Contexts
-import ProcessTableDataContextProvider from '@/components/reusable/contexts/ProcessTableDataContext';
-import ProcessModalDataContextProvider from '@/components/reusable/contexts/ProcessModalDataContex';
+import ProcessTableDataContextProvider from '@/contexts/ProcessTableDataContext';
+import ProcessModalDataContextProvider from '@/contexts/ProcessModalDataContex';
 import CommandModalDataContextProvider from '@/contexts/CommandModalDataContext';
 
 // Components
-import ProcessTable from '@/components/ProcessTable/jsx/ProcessTable';
+import ProcessTable from '@/components/ProcessTable/ProcessTable';
 import ProcessModal from './components/ProcessModal/ProcessModal';
 import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
 

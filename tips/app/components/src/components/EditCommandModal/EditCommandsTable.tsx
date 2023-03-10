@@ -22,7 +22,7 @@ import { FilterCategoryInterface } from './EditCommandModal';
 import { ExecutionStatus } from '@/enums/enums';
 
 // CSS
-import styles from '@/styles/processTable/editCommandsTable.module.css';
+import styles from '@/styles/CommandModal/EditCommandsTable.module.css';
 
 interface PropsInterface {
     selectedCommand: Partial<CommandDataInterface>;

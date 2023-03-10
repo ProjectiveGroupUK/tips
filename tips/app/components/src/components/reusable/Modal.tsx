@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 // CSS
-import styles from "@/styles/processTable/modal.module.css";
+import styles from "@/styles/Modal/Modal.module.css";
 
 interface PropsInterface {
     isOpen: boolean; // The modal component is always mounted but isOpen tells the component whether it should make itself visible or not

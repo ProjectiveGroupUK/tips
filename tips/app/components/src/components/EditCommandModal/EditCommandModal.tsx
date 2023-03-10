@@ -10,7 +10,7 @@ import { useCommandModalData } from "@/contexts/CommandModalDataContext";
 // Components
 import Modal from "@/components/reusable/Modal";
 import EditCommandsTable from "./EditCommandsTable";
-import FloatingEditButtons from "../reusable/FloatingEditButtons";
+import FloatingEditButtons from "@/components/reusable/FloatingEditButtons";
 
 // Interfaces
 import { CommandDataInterface, ExecutionStatusInterface } from "@/interfaces/Interfaces";
@@ -19,7 +19,7 @@ import { CommandDataInterface, ExecutionStatusInterface } from "@/interfaces/Int
 import { ExecutionStatus, OperationType } from "@/enums/enums";
 
 // CSS
-import styles from "@/styles/processTable/editCommandModal.module.css";
+import styles from "@/styles/CommandModal/EditCommandModal.module.css";
 
 // Icons
 import { Search, CircleCheck, AlertCircle } from 'tabler-icons-react';
