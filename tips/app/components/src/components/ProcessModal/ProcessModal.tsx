@@ -5,11 +5,11 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // Contexts
-import { useProcessModalData } from '@/components/reusable/contexts/ProcessModalDataContex';
+import { useProcessModalData } from '@/contexts/ProcessModalDataContex';
 
 // Components
 import Modal from '@/components/reusable/Modal';
-import FloatingEditButtons from '@/components/EditCommandModal/FloatingEditButtons';
+import FloatingEditButtons from '@/components/reusable/FloatingEditButtons';
 
 // Interfaces
 import { ProcessDataInterface, ExecutionStatusInterface } from '@/interfaces/Interfaces';

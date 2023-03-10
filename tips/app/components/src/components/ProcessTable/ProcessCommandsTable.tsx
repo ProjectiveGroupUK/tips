@@ -8,7 +8,7 @@ import { useTable } from 'react-table';
 import { Tooltip } from '@mantine/core';
 
 // Contexts
-import { useProcessTableData } from '@/components/reusable/contexts/ProcessTableDataContext';
+import { useProcessTableData } from '@/contexts/ProcessTableDataContext';
 
 // Interfaces
 import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';

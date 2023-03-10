@@ -5,12 +5,12 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Contexts
-import { useCommandModalData } from "@/components/reusable/contexts/CommandModalDataContext";
+import { useCommandModalData } from "@/contexts/CommandModalDataContext";
 
 // Components
 import Modal from "@/components/reusable/Modal";
 import EditCommandsTable from "./EditCommandsTable";
-import FloatingEditButtons from "./FloatingEditButtons";
+import FloatingEditButtons from "../reusable/FloatingEditButtons";
 
 // Interfaces
 import { CommandDataInterface, ExecutionStatusInterface } from "@/interfaces/Interfaces";

@@ -12,7 +12,7 @@ import { Column, Cell } from 'react-table';
 import { Menu, Tooltip } from '@mantine/core';
 
 // Contexts
-import { useProcessTableData } from '@/components/reusable/contexts/ProcessTableDataContext';
+import { useProcessTableData } from '@/contexts/ProcessTableDataContext';
 
 // Interfaces
 import { ProcessDataInterface } from '@/interfaces/Interfaces';
@@ -24,7 +24,7 @@ import { ExecutionStatus, OperationType } from '@/enums/enums';
 import styles from '@/styles/processTable/processTable.module.css';
 
 // Components
-import StatusPill from '@/components/ProcessTable/jsx/StatusPill';
+import StatusPill from '@/components/ProcessTable/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
 // Icons

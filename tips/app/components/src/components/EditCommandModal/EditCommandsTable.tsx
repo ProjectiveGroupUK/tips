@@ -6,7 +6,7 @@ import { useTable, useFilters } from 'react-table';
 import { Row, Column, Cell } from 'react-table';
 
 // Contexts
-import { useCommandModalData } from '@/components/reusable/contexts/CommandModalDataContext';
+import { useCommandModalData } from '@/contexts/CommandModalDataContext';
 
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
