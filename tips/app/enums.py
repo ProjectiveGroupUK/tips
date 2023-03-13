@@ -6,7 +6,7 @@ class StateVariable:
     PROCESS_DATA = 'processData'
     
 class ProcessTableInstruction:
-    RESET_EDIT_PROCESS = 'resetEditProcess'
+    RESET_EDIT_PROCESS = 'resetProcessTableProcess'
     RESET_COMMAND = 'resetProcessTableCommand'
 
 class ProcessModalInstruction:

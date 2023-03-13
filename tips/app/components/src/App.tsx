@@ -25,7 +25,7 @@ export interface PropsInterface_ProcessTable {
   component: 'ProcessTable';
   processData: ProcessDataInterface[];
   instructions: {
-    resetEditProcess: boolean;
+    resetProcessTableProcess: boolean;
     resetProcessTableCommand: boolean;
   }
 }

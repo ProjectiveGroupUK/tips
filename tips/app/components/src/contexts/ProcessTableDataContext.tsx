@@ -56,8 +56,8 @@ export default function ProcessTableDataContextProvider({ processData: receivedP
     }
 
     useEffect(() => { // Interpret and act upon instructions sent from Python
-        const { resetEditProcess, resetProcessTableCommand } = instructions;
-        if(resetEditProcess) setEditedProcess(null); // Reset edited process (would be instructed if ProcessModal component was closed)
+        const { resetProcessTableProcess, resetProcessTableCommand } = instructions;
+        if(resetProcessTableProcess) setEditedProcess(null); // Reset edited process (would be instructed if ProcessModal component was closed)
         if(resetProcessTableCommand) setCommand(null); // Reset command (would be instructed if CommandMOdal component was closed)        
     }, [instructions]);
 
