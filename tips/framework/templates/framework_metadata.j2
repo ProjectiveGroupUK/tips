@@ -21,7 +21,7 @@ SELECT p.process_id,
        c.cmd_external_call,
        NVL(c.active,'N') AS active
   FROM tips_md_schema.process P
-  JOIN tips_md_schema.process_cmd c ON p.process_id = c.process_id
+  LEFT JOIN tips_md_schema.process_cmd c ON p.process_id = c.process_id
   {% if parameters.process_name != "ALL" %}
   WHERE p.process_name = '{{ parameters.process_name }}'
   {% endif %}

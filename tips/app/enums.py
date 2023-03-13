@@ -6,26 +6,51 @@ class StateVariable:
     PROCESS_DATA = 'processData'
     
 class ProcessTableInstruction:
+    RESET_EDIT_PROCESS = 'resetEditProcess'
     RESET_SELECTED_COMMAND = 'resetSelectedCommand'
+    RESET_CREATE_COMMAND = 'resetCreateCommand'
+
+class ProcessModalInstruction:
+    EXECUTION_STATUS = 'processExecutionStatus'
+    CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS = 'changeUpdateProcessToCreateProcess'
 
 class CommandModalInstruction:
-    RESET_UPDATE_COMMAND = 'resetUpdateCommand'
+    EXECUTION_STATUS = 'commandExecutionStatus'
+    CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND = 'changeUpdateCommandToCreateCommand'
 
-class CommandUpdateProperty:
-    CMD_TYPE = 'cmd_type'
-    CMD_SRC = 'cmd_src'
-    CMD_TGT = 'cmd_tgt'
-    CMD_WHERE = 'cmd_where'
-    CMD_BINDS = 'cmd_binds'
-    REFRESH_TYPE = 'refresh_type'
-    BUSINESS_KEY = 'business_key'
-    MERGE_ON_FIELDS = 'merge_on_fields'
-    GENERATE_MERGE_MATCHED_CLAUSE = 'generate_merge_matched_clause'
-    GENERATE_MERGE_NON_MATCHED_CLAUSE = 'generate_merge_non_matched_clause'
-    ADDITIONAL_FIELDS = 'additional_fields'
-    TEMP_TABLE = 'temp_table'
-    CMD_PIVOT_BY = 'cmd_pivot_by'
-    CMD_PIVOT_FIELD = 'cmd_pivot_field'
-    DQ_TYPE = 'dq_type'
-    CMD_EXTERNAL_CALL = 'cmd_external_call'
-    ACTIVE = 'active'
+class ExecutionStatus:
+    RUNNING = 'running'
+    SUCCESS = 'success'
+    FAIL = 'fail'
+    NONE = 'none'
+
+class ProcessDataProperty:
+    PROCESS_ID = 'PROCESS_ID'
+    PROCESS_NAME = 'PROCESS_NAME'
+    PROCESS_DESCRIPTION = 'PROCESS_DESCRIPTION'
+    ACTIVE = 'ACTIVE'
+
+class CommandDataProperty:
+    PROCESS_ID = 'PROCESS_ID'
+    PROCESS_CMD_ID = 'PROCESS_CMD_ID'
+    CMD_TYPE = 'CMD_TYPE'
+    CMD_SRC = 'CMD_SRC'
+    CMD_TGT = 'CMD_TGT'
+    CMD_WHERE = 'CMD_WHERE'
+    CMD_BINDS = 'CMD_BINDS'
+    REFRESH_TYPE = 'REFRESH_TYPE'
+    BUSINESS_KEY = 'BUSINESS_KEY'
+    MERGE_ON_FIELDS = 'MERGE_ON_FIELDS'
+    GENERATE_MERGE_MATCHED_CLAUSE = 'GENERATE_MERGE_MATCHED_CLAUSE'
+    GENERATE_MERGE_NON_MATCHED_CLAUSE = 'GENERATE_MERGE_NON_MATCHED_CLAUSE'
+    ADDITIONAL_FIELDS = 'ADDITIONAL_FIELDS'
+    TEMP_TABLE = 'TEMP_TABLE'
+    CMD_PIVOT_BY = 'CMD_PIVOT_BY'
+    CMD_PIVOT_FIELD = 'CMD_PIVOT_FIELD'
+    DQ_TYPE = 'DQ_TYPE'
+    CMD_EXTERNAL_CALL = 'CMD_EXTERNAL_CALL'
+    ACTIVE = 'ACTIVE'
+
+class OperationType:
+    CREATE = 'create'
+    EDIT = 'edit'

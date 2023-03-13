@@ -1,6 +1,12 @@
 import os
 import streamlit.components.v1 as components
 
+# Streamlit modal
+from utils.modal import Modal
+
+# Enums
+from enums import ExecutionStatus
+
 _RELEASE = False
 
 def _getComponent(key: str, **kwargs):
@@ -20,20 +26,41 @@ def _getComponent(key: str, **kwargs):
     
     return _component_func(key = key, **kwargs)
 
-def processesTable(key: str, processData: list, instructions = {}):
+def processesTable(key: str, processData: list, instructions: dict):
     return _getComponent(
         key = key,
-        processData = processData,
         component = 'ProcessTable',
+        processData = processData,
         instructions = instructions
     )
 
-def processCommandsModal(key: str, processData: dict, selectedProcessId: int, selectedCommandId: int, instructions: dict):
-    return _getComponent(
-        key = key,
-        component = 'ProcessCommandsModal',
-        processData = processData,
-        selectedProcessId = selectedProcessId,
-        selectedCommandId = selectedCommandId,
-        instructions = instructions
-    )
+def processModal(key: str, operationType: str, process: dict, instructions: dict):
+    modal = Modal(title="Edit Process Modal", key="editProcessModal")
+    with modal.container():
+        return _getComponent(
+            key = key,
+            component = 'ProcessModal',
+            process = {
+                'operation': {
+                    'type': operationType # // From OperationType enum
+                },
+                'process': process
+            },
+            instructions = instructions
+        )
+
+def commandModal(key: str, operationType: str, process: dict, command: dict, instructions: dict):
+    modal = Modal(title="Edit Comand Modal", key="editCommandModal")
+    with modal.container():
+        return _getComponent(
+            key = key,
+            component = 'CommandModal',
+            commandData = {
+                'operation': {
+                    'type': operationType # // From OperationType enum
+                },
+                'process': process,
+                'command': command
+            },
+            instructions = instructions
+        )

@@ -75,3 +75,22 @@ class Globals:
         self.setProjectDir(Path.cwd())
         self.setProjectID(projectID=projectID)
 
+def escapeValuesForSQL(dataDict: dict, fieldsToSkip: list = []) -> dict: # Python 3.9+ parameter types: dataDict: dict[str, int | str | None], fieldsToSkip: list[str]
+    formattedUpdates = {}
+    for update in dataDict.keys():
+        if update in fieldsToSkip:
+            formattedUpdates[update] = dataDict[update]
+            continue
+
+        if isinstance(dataDict[update], int) or isinstance(dataDict[update], bool):
+            formattedUpdates[update] = dataDict[update]
+        elif dataDict[update] == None:
+            formattedUpdates[update] = 'null'
+        elif isinstance(dataDict[update], str):
+            escapedValue = dataDict[update].replace("'", "''")
+            formattedUpdates[update] = f"'{escapedValue}'"
+        else:
+            raise Exception(f'Unexpected type for update value: {type(dataDict[update])}')
+    
+    return formattedUpdates
+

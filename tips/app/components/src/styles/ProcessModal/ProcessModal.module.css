@@ -1,0 +1,167 @@
+.container {
+    padding: 1.5rem;
+    min-width: min(60vw, 40rem);
+}
+
+.header {
+    display: flex;
+}
+
+.header > .headerLeft {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.2rem;
+    color: var(--primary);
+    flex-grow: 1;
+}
+
+.header > .headerLeft > h1 {
+    font-size: 1.7rem;
+    font-weight: 500;
+}
+
+.header > .headerLeft > .processNameContainer {
+    position: relative;
+}
+
+.header > .headerLeft > .processNameContainer > * {
+    font-size: 1.1rem;
+    font-weight: 400;
+}
+
+.header > .headerLeft > .processNameContainer > .invisibleExpander {
+    min-width: fit-content;
+    height: 0;
+    overflow: hidden;
+}
+
+.header .processNameContainer > input {
+    width: 100%;
+    border: none;
+    color: var(--primary);
+    outline-color: transparent;
+    background-color: transparent;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.header .processNameContainer > input[data-editing = "true"] {
+    margin-left: 10px;
+}
+
+.header > .separator {
+    margin-left: 4rem;
+    margin-right: 1rem;
+    width: 2px;
+    border-radius: 100rem;
+    background-color: var(--primary);
+}
+
+.header > .headerRight {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    letter-spacing: 0.1ch;
+}
+
+.header > .headerRight[data-active-status="true"] {
+    color: var(--success-green);
+}
+
+.header > .headerRight[data-active-status="false"] {
+    color: var(--fail-red);
+}
+
+.configContainer {
+    margin-top: 3rem;
+    color: var(--primary);
+    border-collapse: collapse;
+}
+
+.configContainer > .descriptionContainer > h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.configContainer > .descriptionContainer > div {
+    position: relative;
+}
+
+.configContainer > .descriptionContainer textarea {
+    width: 100%;
+    border: none;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--primary);
+    outline-color: transparent;
+    overflow: hidden;
+    resize: none;
+    background-color: transparent;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.configContainer > .descriptionContainer textarea[data-editing = "true"] {
+    margin-left: 10px;
+}
+
+.executionStatusMessageContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.executionStatusMessageContainer > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    row-gap: 1rem;
+    background-color: #3d5a7365;
+    backdrop-filter: blur(2px);
+    border-radius: 0.3rem;
+    padding: 1rem;
+    max-width: 200px;
+    color: white;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.executionStatusMessageContainer .executionSuccess, .executionFail {
+    font-weight: 500;
+}
+
+.executionStatusMessageContainer .executionSuccess {
+    color: var(--success-green-light);
+}
+
+.executionStatusMessageContainer .executionFail {
+    color: var(--fail-red-light);
+}
+
+/* Focus indicator bar */
+.focusIndicatorBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    border-radius: 100rem;
+    background-color: var(--primary);
+    opacity: 0;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.focusIndicatorBar[data-editing = "true"] {
+    opacity: 1;
+}
+
+.focusIndicatorBar:has(+ input:focus, + textarea:focus) {
+    background-color: var(--attention-orange);
+}

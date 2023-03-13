@@ -34,6 +34,16 @@
     background-color: #d1e2e1;
 }
 
+.table > tbody > tr > td > button.actionsButton {
+    padding: 0.13rem;
+    color: var(--primary);
+    transition: color 0.2s linear;
+}
+
+.table > tbody > tr > td > button.actionsButton:hover {
+    color: var(--attention-orange);
+}
+
 .table > tbody > tr:not(.rowSubComponent) > td {
     padding: 10px;
     font-weight: 300;
@@ -47,4 +57,21 @@
 
 .rowSubComponent > td > pre {
     font-size: 10px;
+}
+
+.table > thead .createProcessButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.1rem;
+    transition: color 0.3s linear;
+}
+
+.table > thead .createProcessButton:hover {
+    color: var(--attention-orange);
+}
+
+.tooltip {
+    font-weight: 400;
+    font-size: 0.9rem;
 }
