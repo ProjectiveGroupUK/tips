@@ -34,7 +34,7 @@ type Data = object;
 
 export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
-    const { processData, setCreateCommand, setEditedProcess } = useProcessTableData();
+    const { processData, setCommand, setEditedProcess } = useProcessTableData();
 
     const tableInstance = generateTableData({ processData: processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
@@ -63,8 +63,12 @@ export default function ProcessTable() {
 
     function handleNewCommandClick(rowId: ProcessDataInterface['PROCESS_ID']) {
         const process = processData.find((process) => process.PROCESS_ID === rowId)!;
-        setCreateCommand({
-            data: {
+        setCommand({
+            operation: {
+                type: OperationType.CREATE
+            },
+            process: process,
+            command: {
                 PROCESS_CMD_ID: 0, // Dummy value which will be replaced by Python script when running INSERT INTO query
                 CMD_TYPE: 'APPEND',
                 CMD_SRC: null,
@@ -84,7 +88,6 @@ export default function ProcessTable() {
                 CMD_EXTERNAL_CALL: null,
                 ACTIVE: 'Y'
             },
-            process: process,
             executionStatus: ExecutionStatus.NONE
         });
     }

@@ -14,7 +14,7 @@ import { useProcessTableData } from '@/contexts/ProcessTableDataContext';
 import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
 
 // Enums
-import { ExecutionStatus } from '@/enums/enums';
+import { ExecutionStatus, OperationType } from '@/enums/enums';
 
 // CSS
 import styles from '@/styles/ProcessTable/CommandsTable.module.css';
@@ -28,7 +28,7 @@ type Data = object;
 export default function ProcessCommandsTable({ selectedProcess }: { 
     selectedProcess: ProcessDataInterface;
 }) {
-    const { setUpdateCommand } = useProcessTableData();
+    const { command, setCommand } = useProcessTableData();
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = generateTableData({ commands: selectedProcess?.steps ?? [] });
 
     return (
@@ -55,11 +55,14 @@ export default function ProcessCommandsTable({ selectedProcess }: {
                         <tr 
                             key={row.id} 
                             onClick={() => { // When clicked, update expandedRowId state variable
-                                setUpdateCommand(() => ({
-                                    data: selectedProcess.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === Number(row.id))!,
+                                setCommand({
+                                    operation: {
+                                        type: OperationType.EDIT
+                                    },
                                     process: selectedProcess,
+                                    command: selectedProcess.steps.find((iteratedCommand) => iteratedCommand.PROCESS_CMD_ID === Number(row.id))!,
                                     executionStatus: ExecutionStatus.NONE
-                                }))
+                                })
                             }}
                         >
                             { row.cells.map(cell => {

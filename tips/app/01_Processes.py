@@ -92,7 +92,7 @@ def _stripStepDict(stepDict: dict): # Removes process keys from dictionary inten
     strippedDict.pop(ProcessDataProperty.PROCESS_ID)
     strippedDict.pop(ProcessDataProperty.PROCESS_NAME)
     strippedDict.pop(ProcessDataProperty.PROCESS_DESCRIPTION)
-    strippedDict.pop('PROCESS_ACTIVE')
+    strippedDict.pop('PROCESS_ACTIVE') # uses alias because 'ACTIVE' (i.e., the name of the column as it exists in the table) is the same as the name of the CommandDataProperty active status column
     return strippedDict
 
 def _createProcess(newProcessData: dict):
@@ -367,14 +367,13 @@ def main():
     # Render commandModal if user intends to create or edit a command
     commandModalData = None
     if processesTableData != None:
-        createCommand = processesTableData.get('createCommand')
-        updateCommand = processesTableData.get('updateCommand')
+        command = processesTableData.get('command')
 
-        if createCommand != None or updateCommand != None:
+        if command != None:
 
             # Prepare modal parameters
-            preparedOperationType = OperationType.CREATE if (createCommand != None and st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] == None) else OperationType.EDIT
-            preparedCommand = createCommand.get('data') if createCommand != None else updateCommand.get('data')
+            preparedOperationType = command.get('operation').get('type') if st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] == None else OperationType.EDIT
+            preparedCommand = command.get('command')
             if st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] != None:
                 preparedCommand[CommandDataProperty.PROCESS_CMD_ID] = st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND]
 
@@ -382,7 +381,7 @@ def main():
             commandModalData = commandModal(
                 key = 'modal',
                 operationType = preparedOperationType,
-                process = createCommand.get('process') if createCommand != None else updateCommand.get('process'),
+                process = command.get('process'),
                 command = preparedCommand,
                 instructions = {
                     CommandModalInstruction.EXECUTION_STATUS: st.session_state[CommandModalInstruction.EXECUTION_STATUS],
