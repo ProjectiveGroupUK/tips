@@ -35,11 +35,8 @@ def _setUpStateInstructions():
     if ProcessTableInstruction.RESET_EDIT_PROCESS not in st.session_state:
         st.session_state[ProcessTableInstruction.RESET_EDIT_PROCESS] = False
 
-    if ProcessTableInstruction.RESET_SELECTED_COMMAND not in st.session_state:
-        st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = False
-
-    if ProcessTableInstruction.RESET_CREATE_COMMAND not in st.session_state:
-        st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
+    if ProcessTableInstruction.RESET_COMMAND not in st.session_state:
+        st.session_state[ProcessTableInstruction.RESET_COMMAND] = False
 
     if ProcessModalInstruction.EXECUTION_STATUS not in st.session_state:
         st.session_state[ProcessModalInstruction.EXECUTION_STATUS] = { 'status': ExecutionStatus.NONE }
@@ -299,9 +296,8 @@ def main():
         key = 'processTable', 
         processData = st.session_state[StateVariable.PROCESS_DATA],
         instructions = {
-            ProcessTableInstruction.RESET_CREATE_COMMAND: st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND],
-            ProcessTableInstruction.RESET_SELECTED_COMMAND: st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND],
-            ProcessTableInstruction.RESET_EDIT_PROCESS: st.session_state[ProcessTableInstruction.RESET_EDIT_PROCESS]
+            ProcessTableInstruction.RESET_EDIT_PROCESS: st.session_state[ProcessTableInstruction.RESET_EDIT_PROCESS],
+            ProcessTableInstruction.RESET_COMMAND: st.session_state[ProcessTableInstruction.RESET_COMMAND],
         }
     )
 
@@ -393,8 +389,7 @@ def main():
                 command = commandModalData.get('command')
 
                 if command == None:
-                    st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = True
-                    st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = True
+                    st.session_state[ProcessTableInstruction.RESET_COMMAND] = True
                     st.experimental_rerun()
 
                 elif command.get('executionStatus') == ExecutionStatus.RUNNING and st.session_state[CommandModalInstruction.EXECUTION_STATUS].get('status') == ExecutionStatus.NONE: # Execution of operation has been requested, but Python hasn't started executing it yet -> execute operation
@@ -424,8 +419,7 @@ def main():
                     st.session_state[CommandModalInstruction.EXECUTION_STATUS] = { 'status': ExecutionStatus.NONE }
 
         else: # Process table does not instruct command modal to appear -> reset instructions to be used again when modal is present
-            st.session_state[ProcessTableInstruction.RESET_CREATE_COMMAND] = False
-            st.session_state[ProcessTableInstruction.RESET_SELECTED_COMMAND] = False
+            st.session_state[ProcessTableInstruction.RESET_COMMAND] = False
 
             # Comand modal is not showing -> reset CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND instruction
             st.session_state[CommandModalInstruction.CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND] = None

@@ -7,8 +7,7 @@ class StateVariable:
     
 class ProcessTableInstruction:
     RESET_EDIT_PROCESS = 'resetEditProcess'
-    RESET_SELECTED_COMMAND = 'resetSelectedCommand'
-    RESET_CREATE_COMMAND = 'resetCreateCommand'
+    RESET_COMMAND = 'resetProcessTableCommand'
 
 class ProcessModalInstruction:
     EXECUTION_STATUS = 'processExecutionStatus'
