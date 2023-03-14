@@ -4,6 +4,9 @@ import { createContext, useContext, useState, useEffect } from 'react';
 // Streamlit
 import { Streamlit } from 'streamlit-component-lib';
 
+// Supporting functions
+import { getObjectWithoutFunctions } from '@/supportingFunctions/getObjectWithoutFunctions';
+
 // Interfaces
 import { PropsInterface_ProcessModal } from '@/App';
 import { ProcessDataInterface, ExecutionStatusInterface } from '@/interfaces/Interfaces';
@@ -82,15 +85,4 @@ export default function ProcessModalDataContextProvider({ process: receivedProce
     return <ProcessModalDataContext.Provider value={value}>
         {children}
     </ProcessModalDataContext.Provider>
-}
-
-function getObjectWithoutFunctions(obj: Object): Object {
-    return Object.entries(obj).reduce((cleansed, [key, value]) => {
-        const isFunction = value?.constructor?.name === 'Function';
-        if(isFunction) return { ...cleansed };
-        return {
-            ...cleansed,
-            [key]: value
-        };
-    }, {})
 }

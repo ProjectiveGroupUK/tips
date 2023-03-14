@@ -4,6 +4,9 @@ import { createContext, useContext, useState, useEffect } from 'react';
 // Streamlit
 import { Streamlit } from 'streamlit-component-lib';
 
+// Supporting functions
+import { getObjectWithoutFunctions } from '@/supportingFunctions/getObjectWithoutFunctions';
+
 // Interfaces
 import { ProcessDataInterface, CommandDataInterface } from '@/interfaces/Interfaces';
 import { PropsInterface_ProcessTable } from '@/App';
@@ -72,15 +75,4 @@ export default function ProcessTableDataContextProvider({ processData: receivedP
             { children }
         </ProcessTableDataContext.Provider>
     )
-}
-
-function getObjectWithoutFunctions(obj: Object): Object {
-    return Object.entries(obj).reduce((cleansed, [key, value]) => {
-        const isFunction = value?.constructor?.name === 'Function';
-        if(isFunction) return { ...cleansed };
-        return {
-            ...cleansed,
-            [key]: value
-        };
-    }, {})
 }
