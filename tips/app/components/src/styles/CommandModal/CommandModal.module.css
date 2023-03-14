@@ -44,11 +44,11 @@
 }
 
 .header > .headerRight > button {
-    padding: 0.1rem 0.7rem;
+    padding: 0 0.6rem;
     font-size: 0.8rem;
     border: 1px solid transparent;
     border-radius: 100rem;
-    transition: background-color 300ms ease, color 100ms ease;
+    transition: border-color 300ms ease, color 300ms ease;
 }
 
 .header > .headerRight[data-active-status="true"] > div { /* Colour-code Active status label */
@@ -60,13 +60,13 @@
 }
 
 .header > .headerRight[data-active-status="true"] > button:hover { /* Colour-code Disable button on hover */
-    background-color: var(--fail-red-light);
-    color: white;
+    border-color: var(--fail-red);
+    color: var(--fail-red);
 }
 
 .header > .headerRight[data-active-status="false"] > button:hover { /* Colour-code Enable button on hover */
-    background-color: var(--success-green-light);
-    color: white;
+    border-color: var(--success-green);
+    color: var(--success-green);
 }
 
 .configContainer {
