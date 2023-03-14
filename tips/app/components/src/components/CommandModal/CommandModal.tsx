@@ -9,7 +9,7 @@ import { useCommandModalData } from "@/contexts/CommandModalDataContext";
 
 // Components
 import Modal from "@/components/reusable/Modal";
-import EditCommandsTable from "./EditCommandsTable";
+import CommandModalTable from "./CommandModalTable";
 import FloatingEditButtons from "@/components/reusable/FloatingEditButtons";
 
 // Interfaces
@@ -19,7 +19,7 @@ import { CommandDataInterface, ExecutionStatusInterface } from "@/interfaces/Int
 import { ExecutionStatus, OperationType } from "@/enums/enums";
 
 // CSS
-import styles from "@/styles/CommandModal/EditCommandModal.module.css";
+import styles from "@/styles/CommandModal/CommandModal.module.css";
 
 // Icons
 import { Search, CircleCheck, AlertCircle } from 'tabler-icons-react';
@@ -31,7 +31,7 @@ export interface FilterCategoryInterface{
     propertyIds: Array<keyof CommandDataInterface>;
 }
 
-export default function EditCommandModal() {
+export default function CommandModal() {
 
     const { executionStatus, command, setCommand } = useCommandModalData();
     const [originalCommand, setOriginalCommand] = useState(command); // Stores command as it was prior to saving -> allows table cells to determine which cells have been edited and display PulseLoader only on relevant fields while saving operation is in progress
@@ -158,7 +158,7 @@ export default function EditCommandModal() {
                         </div>
 
                         { /* Table */}
-                        <EditCommandsTable
+                        <CommandModalTable
                             selectedCommand={command?.command ?? {} as Partial<CommandDataInterface>}
                             editedCommandValues={editedCommandValues!}
                             setEditedCommandValues={setEditedCommandValues}

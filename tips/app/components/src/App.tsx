@@ -9,7 +9,7 @@ import CommandModalDataContextProvider from '@/contexts/CommandModalDataContext'
 // Components
 import ProcessTable from '@/components/ProcessTable/ProcessTable';
 import ProcessModal from './components/ProcessModal/ProcessModal';
-import EditCommandModal from '@/components/EditCommandModal/EditCommandModal';
+import CommandModal from '@/components/CommandModal/CommandModal';
 
 // Interfaces
 import { ProcessDataInterface, CommandDataInterface, ExecutionStatusInterface } from '@/interfaces/Interfaces';
@@ -78,7 +78,7 @@ function App(props: ComponentPropsWithArgs) {
     case 'CommandModal':
       return (
         <CommandModalDataContextProvider {...props.args}>
-          <EditCommandModal />
+          <CommandModal />
         </CommandModalDataContextProvider>
       );
 

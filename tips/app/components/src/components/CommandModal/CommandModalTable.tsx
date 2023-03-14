@@ -16,13 +16,13 @@ import { PulseLoader } from 'react-spinners';
 
 // Interfaces
 import { CommandDataInterface } from "@/interfaces/Interfaces";
-import { FilterCategoryInterface } from './EditCommandModal';
+import { FilterCategoryInterface } from './CommandModal';
 
 // Enums
 import { ExecutionStatus } from '@/enums/enums';
 
 // CSS
-import styles from '@/styles/CommandModal/EditCommandsTable.module.css';
+import styles from '@/styles/CommandModal/CommandModalTable.module.css';
 
 interface PropsInterface {
     selectedCommand: Partial<CommandDataInterface>;
@@ -45,7 +45,7 @@ type EditCommandPropertyArgs = {
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
 
-export default function EditCommandsTable({ selectedCommand, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
+export default function CommandModalTable({ selectedCommand, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
 
     const tableInstance = generateTableData({
         commandData: isEditing ? editedCommandValues : selectedCommand!,
