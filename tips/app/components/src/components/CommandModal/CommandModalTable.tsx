@@ -25,6 +25,7 @@ import { ExecutionStatus } from '@/enums/enums';
 import styles from '@/styles/CommandModal/CommandModalTable.module.css';
 
 interface PropsInterface {
+    originalCommandData: Partial<CommandDataInterface> | null;
     editedCommandValues: Partial<CommandDataInterface>;
     setEditedCommandValues: React.Dispatch<React.SetStateAction<Partial<CommandDataInterface>>>;
     filterCategories: FilterCategoryInterface[];
@@ -44,11 +45,12 @@ type EditCommandPropertyArgs = {
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
 
-export default function CommandModalTable({ editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
+export default function CommandModalTable({ originalCommandData, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
 
     const { command } = useCommandModalData();
 
     const tableInstance = generateTableData({
+        originalCommandData,
         commandData: isEditing ? editedCommandValues : command?.command!,
         filterCategories,
         isEditing,
@@ -133,7 +135,8 @@ type InputRefs = {
     };
 }
 
-function generateTableData({ commandData, filterCategories, isEditing, isProcessing, editCommandProperty }: {
+function generateTableData({ originalCommandData, commandData, filterCategories, isEditing, isProcessing, editCommandProperty }: {
+    originalCommandData: Partial<CommandDataInterface> | null;
     commandData: Partial<CommandDataInterface>;
     filterCategories: FilterCategoryInterface[];
     isEditing: boolean;
@@ -201,8 +204,7 @@ function generateTableData({ commandData, filterCategories, isEditing, isProcess
                 return <div>{cell.value}</div>
 
             case 'property_value':
-                const originalCommand = command?.command;
-                const savingEditedValue = command?.executionStatus === ExecutionStatus.RUNNING && command.command?.[propertyName] !== originalCommand?.[propertyName];
+                const savingEditedValue = command?.executionStatus === ExecutionStatus.RUNNING && command.command?.[propertyName] !== originalCommandData?.[propertyName];
                 const cellValue = savingEditedValue ? command!.command?.[propertyName] : cell.value;
                 const placeholder = cellValue === null ? 'NULL' : 'Empty String';
 

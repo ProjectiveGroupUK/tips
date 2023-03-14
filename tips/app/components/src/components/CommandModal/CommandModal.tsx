@@ -34,7 +34,7 @@ export interface FilterCategoryInterface{
 export default function CommandModal() {
 
     const { executionStatus, command, setCommand } = useCommandModalData();
-    const [originalCommand, setOriginalCommand] = useState(command); // Stores command as it was prior to saving -> allows table cells to determine which cells have been edited and display PulseLoader only on relevant fields while saving operation is in progress
+    const [originalCommandData, setOriginalCommandData] = useState(command?.command!); // Stores command as it was prior to saving -> allows table cells to determine which cells have been edited and display PulseLoader only on relevant fields while saving operation is in progress
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
     const [editedCommandValues, setEditedCommandValues] = useState<Partial<CommandDataInterface>>(command?.command!);
 
@@ -96,7 +96,7 @@ export default function CommandModal() {
 
         setCommand((prevState) => {
 
-            setOriginalCommand(prevState)
+            setOriginalCommandData(prevState?.command!)
 
             return {
                 ...prevState!,
@@ -159,6 +159,7 @@ export default function CommandModal() {
 
                         { /* Table */}
                         <CommandModalTable
+                            originalCommandData={originalCommandData}
                             editedCommandValues={editedCommandValues!}
                             setEditedCommandValues={setEditedCommandValues}
                             filterText={filterText}
