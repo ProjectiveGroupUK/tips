@@ -159,7 +159,6 @@ export default function CommandModal() {
 
                         { /* Table */}
                         <CommandModalTable
-                            selectedCommand={command?.command ?? {} as Partial<CommandDataInterface>}
                             editedCommandValues={editedCommandValues!}
                             setEditedCommandValues={setEditedCommandValues}
                             filterText={filterText}

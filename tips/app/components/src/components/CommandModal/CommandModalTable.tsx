@@ -25,7 +25,6 @@ import { ExecutionStatus } from '@/enums/enums';
 import styles from '@/styles/CommandModal/CommandModalTable.module.css';
 
 interface PropsInterface {
-    selectedCommand: Partial<CommandDataInterface>;
     editedCommandValues: Partial<CommandDataInterface>;
     setEditedCommandValues: React.Dispatch<React.SetStateAction<Partial<CommandDataInterface>>>;
     filterCategories: FilterCategoryInterface[];
@@ -45,10 +44,12 @@ type EditCommandPropertyArgs = {
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
 
-export default function CommandModalTable({ selectedCommand, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
+export default function CommandModalTable({ editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
+
+    const { command } = useCommandModalData();
 
     const tableInstance = generateTableData({
-        commandData: isEditing ? editedCommandValues : selectedCommand!,
+        commandData: isEditing ? editedCommandValues : command?.command!,
         filterCategories,
         isEditing,
         isProcessing,
