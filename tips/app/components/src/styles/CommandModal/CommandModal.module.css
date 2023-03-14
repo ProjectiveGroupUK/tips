@@ -35,18 +35,38 @@
 
 .header > .headerRight {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    row-gap: 0.3rem;
     font-size: 1.2rem;
     letter-spacing: 0.1ch;
 }
 
-.header > .headerRight[data-active-status="true"] {
+.header > .headerRight > button {
+    padding: 0.1rem 0.7rem;
+    font-size: 0.8rem;
+    border: 1px solid transparent;
+    border-radius: 100rem;
+    transition: background-color 300ms ease, color 100ms ease;
+}
+
+.header > .headerRight[data-active-status="true"] > div { /* Colour-code Active status label */
     color: var(--success-green);
 }
 
-.header > .headerRight[data-active-status="false"] {
+.header > .headerRight[data-active-status="false"] > div { /* Colour-code Inactive status label */
     color: var(--fail-red);
+}
+
+.header > .headerRight[data-active-status="true"] > button:hover { /* Colour-code Disable button on hover */
+    background-color: var(--fail-red-light);
+    color: white;
+}
+
+.header > .headerRight[data-active-status="false"] > button:hover { /* Colour-code Enable button on hover */
+    background-color: var(--success-green-light);
+    color: white;
 }
 
 .configContainer {

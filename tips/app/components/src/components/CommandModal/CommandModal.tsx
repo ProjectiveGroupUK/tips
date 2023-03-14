@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
 
+// React-spinners
+import { ClipLoader } from "react-spinners";
+
 // Contexts
 import { useCommandModalData } from "@/contexts/CommandModalDataContext";
 
@@ -44,7 +47,7 @@ export default function CommandModal() {
         { id: 'io', label: 'Input & output', active: false, propertyIds: ['CMD_SRC', 'CMD_TGT'] },
         { id: 'merging', label: 'Merging', active: false, propertyIds: ['MERGE_ON_FIELDS', 'GENERATE_MERGE_MATCHED_CLAUSE', 'GENERATE_MERGE_NON_MATCHED_CLAUSE'] },
         { id: 'additional_fields_and_processing', label: 'Additional fields & processing', active: false, propertyIds: ['ADDITIONAL_FIELDS', 'TEMP_TABLE', 'CMD_PIVOT_BY', 'CMD_PIVOT_FIELD'] },
-        { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL', 'ACTIVE'] }
+        { id: 'other', label: 'Other', active: false, propertyIds: ['REFRESH_TYPE', 'BUSINESS_KEY', 'DQ_TYPE', 'CMD_EXTERNAL_CALL'] }
     ])
     const [isEditing, setIsEditing] = useState(Boolean(command?.operation.type === 'create')); // If user is creating a new command, default isEditing to true
 
@@ -110,6 +113,13 @@ export default function CommandModal() {
         setCommand(null)
     }
 
+    function toggleCommandStatus() {
+        setEditedCommandValues((prevState) => ({
+            ...prevState,
+            ACTIVE: prevState.ACTIVE === 'Y' ? 'N' : 'Y'
+        }));
+    }
+
     const processing = Boolean(command?.executionStatus === ExecutionStatus.RUNNING);
 
     return (
@@ -125,8 +135,40 @@ export default function CommandModal() {
                         <h2>In the {command?.process.PROCESS_NAME} process</h2>
                     </div>
                     <div className={styles.separator} />
-                    <div className={styles.headerRight} data-active-status={command?.command?.ACTIVE == 'Y'}>
-                        {command?.command?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
+                    <div className={styles.headerRight} data-active-status={(isEditing ? editedCommandValues : command?.command)?.ACTIVE == 'Y'}>
+
+                        {/* Status label */}
+                        <motion.div layout>
+                            {(isEditing ? editedCommandValues : command?.command)?.ACTIVE === 'Y' ? 'Active' : 'Inactive'}
+                        </motion.div>
+
+                        {/* Toggle status button/spinner */}
+                        <AnimatePresence mode='popLayout'>
+
+                            {/* Button */}
+                            { isEditing && (
+                                <motion.button
+                                    onClick={toggleCommandStatus}
+                                    disabled={processing}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }} 
+                                    exit={{ opacity: 0 }}
+                                >
+                                    {editedCommandValues?.ACTIVE === 'Y' ? 'Disable' : 'Enable'}
+                                </motion.button>
+                            )}
+
+                            {/* Spinner */}
+                            { processing && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }} 
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <ClipLoader size={16} color='var(--primary)' />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
                 <div className={styles.configContainer}>
