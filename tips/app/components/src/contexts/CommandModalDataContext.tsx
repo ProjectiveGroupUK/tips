@@ -44,7 +44,9 @@ export default function CommandModalDataContextProvider({ commandData: receivedC
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
     }, [command]);
 
-    if(command !== null && ((receivedCommandData.command?.PROCESS_CMD_ID !== command?.command?.PROCESS_CMD_ID) || (receivedCommandData.operation.type !== command?.operation.type))) { // Update command if receivedCommandData has updated and is pushing override of PROCESS_CMD_ID and/or operation type (happens when new command has just been created and Python instructs react to render the new command in editing mode)
+    if(command?.operation.type)
+
+    if(command !== null && ((receivedCommandData.command?.PROCESS_CMD_ID !== command?.command?.PROCESS_CMD_ID))) { // Update command if receivedCommandData has updated and is pushing override of PROCESS_CMD_ID (happens when new command has just been created and Python instructs react to render the new command in editing mode)
         setCommand((prev) => prev 
             ? ({
                 ...prev, 

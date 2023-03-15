@@ -8,6 +8,11 @@
     backdrop-filter: blur(2px);
     padding: 1rem 0.5rem;
     column-gap: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.editButtonContainer.pendingDeleteConfirmation {
+    background-color: #8b1d1d83;
 }
 
 .editButtonContainer > button {
@@ -38,11 +43,28 @@
 }
 
 .editButtonContainer > button.button_cancel:hover:not(:disabled) {
-    background-color: #f3a789;
+    background-color: #fae8e1;
     border-color: #e64b0e;
 }
 
-.editButtonContainer > button.button_save:hover:not(:disabled) {
-    background-color: #b1d6b1;
+.editButtonContainer > button.confirmSaveButton:hover:not(:disabled) {
+    background-color: #ebffeb;
     border-color: #6cb66c;
+}
+
+.editButtonContainer > button.confirmDeleteButton:hover:not(:disabled) {
+    background-color: #8b1d1d83;
+    color: white;
+    border-color: var(--fail-red);
+}
+
+.editButtonContainer > button.button_delete {
+    position: absolute;
+    left: 1rem;
+    padding: 0.3rem;
+}
+
+.editButtonContainer > button.button_delete:hover:not(:disabled) {
+    color: var(--fail-red);
+    border-color: var(--fail-red);
 }

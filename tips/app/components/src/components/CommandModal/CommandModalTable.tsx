@@ -137,7 +137,7 @@ type InputRefs = {
 
 function generateTableData({ originalCommandData, commandData, filterCategories, isEditing, isProcessing, editCommandProperty }: {
     originalCommandData: Partial<CommandDataInterface> | null;
-    commandData: Partial<CommandDataInterface>;
+    commandData: Partial<CommandDataInterface> | null;
     filterCategories: FilterCategoryInterface[];
     isEditing: boolean;
     isProcessing: boolean;
@@ -174,7 +174,7 @@ function generateTableData({ originalCommandData, commandData, filterCategories,
     }, {} as CategoryToKeysMap);
 
     const tableData = useMemo(() => (
-        Object.entries(commandData)
+        Object.entries(commandData ?? {})
             .filter(([propertyKey]) => propertyKey in categoryToKeysMap) // Filter out properties that don't have a category (e.g., 'PROCESS_CMD_ID')
             .map(([propertyKey, propertyValue]) => ({ // Map the property key/value pairs to the table data format
                 category_id: categoryToKeysMap[propertyKey as keyof CommandDataInterface],

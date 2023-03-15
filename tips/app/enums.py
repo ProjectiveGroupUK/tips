@@ -53,3 +53,4 @@ class CommandDataProperty:
 class OperationType:
     CREATE = 'create'
     EDIT = 'edit'
+    DELETE = 'delete'

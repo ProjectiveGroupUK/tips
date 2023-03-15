@@ -1,0 +1,4 @@
+DELETE FROM tips_md_schema.process_cmd
+WHERE 
+    PROCESS_ID = {{parameters.PROCESS_ID}} AND
+    PROCESS_CMD_ID = {{parameters.PROCESS_CMD_ID}};

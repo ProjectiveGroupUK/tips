@@ -52,10 +52,11 @@ export default function CommandModal() {
     const [isEditing, setIsEditing] = useState(Boolean(command?.operation.type === 'create')); // If user is creating a new command, default isEditing to true
 
     useEffect(() => { // When Python sends notification about execution of SQL instruction, show message to user for 3 seconds
-        if([ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(executionStatus.status)) {
+        if(executionStatus.status === ExecutionStatus.SUCCESS || executionStatus.status === ExecutionStatus.FAIL) {
             setShowExecutionStatusMessage(executionStatus);
             setTimeout(() => {
                 setShowExecutionStatusMessage({ status: ExecutionStatus.NONE });
+                if(executionStatus.operationType === OperationType.DELETE && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
             }, 3000);
         }
     }, [executionStatus]);
@@ -109,6 +110,16 @@ export default function CommandModal() {
         });
     }
 
+    function handleDelete() {
+        setCommand((prevState) => ({
+            ...prevState!,
+            operation: {
+                type: OperationType.DELETE
+            },
+            executionStatus: ExecutionStatus.RUNNING
+        }));
+    }
+
     function handleCloseModal() {
         setCommand(null)
     }
@@ -121,6 +132,21 @@ export default function CommandModal() {
     }
 
     const processing = Boolean(command?.executionStatus === ExecutionStatus.RUNNING);
+
+    const executionStatusMessage: { [key in OperationType]: { [status in ExecutionStatus.SUCCESS | ExecutionStatus.FAIL]: string } } = {
+        [OperationType.CREATE]: {
+            [ExecutionStatus.SUCCESS]: 'Command created successfully',
+            [ExecutionStatus.FAIL]: 'Failed to create command'
+        },
+        [OperationType.EDIT]: {
+            [ExecutionStatus.SUCCESS]: 'Command updated successfully',
+            [ExecutionStatus.FAIL]: 'Failed to update command'
+        },
+        [OperationType.DELETE]: {
+            [ExecutionStatus.SUCCESS]: 'Command deleted successfully',
+            [ExecutionStatus.FAIL]: 'Failed to delete command'
+        }
+    };
 
     return (
         <Modal
@@ -215,7 +241,7 @@ export default function CommandModal() {
 
                 {/* Execution status message */}
                 <AnimatePresence>
-                { [ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(showExecutionStatusMessage.status) && (
+                { (showExecutionStatusMessage.status === ExecutionStatus.SUCCESS || showExecutionStatusMessage.status === ExecutionStatus.FAIL) && (
                     <motion.div 
                         className={styles.executionStatusMessageContainer}
                         initial={{ opacity: 0, y: -20 }}
@@ -231,11 +257,7 @@ export default function CommandModal() {
                             }
 
                             {/* Text */}
-                            { 
-                                showExecutionStatusMessage.status === ExecutionStatus.SUCCESS ? <div>Command { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
-                                : showExecutionStatusMessage.status === ExecutionStatus.FAIL ? <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'create' : 'update' } command</div>
-                                : null
-                            }
+                            { executionStatusMessage[showExecutionStatusMessage.operationType][showExecutionStatusMessage.status] }
                         </div>
                     </motion.div>
                 )}
@@ -246,9 +268,11 @@ export default function CommandModal() {
                 type={command?.operation.type === OperationType.CREATE ? 'create' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
+                allowDelete
                 isSaving={processing}
                 onCancel={handleCancel}
                 onSave={handleSave}
+                onDelete={handleDelete}
             />
         </Modal>
     );
