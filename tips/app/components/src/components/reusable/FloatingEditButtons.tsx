@@ -55,12 +55,12 @@ export default function FloatingEditButton({ type, isEditing, setIsEditing, allo
                 onClick={(isEditing || pendingConfirmDelete) ? handleCancel : () => setIsEditing(true)}
                 disabled={isSaving}
             >
-                { type === 'create' ? 'Discard' : ((isEditing || pendingConfirmDelete) ? 'Cancel' : 'Edit') }
+                { (isEditing || pendingConfirmDelete) ? 'Cancel' : 'Edit' }
             </motion.button>
             <AnimatePresence mode='popLayout'>
 
                 {/* Save (or delete) button */}
-                { (isEditing || isSaving || type === 'create' || pendingConfirmDelete) && (
+                { (isEditing || isSaving || pendingConfirmDelete) && (
                     <motion.button
                         id="confirmActionButton"
                         className={pendingConfirmDelete ? styles.confirmDeleteButton : styles.confirmSaveButton}

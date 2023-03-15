@@ -101,13 +101,13 @@ def _createProcess(newProcessData: dict):
 
     # Cleanse newProcessData dictionary so that it contains only properties which are allowed to be updated
     allowedProperties = [propertyKey for propertyKey in dir(ProcessDataProperty) if not ((propertyKey.startswith('__') and propertyKey.endswith('__')) or propertyKey == ProcessDataProperty.PROCESS_ID)]
-    cleansedCommandData = { key: newProcessData[key] for key in newProcessData.keys() if key in allowedProperties }
+    cleansedProcessData = { key: newProcessData[key] for key in newProcessData.keys() if key in allowedProperties }
     if len(allowedProperties) == 0:
         logger.error("No valid updates provided")
         return ExecutionStatus.FAIL
     
     # Escape values and store None values as NULL
-    formattedCommandData = escapeValuesForSQL(cleansedCommandData)
+    formattedCommandData = escapeValuesForSQL(cleansedProcessData)
 
     # Construct SQL command to create process command
     cmdStr: str = SQLTemplate().getTemplate(
@@ -125,11 +125,12 @@ def _createProcess(newProcessData: dict):
         newProcessId: int = response[0][ProcessDataProperty.PROCESS_ID]
 
         # Update PROCESS_ID of newly-created process in cleansedCommandData (since it'll be added to the PROCESS_DATA session state)
-        cleansedCommandData[ProcessDataProperty.PROCESS_ID] = newProcessId
+        cleansedProcessData[ProcessDataProperty.PROCESS_ID] = newProcessId
+        cleansedProcessData['steps'] = []
 
         # Update process data in session state
         processData = st.session_state[StateVariable.PROCESS_DATA]
-        processData.append(cleansedCommandData)
+        processData.append(cleansedProcessData)
         st.session_state[StateVariable.PROCESS_DATA] = processData
 
         return (ExecutionStatus.SUCCESS, newProcessId)
@@ -179,6 +180,41 @@ def _updateProcess(processId: int, updatedData: dict):
         return ExecutionStatus.SUCCESS
     except Exception as e:
         logger.error(f'Error updating process: {e}')
+        return ExecutionStatus.FAIL
+    
+def _deleteProcess(processId: int):
+
+    # Validate that processId has been provided and is integer
+    if not isinstance(processId, int):
+        logger.error(f"processId '{processId}' ({type(processId).__name__}) is not an integer")
+        return ExecutionStatus.FAIL
+    
+    # Delete all commands within process
+    deleteCommandResult = _deleteProcessCommand(processId=processId, commandId='all')
+    if deleteCommandResult != ExecutionStatus.SUCCESS:
+        logger.error(f"Error deleting commands within process {processId}")
+        return ExecutionStatus.FAIL
+    
+    # Construct SQL command to delete process
+    cmdStr: str = SQLTemplate().getTemplate(
+        sqlAction = "delete_process",
+        parameters = {
+            ProcessDataProperty.PROCESS_ID: processId
+        }
+    )
+
+    # Execute SQL command
+    db = DatabaseConnection()
+    try:
+        db.executeSQL(sqlCommand=cmdStr)
+
+        # Update process data in session state
+        processData = st.session_state[StateVariable.PROCESS_DATA]
+        processDataWithoutDeletedProcess = [process for process in processData if process[ProcessDataProperty.PROCESS_ID] != processId]
+        st.session_state[StateVariable.PROCESS_DATA] = processDataWithoutDeletedProcess
+        return ExecutionStatus.SUCCESS
+    except Exception as e:
+        logger.error(f'Error deleting process (although commands for process have been removed): {e}')
         return ExecutionStatus.FAIL
 
 def _createProcessCommand(processId: int, commandData: dict):
@@ -279,11 +315,16 @@ def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
         logger.error(f'Error updating process command: {e}')
         return ExecutionStatus.FAIL
     
-def _deleteProcessCommand(processId: int, commandId: int):
+def _deleteProcessCommand(processId: int, commandId): # processId: int, commandId: int | 'all'
 
-    # Validate that both processId and commandId have been provided and are integers
-    if not isinstance(processId, int) or not isinstance(commandId, int):
-        logger.error(f"processId ('{processId}' {type(processId).__name__}) and/or command ID ('{commandId}' {type(commandId).__name__}) is not an integer")
+    # Validate that processId has been provided and is integer
+    if not isinstance(processId, int):
+        logger.error(f"processId ('{processId}' {type(processId).__name__}) is not an integer")
+        return ExecutionStatus.FAIL
+    
+    # Validate that commandId has been provided and is integer or 'all'
+    if not isinstance(commandId, int) and commandId != 'all':
+        logger.error(f"commandId ('{commandId}' {type(commandId).__name__}) is not an integer or string literal 'all'")
         return ExecutionStatus.FAIL
 
     # Construct SQL command to delete process command
@@ -300,7 +341,7 @@ def _deleteProcessCommand(processId: int, commandId: int):
         # Update process data in session state
         processData = st.session_state[StateVariable.PROCESS_DATA]
         selectedProcess = [process for process in processData if process[ProcessDataProperty.PROCESS_ID] == processId][0]
-        processCommandsWithoutRemovedCommand = [command for command in selectedProcess['steps'] if command[CommandDataProperty.PROCESS_CMD_ID] != commandId]
+        processCommandsWithoutRemovedCommand = [] if commandId == 'all' else [command for command in selectedProcess['steps'] if command[CommandDataProperty.PROCESS_CMD_ID] != commandId]
         selectedProcess['steps'] = processCommandsWithoutRemovedCommand
         st.session_state[StateVariable.PROCESS_DATA] = processData
 
@@ -333,13 +374,13 @@ def main():
     # Render processModal if user intends to create or edit a process
     processModalData = None
     if processesTableData != None:
-        process = processesTableData.get('editedProcess')
+        processTableProcess = processesTableData.get('editedProcess')
 
-        if process != None:
+        if processTableProcess != None:
 
             # Prepare modal parameters
-            preparedOperationType = OperationType.CREATE if (process.get('operation').get('type') == OperationType.CREATE and st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] == None) else OperationType.EDIT
-            preparedProcess = process.get('process')
+            preparedOperationType = OperationType.CREATE if (processTableProcess.get('operation').get('type') == OperationType.CREATE and st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] == None) else OperationType.EDIT
+            preparedProcess = processTableProcess.get('process')
             if st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] != None:
                 preparedProcess[ProcessDataProperty.PROCESS_ID] = st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS]
 
@@ -355,34 +396,38 @@ def main():
 
             # Check for instructions from the modal that require performing activities on the Python side
             if processModalData != None:
-                processData = processModalData.get('process')
+                processModalProcess = processModalData.get('process')
 
-                if processData == None:
+                if processModalProcess == None:
                     st.session_state[ProcessTableInstruction.RESET_EDIT_PROCESS] = True
                     st.experimental_rerun()
 
-                elif processData.get('executionStatus') == ExecutionStatus.RUNNING and st.session_state[ProcessModalInstruction.EXECUTION_STATUS].get('status') == ExecutionStatus.NONE: # Execution of operation has been requested, but Python hasn't started executing it yet -> execute operation
+                elif processModalProcess.get('executionStatus') == ExecutionStatus.RUNNING and st.session_state[ProcessModalInstruction.EXECUTION_STATUS].get('status') == ExecutionStatus.NONE: # Execution of operation has been requested, but Python hasn't started executing it yet -> execute operation
                     result = None
-                    if processData.get('operation').get('type') == OperationType.CREATE:
+                    if processModalProcess.get('operation').get('type') == OperationType.CREATE:
                         result = _createProcess(
-                            newProcessData = processData.get('process')
+                            newProcessData = processModalProcess.get('process')
                         )
-                    elif processData.get('operation').get('type') == OperationType.EDIT:
+                    elif processModalProcess.get('operation').get('type') == OperationType.EDIT:
                         result = _updateProcess(
-                            processId = processData.get('process').get(ProcessDataProperty.PROCESS_ID),
-                            updatedData = processData.get('process')
+                            processId = processModalProcess.get('process').get(ProcessDataProperty.PROCESS_ID),
+                            updatedData = processModalProcess.get('process')
+                        )
+                    elif processModalProcess.get('operation').get('type') == OperationType.DELETE:
+                        result = _deleteProcess(
+                            processId = processModalProcess.get('process').get(ProcessDataProperty.PROCESS_ID)
                         )
                     
                     resultStatus = result[0] if isinstance(result, tuple) else result # A successful update process operation returns a tuple where first element is execution status and second is the ID of the newly-created process
                     newProcessId = result[1] if isinstance(result, tuple) else None
-                    st.session_state[ProcessModalInstruction.EXECUTION_STATUS] = { 'status': resultStatus, 'operationType': processData.get('operation').get('type') }
+                    st.session_state[ProcessModalInstruction.EXECUTION_STATUS] = { 'status': resultStatus, 'operationType': processModalProcess.get('operation').get('type') }
 
                     if newProcessId != None:
                         st.session_state[ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS] = newProcessId
 
                     st.experimental_rerun()   
 
-                elif processData.get('executionStatus') == ExecutionStatus.NONE:
+                elif processModalProcess.get('executionStatus') == ExecutionStatus.NONE:
                     st.session_state[ProcessModalInstruction.EXECUTION_STATUS] = { 'status': ExecutionStatus.NONE }
 
         else: # Process table does not instruct command modal to appear -> reset instruction to be used again when modal is present

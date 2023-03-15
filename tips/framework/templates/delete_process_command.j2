@@ -1,4 +1,6 @@
 DELETE FROM tips_md_schema.process_cmd
-WHERE 
-    PROCESS_ID = {{parameters.PROCESS_ID}} AND
-    PROCESS_CMD_ID = {{parameters.PROCESS_CMD_ID}};
+WHERE
+    PROCESS_ID = {{ parameters.PROCESS_ID }}
+    {% if parameters.PROCESS_CMD_ID != 'all' %} 
+        AND PROCESS_CMD_ID = {{ parameters.PROCESS_CMD_ID }}
+    {% endif %};

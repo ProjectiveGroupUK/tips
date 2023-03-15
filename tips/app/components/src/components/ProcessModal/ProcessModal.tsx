@@ -35,15 +35,16 @@ export default function ProcessModal() {
     const { executionStatus, process, setProcess } = useProcessModalData();
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
     const [editedProcessValues, setEditedProcessValues] = useState<ProcessDataInterface | null>(process?.process ?? null);
-    const [isEditing, setIsEditing] = useState(true);
+    const [isEditing, setIsEditing] = useState(process?.operation.type === OperationType.CREATE);
     const inputRefs = useRef({} as InputRefs);
 
     useEffect(() => { // When Python sends notification about execution of SQL instruction, show message to user for 3 seconds
-        if([ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(executionStatus.status)) {
+        if(executionStatus.status === ExecutionStatus.SUCCESS || executionStatus.status === ExecutionStatus.FAIL) {
             setIsEditing(false);
             setShowExecutionStatusMessage(executionStatus);
             setTimeout(() => {
                 setShowExecutionStatusMessage({ status: ExecutionStatus.NONE });
+                if(executionStatus.operationType === OperationType.DELETE && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
             }, 3000);
         }
     }, [executionStatus]);
@@ -82,6 +83,7 @@ export default function ProcessModal() {
     function handleCancel() {
         setEditedProcessValues(process!.process);
         setIsEditing(false);
+        if(process!.operation.type === OperationType.CREATE) handleCloseModal();
     }
 
     function handleSave() {
@@ -96,6 +98,16 @@ export default function ProcessModal() {
         setProcess((prevState) => ({
             ...prevState!,
             process: editedProcessValues!,
+            executionStatus: ExecutionStatus.RUNNING
+        }));
+    }
+
+    function handleDelete() {
+        setProcess((prevState) => ({
+            ...prevState!,
+            operation: {
+                type: OperationType.DELETE
+            },
             executionStatus: ExecutionStatus.RUNNING
         }));
     }
@@ -143,6 +155,21 @@ export default function ProcessModal() {
     }
 
     const processing = Boolean(process?.executionStatus === ExecutionStatus.RUNNING);
+
+    const executionStatusMessage: { [key in OperationType]: { [status in ExecutionStatus.SUCCESS | ExecutionStatus.FAIL]: string } } = {
+        [OperationType.CREATE]: {
+            [ExecutionStatus.SUCCESS]: 'Process created successfully',
+            [ExecutionStatus.FAIL]: 'Failed to create process'
+        },
+        [OperationType.EDIT]: {
+            [ExecutionStatus.SUCCESS]: 'Process updated successfully',
+            [ExecutionStatus.FAIL]: 'Failed to update process'
+        },
+        [OperationType.DELETE]: {
+            [ExecutionStatus.SUCCESS]: 'Process deleted successfully',
+            [ExecutionStatus.FAIL]: 'Failed to delete process'
+        }
+    };
 
     return (
         <Modal
@@ -240,9 +267,11 @@ export default function ProcessModal() {
                 type={process?.operation.type === OperationType.CREATE ? 'create' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
+                allowDelete={process?.operation.type === OperationType.EDIT}
                 isSaving={processing}
                 onCancel={handleCancel}
                 onSave={handleSave}
+                onDelete={handleDelete}
             />
         </Modal>
     );

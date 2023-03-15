@@ -268,7 +268,7 @@ export default function CommandModal() {
                 type={command?.operation.type === OperationType.CREATE ? 'create' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
-                allowDelete
+                allowDelete={command?.operation.type === OperationType.EDIT}
                 isSaving={processing}
                 onCancel={handleCancel}
                 onSave={handleSave}

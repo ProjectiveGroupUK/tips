@@ -43,7 +43,7 @@ export default function ProcessModalDataContextProvider({ process: receivedProce
         Streamlit.setComponentValue(getObjectWithoutFunctions(value));
     }, [process]);
 
-    if(process !== null && ((receivedProcess.process.PROCESS_ID !== process.process.PROCESS_ID) || (receivedProcess.operation.type !== process.operation.type))) { // Update process if receivedProcessData has updated and is pushing override of id and/or operation type (happens when new process has just been created and Python instructs react to render the new process in editing mode)
+    if(process !== null && ((receivedProcess.process.PROCESS_ID !== process.process.PROCESS_ID))) { // Update process if receivedProcessData has updated and is pushing override of id (happens when new process has just been created and Python instructs react to render the new process in editing mode)
         setProcess((prev) => prev 
             ? ({
                 ...prev, 
