@@ -154,6 +154,13 @@ export default function ProcessModal() {
         };
     }
 
+    function toggleProcessStatus() {
+        setEditedProcessValues((prevState) => ({
+            ...prevState!,
+            ACTIVE: prevState!.ACTIVE === 'Y' ? 'N' : 'Y'
+        }));
+    }
+
     const processing = Boolean(process?.executionStatus === ExecutionStatus.RUNNING);
 
     const executionStatusMessage: { [key in OperationType]: { [status in ExecutionStatus.SUCCESS | ExecutionStatus.FAIL]: string } } = {
@@ -206,8 +213,27 @@ export default function ProcessModal() {
                         </div>
                     </div>
                     <div className={styles.separator} />
-                    <div className={styles.headerRight} data-active-status={process?.process.ACTIVE == 'Y'}>
-                        {process?.process.ACTIVE ? 'Active' : 'Inactive'}
+                    <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
+
+                        {/* Status label */}
+                        <motion.div layout>
+                            {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Active' : 'Inactive'}
+                        </motion.div>
+
+                        {/* Toggle status button */}
+                        <AnimatePresence mode='popLayout'>
+                            { isEditing && (
+                                <motion.button
+                                    onClick={toggleProcessStatus}
+                                    disabled={processing}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }} 
+                                    exit={{ opacity: 0 }}
+                                >
+                                    {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Disable' : 'Enable'}
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
                 <div className={styles.configContainer}>
@@ -236,7 +262,7 @@ export default function ProcessModal() {
 
                 {/* Execution status message */}
                 <AnimatePresence>
-                { [ExecutionStatus.SUCCESS, ExecutionStatus.FAIL].includes(showExecutionStatusMessage.status) && (
+                { (showExecutionStatusMessage.status === ExecutionStatus.SUCCESS || showExecutionStatusMessage.status === ExecutionStatus.FAIL) && (
                     <motion.div 
                         className={styles.executionStatusMessageContainer}
                         initial={{ opacity: 0, y: -20 }}
@@ -252,11 +278,7 @@ export default function ProcessModal() {
                             }
 
                             {/* Text */}
-                            { 
-                                showExecutionStatusMessage.status === ExecutionStatus.SUCCESS ? <div>Process { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'created' : 'updated' } <span className={styles.executionSuccess}>sucessfully</span></div>
-                                : showExecutionStatusMessage.status === ExecutionStatus.FAIL ? <div><span className={styles.executionFail}>Failed</span> to { showExecutionStatusMessage.operationType === OperationType.CREATE ? 'create' : 'update' } process</div>
-                                : null
-                            }
+                            { executionStatusMessage[showExecutionStatusMessage.operationType][showExecutionStatusMessage.status] }
                         </div>
                     </motion.div>
                 )}
