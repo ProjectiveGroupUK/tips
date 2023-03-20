@@ -134,9 +134,9 @@ export default function ProcessTable() {
                                 onClick={() => { // When clicked, update expandedRowId state variable
                                     setSelectedProcessId((prev) => prev === Number(row.id) ? null : Number(row.id)) // Deslect row if already selected, otherwise select row
                             }}>
-                                { row.cells.map(cell => {
+                                { row.cells.map((cell) => {
                                     let renderedCell: React.ReactNode;
-                                    if(cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value} />;
+                                    if(cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value === 'Active' ? 'active' : 'inactive'} />;
                                     else renderedCell = cell.render('Cell');
                                     return (
                                         <td {...cell.getCellProps()}>
