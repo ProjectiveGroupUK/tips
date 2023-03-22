@@ -29,8 +29,21 @@
     padding-right: 1rem;
 }
 
-.table tr > :not(.categoryLabel):nth-child(1) > div::after { /* Add colon after every displayed property name (e.g., 'CMD_SRC:') */
+.table tr > td > .propertyName {
+    position: relative;
+}
+
+.table tr > td > .propertyName > span:first-child::after { /* Add colon after every displayed property name (e.g., 'CMD_SRC:*') */
+    color: var(--primary);
     content: ':';
+}
+
+.table tr > td > .propertyName > .required {
+    color: var(--fail-red-light);
+    font-size: 0.7rem;
+    position: absolute;
+    margin-left: 2px;
+    margin-top: -1px;
 }
 
 .table tr:has(td:not(.categoryLabel)):nth-child(odd) { /* Add striped rows */

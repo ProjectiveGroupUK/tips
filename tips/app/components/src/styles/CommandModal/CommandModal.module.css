@@ -69,6 +69,45 @@
     color: var(--success-green);
 }
 
+.container .commandTypeSelector {
+    max-width: 20rem;
+    margin-top: 1rem;
+    transition: margin-top 300ms ease;
+}
+
+.container .commandTypeSelector:has(> input:disabled) {
+    margin-top: 0;
+}
+
+.container .commandTypeSelector > input {
+    font-family: 'Open Sans';
+    color: var(--primary);
+    background-color: transparent;
+    opacity: 100%;
+    transition: padding-left 300ms ease, border-color 300ms ease, font-size 300ms ease;
+}
+
+.container .commandTypeSelector > input:focus {
+    border-color: var(--primary);
+}
+
+.container .commandTypeSelector > input + .rightSection {
+    opacity: 100%;
+    transition: opacity 300ms ease;
+}
+
+.container .commandTypeSelector > input:disabled {
+    font-size: 1.1rem;
+    border-color: transparent;
+    padding-left: 0;
+    font-weight: 500;
+    cursor: default;
+}
+
+.container .commandTypeSelector > input:disabled + .rightSection {
+    opacity: 0;
+}
+
 .configContainer {
     display: flex;
     column-gap: 0.8rem;
@@ -86,6 +125,7 @@
     display: flex;
     flex-direction: column;
     row-gap: 2rem;
+    width: 100%;
 }
 
 .configParent > .configHeader > .searchBox {

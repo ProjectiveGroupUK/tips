@@ -11,12 +11,12 @@ export interface ProcessDataInterface {
 
 export interface CommandDataInterface {
     PROCESS_CMD_ID: number;
-    CMD_TYPE: 'APPEND' | 'COPY_INTO_FILE' | 'DELETE'| 'DI' | 'MERGE' | 'OI' | 'PUBLISH_SCD2_DIM' | 'REFRESH' | 'TI' | 'TRUNCATE';
+    CMD_TYPE: 'APPEND' | 'COPY_INTO_FILE' | 'DQ_TEST' | 'MERGE' | 'PUBLISH_SCD2_DIM' | 'REFRESH' | 'TRUNCATE';
     CMD_SRC: string | null;
     CMD_TGT: string;
     CMD_WHERE: string | null;
     CMD_BINDS: string | null;
-    REFRESH_TYPE: 'DI' | null;
+    REFRESH_TYPE: 'DI' | 'TI' | 'OI' | null; // DI - Delete Insert, TI - Truncate Insert, OI - Overwrite Insert
     BUSINESS_KEY: string | null;
     MERGE_ON_FIELDS: string | null;
     GENERATE_MERGE_MATCHED_CLAUSE: 'Y' | null;
