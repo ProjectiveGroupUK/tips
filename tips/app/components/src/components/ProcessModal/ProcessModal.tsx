@@ -227,61 +227,61 @@ export default function ProcessModal() {
         >
             <div className={styles.container}>
                 {!isDownloading &&
-                <div className={styles.header}>
-                    <div className={styles.headerLeft}>
+                    <div className={styles.header}>
+                        <div className={styles.headerLeft}>
 
-                        {/* Process name */}
-                        <h1>Process</h1>
+                            {/* Process name */}
+                            <h1>Process</h1>
 
-                        {/* Process name (input) */}
-                        <div className={styles.processNameContainer}>
+                            {/* Process name (input) */}
+                            <div className={styles.processNameContainer}>
 
-                            {/* Dummy text to make input element expand to fit text content */}
-                            <div className={styles.invisibleExpander}>{editedProcessValues?.PROCESS_NAME}</div>
+                                {/* Dummy text to make input element expand to fit text content */}
+                                <div className={styles.invisibleExpander}>{editedProcessValues?.PROCESS_NAME}</div>
 
-                            {/* Focus indicator bar */}
-                            <div className={styles.focusIndicatorBar} data-editing={isEditing} />
+                                {/* Focus indicator bar */}
+                                <div className={styles.focusIndicatorBar} data-editing={isEditing} />
 
-                            {/* Input element */}
-                            <input
-                                ref={(ref) => captureRef(ref, 'PROCESS_NAME')}
-                                value={editedProcessValues?.PROCESS_NAME ?? ''}
-                                onChange={(e) => handleInputChange('PROCESS_NAME', e)}
-                                onBlur={() => handleBlur('PROCESS_NAME')}
-                                placeholder='Enter a process name'
-                                disabled={!isEditing || processing}
-                                data-editing={isEditing}
-                            />
-                        </div>
-                    </div>
-                    {!isRunFlow && !isDownloading &&
-                        <div>
-                            <div className={styles.separator} />
-                            <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
-
-                                {/* Status label */}
-                                <motion.div layout>
-                                    {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Active' : 'Inactive'}
-                                </motion.div>
-
-                                {/* Toggle status button */}
-                                <AnimatePresence mode='popLayout'>
-                                    {isEditing && (
-                                        <motion.button
-                                            onClick={toggleProcessStatus}
-                                            disabled={processing}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                        >
-                                            {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Disable' : 'Enable'}
-                                        </motion.button>
-                                    )}
-                                </AnimatePresence>
+                                {/* Input element */}
+                                <input
+                                    ref={(ref) => captureRef(ref, 'PROCESS_NAME')}
+                                    value={editedProcessValues?.PROCESS_NAME ?? ''}
+                                    onChange={(e) => handleInputChange('PROCESS_NAME', e)}
+                                    onBlur={() => handleBlur('PROCESS_NAME')}
+                                    placeholder='Enter a process name'
+                                    disabled={!isEditing || processing}
+                                    data-editing={isEditing}
+                                />
                             </div>
                         </div>
-                    }
-                </div>
+                        {!isRunFlow && !isDownloading &&
+                            <div>
+                                <div className={styles.separator} />
+                                <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
+
+                                    {/* Status label */}
+                                    <motion.div layout>
+                                        {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Active' : 'Inactive'}
+                                    </motion.div>
+
+                                    {/* Toggle status button */}
+                                    <AnimatePresence mode='popLayout'>
+                                        {isEditing && (
+                                            <motion.button
+                                                onClick={toggleProcessStatus}
+                                                disabled={processing}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                            >
+                                                {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Disable' : 'Enable'}
+                                            </motion.button>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 }
                 <div className={styles.configContainer}>
                     {isDownloading ?
@@ -294,7 +294,7 @@ export default function ProcessModal() {
                             <br></br>
                         </div>
                         :
-                        <div>
+                        <div className={styles.configContainer}>
                             {isRunFlow ?
                                 <div className={styles.descriptionContainer}>
                                     <h2>Bind Variables</h2>
@@ -382,7 +382,7 @@ export default function ProcessModal() {
             </div>
 
             <FloatingEditButtons
-                type={process?.operation.type === OperationType.CREATE ? 'create' : process?.operation.type === OperationType.DOWNLOAD ? 'download': process?.operation.type === OperationType.RUN ? 'run' : 'edit'}
+                type={process?.operation.type === OperationType.CREATE ? 'create' : process?.operation.type === OperationType.DOWNLOAD ? 'download' : process?.operation.type === OperationType.RUN ? 'run' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 isRunFlow={isRunFlow}
