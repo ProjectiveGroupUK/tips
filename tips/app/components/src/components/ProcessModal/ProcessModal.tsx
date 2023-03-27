@@ -21,7 +21,7 @@ import { ExecutionStatus, OperationType } from '@/enums/enums';
 import styles from '@/styles/ProcessModal/ProcessModal.module.css';
 
 // Icons
-import { CircleCheck, AlertCircle } from 'tabler-icons-react';
+import { CircleCheck, AlertCircle, SpacingVertical } from 'tabler-icons-react';
 
 type InputRefs = {
     [K in keyof ProcessDataInterface]: {
@@ -36,16 +36,17 @@ export default function ProcessModal() {
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
     const [editedProcessValues, setEditedProcessValues] = useState<ProcessDataInterface | null>(process?.process ?? null);
     const [isEditing, setIsEditing] = useState(process?.operation.type === OperationType.CREATE);
+    const [isRunFlow, setIsRunFlow] = useState(process?.operation.type === OperationType.RUN);
     const inputRefs = useRef({} as InputRefs);
 
     useEffect(() => { // When Python sends notification about execution of SQL instruction, show message to user for 3 seconds
-        if(executionStatus.status === ExecutionStatus.SUCCESS || executionStatus.status === ExecutionStatus.FAIL) {
+        if (executionStatus.status === ExecutionStatus.SUCCESS || executionStatus.status === ExecutionStatus.FAIL) {
             setIsEditing(false);
             setShowExecutionStatusMessage(executionStatus);
             setTimeout(() => {
                 setShowExecutionStatusMessage({ status: ExecutionStatus.NONE });
-                if(executionStatus.operationType === OperationType.DELETE && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
-            }, 3000);
+                if ((executionStatus.operationType === OperationType.DELETE || executionStatus.operationType === OperationType.RUN) && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
+            }, 5000);
         }
     }, [executionStatus]);
 
@@ -55,10 +56,10 @@ export default function ProcessModal() {
             const processValue = _processValue as InputRefs[keyof ProcessDataInterface];
             return processValue.isActive;
         });
-        if(activeField) {
+        if (activeField) {
             const [_processProperty, processValue] = activeField;
             const input = processValue.ref;
-            if(input) {
+            if (input) {
                 input.focus();
                 input.setSelectionRange(processValue.caretPosition!, processValue.caretPosition!);
             }
@@ -73,7 +74,7 @@ export default function ProcessModal() {
             const processValue = _processValue as ProcessDataInterface[keyof ProcessDataInterface];
             const propertyHasChanged = processValue !== originalValues[processProperty];
 
-            if(propertyHasChanged) return { ...accumulator, [processProperty]: processValue };
+            if (propertyHasChanged) return { ...accumulator, [processProperty]: processValue };
             return accumulator;
         }, {});
 
@@ -83,13 +84,14 @@ export default function ProcessModal() {
     function handleCancel() {
         setEditedProcessValues(process!.process);
         setIsEditing(false);
-        if(process!.operation.type === OperationType.CREATE) handleCloseModal();
+        setIsRunFlow(false);
+        if (process!.operation.type === OperationType.CREATE) handleCloseModal();
     }
 
     function handleSave() {
-        if(process!.operation.type == OperationType.EDIT) {
+        if (process!.operation.type == OperationType.EDIT) {
             const editedProperties = getEditedProperties(editedProcessValues!, process!.process);
-            if(Object.keys(editedProperties).length === 0) { // No changes have been made to process
+            if (Object.keys(editedProperties).length === 0) { // No changes have been made to process
                 setIsEditing(false);
                 return;
             }
@@ -110,6 +112,17 @@ export default function ProcessModal() {
             },
             executionStatus: ExecutionStatus.RUNNING
         }));
+    }
+
+    function handleRun() {
+        const editedProperties = getEditedProperties(editedProcessValues!, process!.process);
+
+        setProcess((prevState) => ({
+            ...prevState!,
+            process: editedProcessValues!,
+            executionStatus: ExecutionStatus.RUNNING
+        }));
+
     }
 
     function handleCloseModal() {
@@ -142,7 +155,7 @@ export default function ProcessModal() {
         const sanitisedValue = modifiedProperty === 'PROCESS_NAME' ? sanitiseNameForDB(modifiedValue) : modifiedValue;
         setEditedProcessValues((prevState) => ({ ...prevState!, [modifiedProperty]: sanitisedValue }));
 
-        function sanitiseNameForDB (name: string) { // Turn all letters into all caps, will replace all spaces with underscores, and will remove all other characters except for numbers and dashes
+        function sanitiseNameForDB(name: string) { // Turn all letters into all caps, will replace all spaces with underscores, and will remove all other characters except for numbers and dashes
             return name.toUpperCase().replace(/ /g, '_').replace(/[^A-Z0-9_\-]/g, '');
         }
     }
@@ -161,6 +174,13 @@ export default function ProcessModal() {
         }));
     }
 
+    function toggleProcessExecuteFlag() {
+        setEditedProcessValues((prevState) => ({
+            ...prevState!,
+            EXECUTE_FLAG: prevState!.EXECUTE_FLAG === 'Y' ? 'N' : 'Y'
+        }));
+    }
+
     const processing = Boolean(process?.executionStatus === ExecutionStatus.RUNNING);
 
     const executionStatusMessage: { [key in OperationType]: { [status in ExecutionStatus.SUCCESS | ExecutionStatus.FAIL]: string } } = {
@@ -175,6 +195,10 @@ export default function ProcessModal() {
         [OperationType.DELETE]: {
             [ExecutionStatus.SUCCESS]: 'Process deleted successfully',
             [ExecutionStatus.FAIL]: 'Failed to delete process'
+        },
+        [OperationType.RUN]: {
+            [ExecutionStatus.SUCCESS]: 'Process execution competed. Please check into logs for any warnings!', //TBC add appropriate message to suggest checking logs page
+            [ExecutionStatus.FAIL]: 'Process execution failed. Please check logs for details!'
         }
     };
 
@@ -190,7 +214,7 @@ export default function ProcessModal() {
 
                         {/* Process name */}
                         <h1>Process</h1>
-                        
+
                         {/* Process name (input) */}
                         <div className={styles.processNameContainer}>
 
@@ -212,89 +236,132 @@ export default function ProcessModal() {
                             />
                         </div>
                     </div>
-                    <div className={styles.separator} />
-                    <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
+                    {!isRunFlow &&
+                        <div>
+                            <div className={styles.separator} />
+                            <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
 
-                        {/* Status label */}
-                        <motion.div layout>
-                            {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Active' : 'Inactive'}
-                        </motion.div>
+                                {/* Status label */}
+                                <motion.div layout>
+                                    {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Active' : 'Inactive'}
+                                </motion.div>
 
-                        {/* Toggle status button */}
-                        <AnimatePresence mode='popLayout'>
-                            { isEditing && (
-                                <motion.button
-                                    onClick={toggleProcessStatus}
-                                    disabled={processing}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }} 
-                                    exit={{ opacity: 0 }}
-                                >
-                                    {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Disable' : 'Enable'}
-                                </motion.button>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                {/* Toggle status button */}
+                                <AnimatePresence mode='popLayout'>
+                                    {isEditing && (
+                                        <motion.button
+                                            onClick={toggleProcessStatus}
+                                            disabled={processing}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                        >
+                                            {(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y' ? 'Disable' : 'Enable'}
+                                        </motion.button>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    }
                 </div>
                 <div className={styles.configContainer}>
+                    {isRunFlow ?
+                        <div className={styles.descriptionContainer}>
+                            <h2>Bind Variables</h2>
+                            <div>
+                                {/* Focus indicator bar */}
+                                <div className={styles.focusIndicatorBar} data-editing={isRunFlow} />
 
-                    {/* Description */}
-                    <div className={styles.descriptionContainer}>
+                                {/* Textarea */}
+                                <textarea
+                                    value={editedProcessValues?.BIND_VARS ?? ''}
+                                    onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, BIND_VARS: e.target.value }))}
+                                    placeholder='Enter bind variables in JSON Format e.g. {"KEY":"VALUE"}'
+                                    disabled={!isRunFlow || processing}
+                                    data-editing={isRunFlow}
+                                />
+                            </div>
 
-                        {/* Field title */}
-                        <h2>Description</h2>
+                        </div>
+                        :
+                        <div className={styles.descriptionContainer}>
+                            {/* Field title */}
+                            <h2>Description</h2>
+                            <div>
+                                {/* Focus indicator bar */}
+                                <div className={styles.focusIndicatorBar} data-editing={isEditing} />
 
-                        <div>
-                            {/* Focus indicator bar */}
-                            <div className={styles.focusIndicatorBar} data-editing={isEditing} />
+                                {/* Textarea */}
+                                <textarea
+                                    value={editedProcessValues?.PROCESS_DESCRIPTION ?? ''}
+                                    onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, PROCESS_DESCRIPTION: e.target.value }))}
+                                    placeholder='Enter a process description'
+                                    disabled={!isEditing || processing}
+                                    data-editing={isEditing}
+                                />
+                            </div>
+                        </div>
 
-                            {/* Textarea */}
-                            <textarea 
-                                value={editedProcessValues?.PROCESS_DESCRIPTION ?? ''}
-                                onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, PROCESS_DESCRIPTION: e.target.value }))}
-                                placeholder='Enter a process description'
-                                disabled={!isEditing || processing}
-                                data-editing={isEditing}
-                            />
+                    }
+                </div>
+                {isRunFlow &&
+                    <div className={styles.configContainer}>
+                        <div className={styles.descriptionContainer}>
+                            <h2>Run in Execute Mode?&nbsp;&nbsp;&nbsp;
+                                <AnimatePresence mode='popLayout'>
+                                    <motion.button
+                                        onClick={toggleProcessExecuteFlag}
+                                        disabled={processing}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                    >
+                                        {(isRunFlow ? editedProcessValues : process?.process)?.EXECUTE_FLAG == 'Y' ? 'Yes' : 'No'}
+                                    </motion.button>
+                                </AnimatePresence>
+                            </h2>
                         </div>
                     </div>
-                </div>
+                }
 
                 {/* Execution status message */}
                 <AnimatePresence>
-                { (showExecutionStatusMessage.status === ExecutionStatus.SUCCESS || showExecutionStatusMessage.status === ExecutionStatus.FAIL) && (
-                    <motion.div 
-                        className={styles.executionStatusMessageContainer}
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <div>
-                            {/* Icon */}
-                            { showExecutionStatusMessage.status === ExecutionStatus.SUCCESS
-                                ? <CircleCheck size={40} color='var(--success-green-light)' />
-                                : <AlertCircle size={40} color='var(--fail-red-light)' />
-                            }
+                    {(showExecutionStatusMessage.status === ExecutionStatus.SUCCESS || showExecutionStatusMessage.status === ExecutionStatus.FAIL) && (
+                        <motion.div
+                            className={styles.executionStatusMessageContainer}
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <div>
+                                {/* Icon */}
+                                {showExecutionStatusMessage.status === ExecutionStatus.SUCCESS
+                                    ? <CircleCheck size={40} color='var(--success-green-light)' />
+                                    : <AlertCircle size={40} color='var(--fail-red-light)' />
+                                }
 
-                            {/* Text */}
-                            { executionStatusMessage[showExecutionStatusMessage.operationType][showExecutionStatusMessage.status] }
-                        </div>
-                    </motion.div>
-                )}
+                                {/* Text */}
+                                {executionStatusMessage[showExecutionStatusMessage.operationType][showExecutionStatusMessage.status]}
+                            </div>
+                        </motion.div>
+                    )}
                 </AnimatePresence>
             </div>
 
             <FloatingEditButtons
-                type={process?.operation.type === OperationType.CREATE ? 'create' : 'edit'}
+                type={process?.operation.type === OperationType.CREATE ? 'create' : process?.operation.type === OperationType.RUN ? 'run' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
+                isRunFlow={isRunFlow}
+                setIsRunFlow={setIsRunFlow}
                 allowDelete={process?.operation.type === OperationType.EDIT}
                 isSaving={processing}
                 onCancel={handleCancel}
                 onSave={handleSave}
                 onDelete={handleDelete}
+                onRun={handleRun}
             />
-        </Modal>
+        </Modal >
     );
- }
+}

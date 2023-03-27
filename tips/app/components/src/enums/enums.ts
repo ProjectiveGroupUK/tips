@@ -8,5 +8,6 @@ export enum ExecutionStatus {
 export enum OperationType {
     CREATE = 'create',
     EDIT = 'edit',
-    DELETE = 'delete'
+    DELETE = 'delete',
+    RUN = 'run'
 }

@@ -48,6 +48,4 @@ class SQLFrameworkMetaDataRunner(FrameworkMetaData):
             scannedKeys.append(val['PROCESS_CMD_ID'])
             scannedKeys = list(set(scannedKeys))
 
-        # print(returnDict)
         return returnDict
-        # return results

@@ -153,7 +153,7 @@ class SQLRunner(Runner):
                             dqLog["status"] = "ERROR"
                             dqLog[
                                 "status_message"
-                            ] = "DQ Test Failed with Error, process will abort!"
+                            ] = "DQ Test Failed with Error, process aborted!"
 
                             sqlJson["status"] = "ERROR"
                             sqlJson["error_message"] = dqLog["status_message"]
@@ -172,7 +172,7 @@ class SQLRunner(Runner):
                             dqLog["status"] = "WARNING"
                             dqLog[
                                 "status_message"
-                            ] = "Test Failed with warning, process will continue!"
+                            ] = "Some of the DQ test(s) failed with warning, please check logs for more details!"
 
                             sqlJson["status"] = "WARNING"
                             sqlJson["warning_message"] = dqLog["status_message"]

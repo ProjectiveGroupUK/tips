@@ -190,8 +190,6 @@ class DeployTask(BaseTask):
         errorMessages = ""
         if len(errorList) > 0:
             for exception in errorList:
-                # print(exception)
-                # print(type(exception))
                 errorMessages += f"\n\n{exception}"
 
             raise Exception(f"Error encountered in deployment with following: {errorMessages}")

@@ -67,7 +67,15 @@ class FrameworkRunner:
 
                 # cmd_binds is held as pipe delimited value
                 binds: List[str] = list()
-                cmdBinds = [x.strip() for x in (fwMetaData["CMD_BINDS"] if fwMetaData["CMD_BINDS"] is not None else '').split("|")]
+                cmdBinds = [] if fwMetaData["CMD_BINDS"] is None else [x.strip() for x in fwMetaData["CMD_BINDS"].split("|")]
+                ##If process accepts bind variables and no bind variables are passed in arguments then raise error
+                if len(cmdBinds) > 0 and (self._bindVariables == {} or len(self._bindVariables) == 0):
+                    self.returnJson["status"] = "ERROR"
+                    self.returnJson[
+                        "error_message"
+                    ] = f"cmd_binds {fwMetaData['CMD_BINDS']} are required, but not passed as variables"
+                    break
+
                 for bind in cmdBinds:
                     if bind != "":
                         if bind not in self._bindVariables:
@@ -75,7 +83,7 @@ class FrameworkRunner:
                             self.returnJson[
                                 "error_message"
                             ] = f"cmd_binds {bind} doesnt exists in session_variables"
-                            return self.returnJson
+                            break
 
                         binds.append(self._bindVariables[bind])
 

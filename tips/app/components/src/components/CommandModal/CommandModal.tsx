@@ -145,6 +145,10 @@ export default function CommandModal() {
         [OperationType.DELETE]: {
             [ExecutionStatus.SUCCESS]: 'Command deleted successfully',
             [ExecutionStatus.FAIL]: 'Failed to delete command'
+        },
+        [OperationType.RUN]: {
+            [ExecutionStatus.SUCCESS]: 'Process exection initiated', //TBC add appropriate message to suggest checking logs page
+            [ExecutionStatus.FAIL]: 'Failed to execute process'
         }
     };
 

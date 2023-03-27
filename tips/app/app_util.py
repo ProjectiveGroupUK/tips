@@ -54,7 +54,7 @@ class AppUtil:
 
 if __name__ == "__main__":
     globals.setEnvName(os.environ.get("env", "debug"))
-    logger = Logger().initialize()
+    ##logger = Logger().initialize()
     appUtil = AppUtil()
     ret = appUtil.checkStreamlitVersion()
     ret = appUtil.startServer()
