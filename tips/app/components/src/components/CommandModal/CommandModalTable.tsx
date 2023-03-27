@@ -30,6 +30,7 @@ interface PropsInterface {
     setEditedCommandValues: React.Dispatch<React.SetStateAction<Partial<CommandDataInterface>>>;
     filterCategories: FilterCategoryInterface[];
     filterText: string;
+    applicableFieldsForCommandType: { [key in CommandDataInterface['CMD_TYPE']]: { required: Array<keyof CommandDataInterface>; optional: Array<keyof CommandDataInterface>; } };
     isEditing: boolean;
     isProcessing: boolean;
 }
@@ -45,7 +46,7 @@ type EditCommandPropertyArgs = {
     propertyValue: CommandDataInterface[keyof CommandDataInterface];
 }
 
-export default function CommandModalTable({ originalCommandData, editedCommandValues, setEditedCommandValues, filterCategories, filterText, isEditing, isProcessing }: PropsInterface) {
+export default function CommandModalTable({ originalCommandData, editedCommandValues, setEditedCommandValues, filterCategories, filterText, applicableFieldsForCommandType, isEditing, isProcessing }: PropsInterface) {
 
     const { command } = useCommandModalData();
 
@@ -53,6 +54,7 @@ export default function CommandModalTable({ originalCommandData, editedCommandVa
         originalCommandData,
         commandData: isEditing ? editedCommandValues : command?.command!,
         filterCategories,
+        applicableFieldsForCommandType,
         isEditing,
         isProcessing,
         editCommandProperty
@@ -135,10 +137,11 @@ type InputRefs = {
     };
 }
 
-function generateTableData({ originalCommandData, commandData, filterCategories, isEditing, isProcessing, editCommandProperty }: {
+function generateTableData({ originalCommandData, commandData, filterCategories, applicableFieldsForCommandType, isEditing, isProcessing, editCommandProperty }: {
     originalCommandData: Partial<CommandDataInterface> | null;
     commandData: Partial<CommandDataInterface> | null;
     filterCategories: FilterCategoryInterface[];
+    applicableFieldsForCommandType: { [key in CommandDataInterface['CMD_TYPE']]: { required: Array<keyof CommandDataInterface>; optional: Array<keyof CommandDataInterface>; } };
     isEditing: boolean;
     isProcessing: boolean;
     editCommandProperty: (args: EditCommandPropertyArgs) => void;
@@ -161,6 +164,10 @@ function generateTableData({ originalCommandData, commandData, filterCategories,
             Header: 'Property Value',
             accessor: 'property_value',
             Cell: (cell: Cell) => renderCell(cell, isEditing)
+        },
+        {
+            Header: 'Required',
+            accessor: 'required'
         }
     ], [command, commandData, isEditing]);
 
@@ -175,18 +182,19 @@ function generateTableData({ originalCommandData, commandData, filterCategories,
 
     const tableData = useMemo(() => (
         Object.entries(commandData ?? {})
-            .filter(([propertyKey]) => propertyKey in categoryToKeysMap) // Filter out properties that don't have a category (e.g., 'PROCESS_CMD_ID')
+            .filter(([propertyKey]) => [...applicableFieldsForCommandType?.[commandData?.CMD_TYPE!].required, ...applicableFieldsForCommandType?.[commandData?.CMD_TYPE!].optional].includes(propertyKey as keyof CommandDataInterface)) // Filter out properties aren't either required or optional for selected command type
             .map(([propertyKey, propertyValue]) => ({ // Map the property key/value pairs to the table data format
                 category_id: categoryToKeysMap[propertyKey as keyof CommandDataInterface],
                 property_name: propertyKey,
-                property_value: propertyValue
+                property_value: propertyValue,
+                required: applicableFieldsForCommandType?.[commandData?.CMD_TYPE!].required.includes(propertyKey as keyof CommandDataInterface)
             }))
     ), [commandData, command]);
 
     const tableInstance = useTable<Data>({
         columns: (tableColumns as Column<Object>[]),
         data: tableData,
-        initialState: { hiddenColumns: ['category_id'] },
+        initialState: { hiddenColumns: ['category_id', 'required'] },
         getRowId: (row) => (row as { property_name: keyof CommandDataInterface }).property_name
     }, useFilters);
     
@@ -199,9 +207,15 @@ function generateTableData({ originalCommandData, commandData, filterCategories,
     function renderCell(cell: Cell, isEditing: boolean) {
         const columnId = cell.column.id as 'property_name' | 'property_value';
         const propertyName = (cell.row.original as {property_name: string}).property_name as keyof CommandDataInterface
+        const isRequired = (cell.row.original as {required: boolean}).required;
         switch(columnId) {
             case 'property_name':
-                return <div>{cell.value}</div>
+                return (
+                    <div className={styles.propertyName}>
+                        <span>{cell.value}</span>
+                        { isRequired && <span className={styles.required}>*</span> }
+                    </div>
+                );
 
             case 'property_value':
                 const savingEditedValue = command?.executionStatus === ExecutionStatus.RUNNING && command.command?.[propertyName] !== originalCommandData?.[propertyName];

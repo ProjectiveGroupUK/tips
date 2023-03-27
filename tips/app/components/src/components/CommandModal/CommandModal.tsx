@@ -1,6 +1,9 @@
 // React
 import { useEffect, useState } from "react";
 
+// Mantine
+import { Select } from "@mantine/core";
+
 // Framer motion
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -34,6 +37,47 @@ export interface FilterCategoryInterface{
     propertyIds: Array<keyof CommandDataInterface>;
 }
 
+const commandTypeSelectionData: { value: CommandDataInterface['CMD_TYPE']; label: string }[] = [
+    { value: 'APPEND', label: 'Append' },
+    { value: 'COPY_INTO_FILE', label: 'Copy into file' },
+    { value: 'DQ_TEST', label: 'Data quality test' },
+    { value: 'MERGE', label: 'Merge' },
+    { value: 'PUBLISH_SCD2_DIM', label: 'Publish SCD2 dimension' },
+    { value: 'REFRESH', label: 'Refresh' },
+    { value: 'TRUNCATE', label: 'Truncate' }
+];
+
+const applicableFieldsForCommandType: { [key in CommandDataInterface['CMD_TYPE']]: { required: Array<keyof CommandDataInterface>; optional: Array<keyof CommandDataInterface>; } } = {
+    REFRESH: {
+        required: ['CMD_SRC', 'CMD_TGT', 'REFRESH_TYPE'],
+        optional: ['CMD_WHERE', 'CMD_BINDS', 'ADDITIONAL_FIELDS', 'TEMP_TABLE']
+    },
+    APPEND: {
+        required: ['CMD_SRC', 'CMD_TGT'],
+        optional: ['CMD_WHERE', 'CMD_BINDS', 'ADDITIONAL_FIELDS', 'TEMP_TABLE']
+    },
+    PUBLISH_SCD2_DIM: {
+        required: ['CMD_SRC', 'CMD_TGT', 'BUSINESS_KEY'],
+        optional: ['CMD_WHERE', 'CMD_BINDS', 'ADDITIONAL_FIELDS', 'TEMP_TABLE']
+    },
+    MERGE: {
+        required: ['CMD_SRC', 'CMD_TGT', 'MERGE_ON_FIELDS'],
+        optional: ['CMD_WHERE', 'CMD_BINDS', 'GENERATE_MERGE_MATCHED_CLAUSE', 'GENERATE_MERGE_NON_MATCHED_CLAUSE', 'ADDITIONAL_FIELDS', 'TEMP_TABLE']
+    },
+    COPY_INTO_FILE: {
+        required: ['CMD_SRC', 'CMD_TGT'],
+        optional: ['CMD_WHERE', 'CMD_BINDS', 'ADDITIONAL_FIELDS', 'TEMP_TABLE']
+    },
+    TRUNCATE: {
+        required: ['CMD_TGT'],
+        optional: []
+    },
+    DQ_TEST: {
+        required: ['CMD_TGT'],
+        optional: ['CMD_WHERE', 'CMD_BINDS']
+    }
+}
+
 export default function CommandModal() {
 
     const { executionStatus, command, setCommand } = useCommandModalData();
@@ -43,7 +87,7 @@ export default function CommandModal() {
 
     const [filterText, setFilterText] = useState('');
     const [filterCategories, setFilterCategories] = useState<FilterCategoryInterface[]>([
-        { id: 'params', label: 'Parameters', active: false, propertyIds: ['CMD_TYPE', 'CMD_WHERE', 'CMD_BINDS'] },
+        { id: 'params', label: 'Parameters', active: false, propertyIds: ['CMD_WHERE', 'CMD_BINDS'] },
         { id: 'io', label: 'Input & output', active: false, propertyIds: ['CMD_SRC', 'CMD_TGT'] },
         { id: 'merging', label: 'Merging', active: false, propertyIds: ['MERGE_ON_FIELDS', 'GENERATE_MERGE_MATCHED_CLAUSE', 'GENERATE_MERGE_NON_MATCHED_CLAUSE'] },
         { id: 'additional_fields_and_processing', label: 'Additional fields & processing', active: false, propertyIds: ['ADDITIONAL_FIELDS', 'TEMP_TABLE', 'CMD_PIVOT_BY', 'CMD_PIVOT_FIELD'] },
@@ -201,6 +245,18 @@ export default function CommandModal() {
                         </AnimatePresence>
                     </div>
                 </div>
+                
+                {/* Command type selector */}
+                <Select
+                    placeholder='Select command type'
+                    data={commandTypeSelectionData}
+                    value={(isEditing ? editedCommandValues : command?.command)?.CMD_TYPE}
+                    onChange={(value) => setEditedCommandValues((prevState) => ({ ...prevState, CMD_TYPE: value as CommandDataInterface['CMD_TYPE'] }))}
+                    disabled={!isEditing || processing}
+                    classNames={{ wrapper: styles.commandTypeSelector, rightSection: styles.rightSection }}
+                />
+
+                {/* Main command section */}
                 <div className={styles.configContainer}>
                     <div className={styles.verticalBar} />
 
@@ -217,15 +273,18 @@ export default function CommandModal() {
 
                             {/* Category selection */}
                             <div className={styles.categorySelector}>
-                            { filterCategories.map((category) => (
-                                <button 
-                                    key={category.id}
-                                    className={`${styles.categoryItem} ${category.active && styles.active}`}
-                                    onClick={() => handleCategoryClick(category.id)}
-                                >
-                                    {category.label}
-                                </button>
-                            ))}
+                            { filterCategories
+                                .filter((category) =>  [...applicableFieldsForCommandType?.[editedCommandValues.CMD_TYPE!].required, ...applicableFieldsForCommandType?.[editedCommandValues.CMD_TYPE!].optional].some((requiredOrOptionalField) => category.propertyIds.includes(requiredOrOptionalField))) // Check if category contains at least one field which is either required or optional for type of current command
+                                .map((category) => (
+                                    <button 
+                                        key={category.id}
+                                        className={`${styles.categoryItem} ${category.active && styles.active}`}
+                                        onClick={() => handleCategoryClick(category.id)}
+                                    >
+                                        {category.label}
+                                    </button>
+                                )
+                            )}
                             </div>
                         </div>
 
@@ -236,6 +295,7 @@ export default function CommandModal() {
                             setEditedCommandValues={setEditedCommandValues}
                             filterText={filterText}
                             filterCategories={filterCategories}
+                            applicableFieldsForCommandType={applicableFieldsForCommandType}
                             isEditing={isEditing}
                             isProcessing={processing}
                         />
