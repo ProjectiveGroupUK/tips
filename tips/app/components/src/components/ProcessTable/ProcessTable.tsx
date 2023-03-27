@@ -28,7 +28,7 @@ import StatusPill from '@/components/ProcessTable/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
 // Icons
-import { CirclePlus, DotsVertical, Pencil, PencilPlus } from 'tabler-icons-react';
+import { CirclePlus, DotsVertical, Pencil, PencilPlus, Run, Download } from 'tabler-icons-react';
 
 type Data = object;
 
@@ -36,7 +36,7 @@ export default function ProcessTable() {
     useEffect(() => { Streamlit.setFrameHeight(); }); // Update frame height on each re-render
     const { processData, setCommand, setEditedProcess } = useProcessTableData();
 
-    const tableInstance = generateTableData({ processData: processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick });
+    const tableInstance = generateTableData({ processData: processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick, handleRunProcessClick, handleDownloadProcessClick });
     const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
     const [selectedProcessId, setSelectedProcessId] = useState<ProcessDataInterface['PROCESS_ID'] | null>(null);
@@ -55,7 +55,9 @@ export default function ProcessTable() {
                 PROCESS_NAME: '',
                 PROCESS_DESCRIPTION: '',
                 steps: [],
-                ACTIVE: 'Y'
+                ACTIVE: 'Y',
+                BIND_VARS: null,
+                EXECUTE_FLAG: 'Y'
             },
             executionStatus: ExecutionStatus.NONE
         });
@@ -103,6 +105,44 @@ export default function ProcessTable() {
         });
     }
 
+    function handleRunProcessClick(rowId: ProcessDataInterface['PROCESS_ID']) {
+        const process = processData.find((process) => process.PROCESS_ID === rowId)!;
+        setEditedProcess({
+            operation: {
+                type: OperationType.RUN
+            },
+            process: {
+                PROCESS_ID: process.PROCESS_ID,
+                PROCESS_NAME: process.PROCESS_NAME,
+                PROCESS_DESCRIPTION: process.PROCESS_DESCRIPTION,
+                steps: [],
+                ACTIVE: process.ACTIVE,
+                BIND_VARS: null,
+                EXECUTE_FLAG: 'Y'
+            },
+            executionStatus: ExecutionStatus.NONE
+        });
+    }
+
+    function handleDownloadProcessClick(rowId: ProcessDataInterface['PROCESS_ID']) {
+        const process = processData.find((process) => process.PROCESS_ID === rowId)!;
+        setEditedProcess({
+            operation: {
+                type: OperationType.DOWNLOAD
+            },
+            process: {
+                PROCESS_ID: process.PROCESS_ID,
+                PROCESS_NAME: process.PROCESS_NAME,
+                PROCESS_DESCRIPTION: process.PROCESS_DESCRIPTION,
+                steps: [],
+                ACTIVE: process.ACTIVE,
+                BIND_VARS: null,
+                EXECUTE_FLAG: 'Y'
+            },
+            executionStatus: ExecutionStatus.NONE
+        });
+    }
+
     return (
         <table {...getTableProps()} className={styles.table}>
             <thead>
@@ -112,7 +152,7 @@ export default function ProcessTable() {
                             {
                                 headerGroup.headers.map(column => (
                                     <th {...column.getHeaderProps()}>
-                                        { column.render('Header') }
+                                        {column.render('Header')}
                                     </th>
                                 ))}
                         </tr>
@@ -153,29 +193,31 @@ export default function ProcessTable() {
                                         </div>
                                     </td>
                                 </tr>
-                            }
-                        </Fragment>
-                    )
-                })
-            }
+                             }
+                            </Fragment>
+                        )
+                    })
+                }
             </tbody>
 
             <tfoot>
                 <tr>
-                <td>
-                    { /* Footer */ }
-                </td>
+                    <td>
+                        { /* Footer */}
+                    </td>
                 </tr>
             </tfoot>
         </table>
     );
 }
 
-function generateTableData({ processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick }: {
+function generateTableData({ processData, handleNewProcessClick, handleNewCommandClick, handleEditProcessClick, handleRunProcessClick, handleDownloadProcessClick }: {
     processData: ProcessDataInterface[];
     handleNewProcessClick: () => void;
     handleNewCommandClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
     handleEditProcessClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
+    handleRunProcessClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
+    handleDownloadProcessClick: (rowId: ProcessDataInterface['PROCESS_ID']) => void;
 }) {
     const tableColumns = useMemo(() => [
         {
@@ -211,7 +253,7 @@ function generateTableData({ processData, handleNewProcessClick, handleNewComman
         process_id: process.PROCESS_ID,
         process_name: process.PROCESS_NAME,
         process_description: process.PROCESS_DESCRIPTION,
-        process_status: process.ACTIVE =='Y' ? 'Active' : 'Inactive'
+        process_status: process.ACTIVE == 'Y' ? 'Active' : 'Inactive'
     })), [processData]);
 
     const tableInstance = useTable<Data>({
@@ -233,8 +275,10 @@ function generateTableData({ processData, handleNewProcessClick, handleNewComman
                 <Menu.Dropdown onClick={(event) => event?.stopPropagation()}>
                     <Menu.Item icon={<Pencil size={15} color='var(--primary)' />} onClick={() => handleEditProcessClick(Number(cell.row.id))}>Edit process</Menu.Item>
                     <Menu.Item icon={<PencilPlus size={15} color='var(--primary)' />} onClick={() => handleNewCommandClick(Number(cell.row.id))}>Insert new command</Menu.Item>
+                    <Menu.Item icon={<Run size={15} color='var(--primary)' />} onClick={() => handleRunProcessClick(Number(cell.row.id))}>Run Process</Menu.Item>
+                    <Menu.Item icon={<Download size={15} color='var(--primary)' />} onClick={() => handleDownloadProcessClick(Number(cell.row.id))}>Download DML Script</Menu.Item>
                 </Menu.Dropdown>
-            </Menu>   
+            </Menu>
         )
     }
 }

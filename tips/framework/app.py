@@ -1,4 +1,5 @@
 import json
+import warnings
 from typing import Dict, List
 from tips.framework.db.database_connection import DatabaseConnection
 from tips.framework.factories.framework_factory import FrameworkFactory
@@ -17,13 +18,13 @@ from tips.utils.logger import Logger
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 
-
 class App:
     _processName: str
     _bindVariables: Dict
     _executeFlag: str
 
     def __init__(self, processName: str, bindVariables: str, executeFlag: str) -> None:
+
         self._processName = processName
         self._bindVariables = (
             dict() if bindVariables is None else json.loads(bindVariables)
@@ -32,8 +33,8 @@ class App:
 
     def main(self) -> None:
         logger.debug("Inside framework app main")
-        logInstance = Logger()
-        logInstance.addFileHandler()
+        # logInstance = Logger()
+        Logger().addFileHandler(processName=self._processName)
 
         dbConnection: DatabaseConnection = DatabaseConnection()
         logger.debug("DB Connection established!")
@@ -52,6 +53,7 @@ class App:
 
             frameworkDQMetaData: List[Dict] = framework.getDQMetaData(dbConnection)
 
+            
             columnMetaData: List[Dict] = ColumnMetadata().getData(
                 frameworkMetaData=frameworkMetaData, conn=dbConnection
             )
@@ -70,8 +72,7 @@ class App:
                 frameworkMetaData=frameworkMetaData,
                 frameworkDQMetaData=frameworkDQMetaData,
             )
-
-            logInstance.writeResultJson(runFramework)
+            Logger().writeResultJson(runFramework)
 
             # Now insert process run log to database
             processEndTime = datetime.now()
@@ -119,15 +120,14 @@ SELECT {seqVal}
 
                     results = dbConnection.executeSQL(sqlCommand=sqlCommand)
 
-            if runFramework.get("status") == "ERROR":
-                error_message = runFramework.get("error_message")
-                logger.error(error_message)
-            elif runFramework.get("status") == "WARNING":
-                warning_message = runFramework.get("warning_message")
-                logger.warning(warning_message)
+            # if runFramework.get("status") == "ERROR":
+            #     error_message = runFramework.get("error_message")
+            #     logger.error(error_message)
+            # elif runFramework.get("status") == "WARNING":
+            #     warning_message = runFramework.get("warning_message")
+            #     logger.warning(warning_message)
 
-        dbConnection.closeConnection()
-        logInstance.removeFileHandler()
+        ##dbConnection.closeConnection()
         end_dt = datetime.now()
         logger.info(f"Start DateTime: {start_dt}")
         logger.info(f"End DateTime: {end_dt}")
@@ -135,6 +135,13 @@ SELECT {seqVal}
             f"Total Elapsed Time (secs): {round((end_dt - start_dt).total_seconds(),2)}"
         )
 
+        if runFramework.get("status") == "ERROR":
+            raise Exception(runFramework.get("error_message"))
+        elif runFramework.get("status") == "WARNING":
+            warning_message = runFramework.get("warning_message")
+            logger.warning(warning_message)
+
+        Logger().removeFileHandler()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

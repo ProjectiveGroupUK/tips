@@ -12,6 +12,7 @@ class ProcessTableInstruction:
 class ProcessModalInstruction:
     EXECUTION_STATUS = 'processExecutionStatus'
     CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS = 'changeUpdateProcessToCreateProcess'
+    PROCESS_RUN_STATUS = 'processRunStatus'
 
 class CommandModalInstruction:
     EXECUTION_STATUS = 'commandExecutionStatus'
@@ -54,3 +55,5 @@ class OperationType:
     CREATE = 'create'
     EDIT = 'edit'
     DELETE = 'delete'
+    RUN = 'run'
+    DOWNLOAD = 'download'

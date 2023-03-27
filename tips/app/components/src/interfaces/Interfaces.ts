@@ -7,6 +7,8 @@ export interface ProcessDataInterface {
     PROCESS_DESCRIPTION: string | null;
     steps: Array<CommandDataInterface>;
     ACTIVE: 'Y' | 'N' ;
+    BIND_VARS: string | null;
+    EXECUTE_FLAG: 'Y' | 'N' | null;
 };
 
 export interface CommandDataInterface {
