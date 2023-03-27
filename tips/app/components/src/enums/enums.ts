@@ -9,5 +9,6 @@ export enum OperationType {
     CREATE = 'create',
     EDIT = 'edit',
     DELETE = 'delete',
-    RUN = 'run'
+    RUN = 'run',
+    DOWNLOAD = 'download'
 }

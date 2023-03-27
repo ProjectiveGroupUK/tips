@@ -14,20 +14,23 @@ import { Trash } from "tabler-icons-react";
 import styles from "@/styles/FloatingEditButtons/FloatingEditButtons.module.css";
 
 interface PropsInterface {
-    type: 'create' | 'edit' | 'run';
+    type: 'create' | 'edit' | 'run' | 'download';
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
     isRunFlow: boolean;
     setIsRunFlow: React.Dispatch<React.SetStateAction<boolean>>;
+    isDownloading: boolean;
+    setIsDownloading: React.Dispatch<React.SetStateAction<boolean>>;
     allowDelete?: boolean;
     isSaving?: boolean;
     onCancel?: () => void;
     onSave?: () => void;
     onDelete?: () => void;
     onRun?: () => void;
+    onDownload?: () => void;
 }
 
-export default function FloatingEditButton({ type, isEditing, setIsEditing, isRunFlow, setIsRunFlow, allowDelete, isSaving, onCancel, onSave, onDelete, onRun }: PropsInterface) {
+export default function FloatingEditButton({ type, isEditing, setIsEditing, isRunFlow, setIsRunFlow, isDownloading, setIsDownloading, allowDelete, isSaving, onCancel, onSave, onDelete, onRun, onDownload }: PropsInterface) {
 
     const [pendingConfirmDelete, setPendingConfirmDelete] = useState(false);
 
@@ -52,6 +55,10 @@ export default function FloatingEditButton({ type, isEditing, setIsEditing, isRu
         onRun?.();
     }
 
+    function handleDownload() {
+        onDownload?.();
+    }
+
     return (
         <div className={`${styles.editButtonContainer} ${isSaving && styles.savingInProgress} ${pendingConfirmDelete && styles.pendingDeleteConfirmation}`}>
 
@@ -59,18 +66,18 @@ export default function FloatingEditButton({ type, isEditing, setIsEditing, isRu
             <motion.button
                 layout
                 className={type === 'create' ? styles.button_discard : ((isEditing || pendingConfirmDelete) ? styles.button_cancel : styles.button_edit)}
-                onClick={isRunFlow ? handleRun : (isEditing || pendingConfirmDelete) ? handleCancel : () => setIsEditing(true)}
+                onClick={isDownloading ? handleDownload : isRunFlow ? handleRun : (isEditing || pendingConfirmDelete) ? handleCancel : () => setIsEditing(true)}
                 disabled={isSaving}
             >
-                {isRunFlow ? 'Run' : (isEditing || pendingConfirmDelete) ? 'Cancel' : 'Edit'}
+                {isDownloading ? 'Yes' : isRunFlow ? 'Run' : (isEditing || pendingConfirmDelete) ? 'Cancel' : 'Edit'}
                 {/* Saving in progress spinner */}
-                {isRunFlow && isSaving && <PuffLoader size={20} color='var(--primary)' />}
+                {(isDownloading || isRunFlow) && isSaving && <PuffLoader size={20} color='var(--primary)' />}
 
             </motion.button>
             <AnimatePresence mode='popLayout'>
 
                 {/* Save (or delete) button */}
-                {(!isRunFlow) && (isEditing || isSaving || pendingConfirmDelete) && (
+                {(!isDownloading) && (!isRunFlow) && (isEditing || isSaving || pendingConfirmDelete) && (
                     <motion.button
                         id="confirmActionButton"
                         className={pendingConfirmDelete ? styles.confirmDeleteButton : styles.confirmSaveButton}

@@ -56,3 +56,4 @@ class OperationType:
     EDIT = 'edit'
     DELETE = 'delete'
     RUN = 'run'
+    DOWNLOAD = 'download'

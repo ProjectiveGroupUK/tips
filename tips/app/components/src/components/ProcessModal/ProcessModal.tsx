@@ -37,6 +37,7 @@ export default function ProcessModal() {
     const [editedProcessValues, setEditedProcessValues] = useState<ProcessDataInterface | null>(process?.process ?? null);
     const [isEditing, setIsEditing] = useState(process?.operation.type === OperationType.CREATE);
     const [isRunFlow, setIsRunFlow] = useState(process?.operation.type === OperationType.RUN);
+    const [isDownloading, setIsDownloading] = useState(process?.operation.type === OperationType.DOWNLOAD);
     const inputRefs = useRef({} as InputRefs);
 
     useEffect(() => { // When Python sends notification about execution of SQL instruction, show message to user for 3 seconds
@@ -45,7 +46,7 @@ export default function ProcessModal() {
             setShowExecutionStatusMessage(executionStatus);
             setTimeout(() => {
                 setShowExecutionStatusMessage({ status: ExecutionStatus.NONE });
-                if ((executionStatus.operationType === OperationType.DELETE || executionStatus.operationType === OperationType.RUN) && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
+                if ((executionStatus.operationType === OperationType.DELETE || executionStatus.operationType === OperationType.RUN || executionStatus.operationType === OperationType.DOWNLOAD) && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
             }, 5000);
         }
     }, [executionStatus]);
@@ -85,6 +86,7 @@ export default function ProcessModal() {
         setEditedProcessValues(process!.process);
         setIsEditing(false);
         setIsRunFlow(false);
+        setIsDownloading(false);
         if (process!.operation.type === OperationType.CREATE) handleCloseModal();
     }
 
@@ -120,6 +122,17 @@ export default function ProcessModal() {
         setProcess((prevState) => ({
             ...prevState!,
             process: editedProcessValues!,
+            executionStatus: ExecutionStatus.RUNNING
+        }));
+
+    }
+
+    function handleDownload() {
+        setProcess((prevState) => ({
+            ...prevState!,
+            operation: {
+                type: OperationType.DOWNLOAD
+            },
             executionStatus: ExecutionStatus.RUNNING
         }));
 
@@ -199,6 +212,10 @@ export default function ProcessModal() {
         [OperationType.RUN]: {
             [ExecutionStatus.SUCCESS]: 'Process execution competed. Please check into logs for any warnings!', //TBC add appropriate message to suggest checking logs page
             [ExecutionStatus.FAIL]: 'Process execution failed. Please check logs for details!'
+        },
+        [OperationType.DOWNLOAD]: {
+            [ExecutionStatus.SUCCESS]: 'DML script downloaded successfully',
+            [ExecutionStatus.FAIL]: 'Failed to download DML script'
         }
     };
 
@@ -209,6 +226,7 @@ export default function ProcessModal() {
             noPadding
         >
             <div className={styles.container}>
+                {!isDownloading &&
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>
 
@@ -236,7 +254,7 @@ export default function ProcessModal() {
                             />
                         </div>
                     </div>
-                    {!isRunFlow &&
+                    {!isRunFlow && !isDownloading &&
                         <div>
                             <div className={styles.separator} />
                             <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
@@ -264,47 +282,61 @@ export default function ProcessModal() {
                         </div>
                     }
                 </div>
+                }
                 <div className={styles.configContainer}>
-                    {isRunFlow ?
+                    {isDownloading ?
                         <div className={styles.descriptionContainer}>
-                            <h2>Bind Variables</h2>
-                            <div>
-                                {/* Focus indicator bar */}
-                                <div className={styles.focusIndicatorBar} data-editing={isRunFlow} />
-
-                                {/* Textarea */}
-                                <textarea
-                                    value={editedProcessValues?.BIND_VARS ?? ''}
-                                    onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, BIND_VARS: e.target.value }))}
-                                    placeholder='Enter bind variables in JSON Format e.g. {"KEY":"VALUE"}'
-                                    disabled={!isRunFlow || processing}
-                                    data-editing={isRunFlow}
-                                />
-                            </div>
-
+                            <center>DML Script will be downloaded to metadata folder</center>
+                            <br></br>
+                            <center>Any existing script with same process name would be overwritten</center>
+                            <br></br>
+                            <h4><center>Proceed with Download?</center></h4>
+                            <br></br>
                         </div>
                         :
-                        <div className={styles.descriptionContainer}>
-                            {/* Field title */}
-                            <h2>Description</h2>
-                            <div>
-                                {/* Focus indicator bar */}
-                                <div className={styles.focusIndicatorBar} data-editing={isEditing} />
+                        <div>
+                            {isRunFlow ?
+                                <div className={styles.descriptionContainer}>
+                                    <h2>Bind Variables</h2>
+                                    <div>
+                                        {/* Focus indicator bar */}
+                                        <div className={styles.focusIndicatorBar} data-editing={isRunFlow} />
 
-                                {/* Textarea */}
-                                <textarea
-                                    value={editedProcessValues?.PROCESS_DESCRIPTION ?? ''}
-                                    onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, PROCESS_DESCRIPTION: e.target.value }))}
-                                    placeholder='Enter a process description'
-                                    disabled={!isEditing || processing}
-                                    data-editing={isEditing}
-                                />
-                            </div>
+                                        {/* Textarea */}
+                                        <textarea
+                                            value={editedProcessValues?.BIND_VARS ?? ''}
+                                            onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, BIND_VARS: e.target.value }))}
+                                            placeholder='Enter bind variables in JSON Format e.g. {"KEY":"VALUE"}'
+                                            disabled={!isRunFlow || processing}
+                                            data-editing={isRunFlow}
+                                        />
+                                    </div>
+
+                                </div>
+                                :
+                                <div className={styles.descriptionContainer}>
+                                    {/* Field title */}
+                                    <h2>Description</h2>
+                                    <div>
+                                        {/* Focus indicator bar */}
+                                        <div className={styles.focusIndicatorBar} data-editing={isEditing} />
+
+                                        {/* Textarea */}
+                                        <textarea
+                                            value={editedProcessValues?.PROCESS_DESCRIPTION ?? ''}
+                                            onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, PROCESS_DESCRIPTION: e.target.value }))}
+                                            placeholder='Enter a process description'
+                                            disabled={!isEditing || processing}
+                                            data-editing={isEditing}
+                                        />
+                                    </div>
+                                </div>
+
+                            }
                         </div>
-
                     }
                 </div>
-                {isRunFlow &&
+                {!isDownloading && isRunFlow &&
                     <div className={styles.configContainer}>
                         <div className={styles.descriptionContainer}>
                             <h2>Run in Execute Mode?&nbsp;&nbsp;&nbsp;
@@ -350,17 +382,20 @@ export default function ProcessModal() {
             </div>
 
             <FloatingEditButtons
-                type={process?.operation.type === OperationType.CREATE ? 'create' : process?.operation.type === OperationType.RUN ? 'run' : 'edit'}
+                type={process?.operation.type === OperationType.CREATE ? 'create' : process?.operation.type === OperationType.DOWNLOAD ? 'download': process?.operation.type === OperationType.RUN ? 'run' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 isRunFlow={isRunFlow}
                 setIsRunFlow={setIsRunFlow}
+                isDownloading={isDownloading}
+                setIsDownloading={setIsDownloading}
                 allowDelete={process?.operation.type === OperationType.EDIT}
                 isSaving={processing}
                 onCancel={handleCancel}
                 onSave={handleSave}
                 onDelete={handleDelete}
                 onRun={handleRun}
+                onDownload={handleDownload}
             />
         </Modal >
     );

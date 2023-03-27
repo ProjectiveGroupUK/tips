@@ -1,7 +1,6 @@
 # Python
 import logging
-import json
-from datetime import datetime
+from pathlib import Path
 
 # import asyncio
 
@@ -29,9 +28,10 @@ from tips.app.enums import (
     OperationType,
 )
 
-#Logger initialisation
+# Logger initialisation
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
+
 
 def _setUpPageLayout():
     st.set_page_config(page_title="TIPS", page_icon="✨", layout="wide")
@@ -305,188 +305,124 @@ def _deleteProcess(processId: int):
         return ExecutionStatus.FAIL
 
 
-# async def _runProcessTask(processName: str, bindVariables: str, executeFlag: str):
-#     def runApp():
-#         print('########################')
-#         print('Starting Process')
-#         st.session_state[ProcessModalInstruction.PROCESS_RUN_STATUS] = {
-#             processName: 'STARTING'
-#         }
-#         app = App(
-#             processName=processName,
-#             bindVariables=bindVariables,
-#             executeFlag=executeFlag,
-#         )
-#         app.main()
-#         st.session_state[ProcessModalInstruction.PROCESS_RUN_STATUS] = {
-#             processName: 'COMPLETED'
-#         }
-#         print('########################')
-#         print('Process Completed')
-
-#     asyncio.get_event_loop().run_in_executor(None, runApp)
-
-# def _runProcessAsync(ProcessData: dict):
-
-#     v_process_name = ProcessData.get("PROCESS_NAME")
-#     v_vars = ProcessData.get("BIND_VARS")
-#     v_exec = ProcessData.get("EXECUTE_FLAG")
-#     #Async IO Eventloop initialisation
-#     eventLoop = asyncio.new_event_loop()
-#     asyncio.set_event_loop(eventLoop)
-
-#     asyncio.get_event_loop().run_until_complete(
-#         _runProcessTask(
-#             processName=v_process_name, bindVariables=v_vars, executeFlag=v_exec
-#         )
-#     )
-
-#     return ExecutionStatus.SUCCESS
-
 def _runProcess(ProcessData: dict):
 
     v_process_name = ProcessData.get("PROCESS_NAME")
     v_vars = ProcessData.get("BIND_VARS")
     v_exec = ProcessData.get("EXECUTE_FLAG")
-    
+
     if v_vars is not None:
         if v_vars.startswith("{") == False or v_vars.endswith("}") == False:
             raise ValueError(
                 "Invalid value for argument Bind Variable. Should be in form of Dictionary!"
             )
         v_vars = v_vars.replace("'", '"')
-   
+
     try:
         app = App(
-                processName=v_process_name,
-                bindVariables=v_vars,
-                executeFlag=v_exec,
-            )
+            processName=v_process_name,
+            bindVariables=v_vars,
+            executeFlag=v_exec,
+        )
         app.main()
         return ExecutionStatus.SUCCESS
     except Exception as err:
-        logger.error(f'Error occured {err}')
+        logger.error(f"Error occured {err}")
         return ExecutionStatus.FAIL
 
-# def _runProcess(ProcessData: dict):
 
-#     v_process_name = ProcessData.get("PROCESS_NAME")
-#     v_vars = ProcessData.get("BIND_VARS")
-#     v_exec = ProcessData.get("EXECUTE_FLAG")
-    
-#     if v_vars is not None:
-#         if v_vars.startswith("{") == False or v_vars.endswith("}") == False:
-#             raise ValueError(
-#                 "Invalid value for argument Bind Variable. Should be in form of Dictionary!"
-#             )
-#         v_vars = v_vars.replace("'", '"')
+def _downloadProcess(ProcessData: dict):
 
-#     Logger().addFileHandler(processName=v_process_name)
+    try:
+        db = DatabaseConnection()
+        metadataFolder = Path.joinpath(globals.getProjectDir(),'metadata')
+        if not metadataFolder.exists():
+            Path.mkdir(metadataFolder)
 
-#     dbConnection: DatabaseConnection = DatabaseConnection()
-#     logger.debug("DB Connection established!")
+        processName = ProcessData.get('PROCESS_NAME')
 
-#     start_dt = datetime.now()
-#     framework: FrameworkMetaData = FrameworkFactory().getProcess(v_process_name)
-#     frameworkMetaData = framework.getMetaData(dbConnection)
+        scriptFile = Path.joinpath(metadataFolder,f"{processName.lower()}.sql")
 
-#     if len(frameworkMetaData) <= 0:
-#         logger.error(
-#             "Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!"
-#         )
-#     else:
-#         logger.info("Fetched Framework Metadata!")
-#         processStartTime = start_dt
+        with open(scriptFile, "w") as f:
+            ## SQL to Delete from Process Command table
+            cmd = f"""
+DELETE 
+  FROM process_cmd 
+ WHERE process_id = (SELECT process_id 
+                       FROM process
+					  WHERE process_name = '{processName}')
+;            
+            """
+            f.write(cmd)
 
-#         frameworkDQMetaData = framework.getDQMetaData(dbConnection)
+            ## SQL to Delete from Process table
+            cmd = f"""
+DELETE 
+  FROM process
+ WHERE process_name = '{processName}'
+;            
+            """
+            f.write(cmd)
 
-        
-#         columnMetaData = ColumnMetadata().getData(
-#             frameworkMetaData=frameworkMetaData, conn=dbConnection
-#         )
+            ##Fetch PROCESS table columns from database
+            sqlCommand = f"select LISTAGG(column_name,',') WITHIN GROUP(order by ordinal_position) AS COLUMN_LIST from information_schema.columns where table_catalog = '{db.getDatabase()}' and table_schema = 'TIPS_MD_SCHEMA' and table_name = 'PROCESS' and column_name != 'PROCESS_ID'"
+            result = db.executeSQL(sqlCommand=sqlCommand)
+            columnList = result[0].get('COLUMN_LIST')
 
-#         tableMetaData: TableMetaData = TableMetaData(columnMetaData)
+            ##Fetch PROCESS table rows using column list
+            sqlCommand = f"select {columnList} from {db.getDatabase()}.tips_md_schema.process where process_name = '{processName}'"
+            rows = db.executeSQL(sqlCommand=sqlCommand)
+            for row in rows:
+                valList = ""
+                cnt = 0
+                for value in row.values():
+                    if cnt == 0:
+                        valList += f"'{value}'"
+                    else:
+                        valList += f", '{value}'"
+                    cnt += 1
 
-#         frameworkRunner: FrameworkRunner = FrameworkRunner(
-#             processName=v_process_name,
-#             bindVariables=v_vars,
-#             executeFlag=v_exec,
-#         )
 
-#         runFramework, dqTestLogs = frameworkRunner.run(
-#             conn=dbConnection,
-#             tableMetaData=tableMetaData,
-#             frameworkMetaData=frameworkMetaData,
-#             frameworkDQMetaData=frameworkDQMetaData,
-#         )
+                ## SQL for INSERT into Process table
+                cmd = f"""
+INSERT INTO process ({columnList})
+VALUES ({valList})
+;            
+                """
+                f.write(cmd)
 
-#         Logger().writeResultJson(runFramework)
+            ##Fetch PROCESS_CMD table columns from database
+            sqlCommand = f"select LISTAGG(column_name,',') WITHIN GROUP(order by ordinal_position) AS COLUMN_LIST from information_schema.columns where table_catalog = '{db.getDatabase()}' and table_schema = 'TIPS_MD_SCHEMA' and table_name = 'PROCESS_CMD'"
+            result = db.executeSQL(sqlCommand=sqlCommand)
+            columnList = result[0].get('COLUMN_LIST')
 
-#         # Now insert process run log to database
-#         processEndTime = datetime.now()
-#         results = dbConnection.executeSQL(
-#             sqlCommand="SELECT TIPS_MD_SCHEMA.PROCESS_LOG_SEQ.NEXTVAL AS SEQVAL FROM DUAL"
-#         )
-#         seqVal = results[0]["SEQVAL"]
+            ##Fetch PROCESS table rows using column list
+            sqlCommand = f"select {columnList} from {db.getDatabase()}.tips_md_schema.process_cmd where process_id = (select process_id from {db.getDatabase()}.tips_md_schema.process where process_name = '{processName}') order by process_cmd_id"
+            rows = db.executeSQL(sqlCommand=sqlCommand)
+            for row in rows:
+                valList = ""
+                cnt = 0
+                for value in row.values():
+                    if cnt == 0:
+                        valList += "NULL" if value is None else f"'{value}'"
+                    else:
+                        valList += ", NULL" if value is None else f", '{value}'"
+                    cnt += 1
 
-#         sqlCommand = f"""
-# INSERT INTO tips_md_schema.process_log (process_log_id, process_name, process_start_time, process_end_time, process_elapsed_time_in_seconds, execute_flag, status, error_message, log_json)
-# SELECT {seqVal}, '{v_process_name}','{processStartTime}','{processEndTime}',{round((processEndTime - processStartTime).total_seconds(),2)},'{v_exec}','{runFramework["status"]}','{runFramework["error_message"]}',PARSE_JSON('{json.dumps(runFramework).replace("'","''")}')
-#             """
-#         # logger.info(sqlCommand)
-#         results = dbConnection.executeSQL(sqlCommand=sqlCommand)
 
-#         # Now insert DQ Logs if any
-#         if len(dqTestLogs) > 0:
-#             for dqTestLog in dqTestLogs:
-#                 sqlCommand = f"""
-# INSERT INTO tips_md_schema.process_dq_log (
-#     process_log_id
-#   , tgt_name
-#   , attribute_name
-#   , dq_test_name
-#   , dq_test_query
-#   , dq_test_result
-#   , start_time
-#   , end_time
-#   , elapsed_time_in_seconds
-#   , status
-#   , status_message
-# )
-# SELECT {seqVal}
-#      , '{dqTestLog["tgt_name"]}'
-#      , '{dqTestLog["attribute_name"]}'
-#      , '{dqTestLog["dq_test_name"]}'
-#      , '{dqTestLog["dq_test_query"].replace("'","''")}'
-#      , PARSE_JSON('{json.dumps(dqTestLog["dq_test_result"]).replace("'","''")}')
-#      , '{dqTestLog["start_time"]}'
-#      , '{dqTestLog["end_time"]}'
-#      , '{dqTestLog["elapsed_time_in_seconds"]}'
-#      , '{dqTestLog["status"]}'
-#      , '{dqTestLog["status_message"]}'
-#                     """
+                ## SQL for INSERT into Process table
+                cmd = f"""
+INSERT INTO process_cmd ({columnList})
+VALUES ({valList})
+;            
+                """
+                f.write(cmd)
 
-#                 results = dbConnection.executeSQL(sqlCommand=sqlCommand)
+        return ExecutionStatus.SUCCESS
+    except Exception as err:
+        logger.error(f"Error occured {err}")
+        return ExecutionStatus.FAIL
 
-#         if runFramework.get("status") == "ERROR":
-#             error_message = runFramework.get("error_message")
-#             logger.error(error_message)
-#         elif runFramework.get("status") == "WARNING":
-#             warning_message = runFramework.get("warning_message")
-#             logger.warning(warning_message)
-
-#     ##dbConnection.closeConnection()
-#     Logger().removeFileHandler()
-#     end_dt = datetime.now()
-#     logger.info(f"Start DateTime: {start_dt}")
-#     logger.info(f"End DateTime: {end_dt}")
-#     logger.info(
-#         f"Total Elapsed Time (secs): {round((end_dt - start_dt).total_seconds(),2)}"
-#     )
-#     if runFramework.get("status") == "ERROR":
-#         return ExecutionStatus.FAIL
-#     else:
-#         return ExecutionStatus.SUCCESS
 
 def _createProcessCommand(processId: int, commandData: dict):
 
@@ -724,7 +660,10 @@ def main():
 
             # Prepare modal parameters
             preparedOperationType = (
-                OperationType.RUN
+                OperationType.DOWNLOAD
+                if processTableProcess.get("operation").get("type")
+                == OperationType.DOWNLOAD
+                else OperationType.RUN
                 if processTableProcess.get("operation").get("type") == OperationType.RUN
                 else OperationType.CREATE
                 if (
@@ -808,6 +747,14 @@ def main():
                         == OperationType.RUN
                     ):
                         result = _runProcess(
+                            ProcessData=processModalProcess.get("process")
+                        )
+
+                    elif (
+                        processModalProcess.get("operation").get("type")
+                        == OperationType.DOWNLOAD
+                    ):
+                        result = _downloadProcess(
                             ProcessData=processModalProcess.get("process")
                         )
 
