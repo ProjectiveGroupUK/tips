@@ -255,7 +255,7 @@ export default function ProcessModal() {
                             </div>
                         </div>
                         {!isRunFlow && !isDownloading &&
-                            <div>
+                            <>
                                 <div className={styles.separator} />
                                 <div className={styles.headerRight} data-active-status={(isEditing ? editedProcessValues : process?.process)?.ACTIVE == 'Y'}>
 
@@ -279,7 +279,7 @@ export default function ProcessModal() {
                                         )}
                                     </AnimatePresence>
                                 </div>
-                            </div>
+                            </>
                         }
                     </div>
                 }
