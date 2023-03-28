@@ -70,7 +70,7 @@ class Globals:
         config = toml.load(Path.joinpath(workingFolder, projectIdFile))
         projectID = config.get('project').get('project_id')
         if projectID is None:
-            raise Exception('Project config file seems to be corrupted, please run setup again to recreate the file!')
+            raise ValueError('Project config file seems to be corrupted, please run setup again to recreate the file!')
 
         self.setProjectDir(Path.cwd())
         self.setProjectID(projectID=projectID)
@@ -90,7 +90,7 @@ def escapeValuesForSQL(dataDict: dict, fieldsToSkip: list = []) -> dict: # Pytho
             escapedValue = dataDict[update].replace("'", "''")
             formattedUpdates[update] = f"'{escapedValue}'"
         else:
-            raise Exception(f'Unexpected type for update value: {type(dataDict[update])}')
+            raise ValueError(f'Unexpected type for update value: {type(dataDict[update])}')
     
     return formattedUpdates
 
