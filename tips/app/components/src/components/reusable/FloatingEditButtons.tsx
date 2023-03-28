@@ -67,7 +67,7 @@ export default function FloatingEditButton({ type, isEditing, setIsEditing, isRu
                 onClick={isDownloading ? handleDownload : isRunFlow ? handleRun : (isEditing || pendingConfirmDelete) ? handleCancel : () => setIsEditing(true)}
                 disabled={isSaving}
             >
-                {isDownloading ? 'Yes' : isRunFlow ? 'Run' : (isEditing || pendingConfirmDelete) ? 'Cancel' : 'Edit'}
+                {isDownloading ? 'Download' : isRunFlow ? 'Run' : (isEditing || pendingConfirmDelete) ? 'Cancel' : 'Edit'}
                 {/* Saving in progress spinner */}
                 {(isDownloading || isRunFlow) && isSaving && <PuffLoader size={20} color='var(--primary)' />}
 

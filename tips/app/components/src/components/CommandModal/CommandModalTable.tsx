@@ -212,7 +212,7 @@ function generateTableData({ originalCommandData, commandData, filterCategories,
             case 'property_name':
                 return (
                     <div className={styles.propertyName}>
-                        <span>{cell.value}</span>
+                        <span>{cell.value.replaceAll('_',' ').replace('CMD','').replaceAll('SRC','SOURCE').replaceAll('TGT','TARGET')}</span>
                         { isRequired && <span className={styles.required}>*</span> }
                     </div>
                 );
