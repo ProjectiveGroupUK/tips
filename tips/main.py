@@ -115,7 +115,7 @@ def main(args=None):
         exit_code = e.code
 
     except BaseException as e:
-        logger.error(e)
+        # logger.error(e)
         exit_code = ExitCodes.UnhandledError.value
 
     sys.exit(exit_code)

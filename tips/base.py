@@ -31,7 +31,7 @@ class BaseTask(metaclass=ABCMeta):
             # for the clean or deps tasks
             config = cls.ConfigType.from_args(args)
         except Exception as exc:
-            raise Exception("Could not run dbt") from exc
+            raise Exception("Could not run TiPS") from exc
         return cls(args, config)
 
     @abstractmethod

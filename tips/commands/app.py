@@ -12,39 +12,6 @@ class AppTask(BaseTask):
     errorList: list
     def validateArgs(self) -> int:
         logger.debug("Inside validateArgs")
-        # """
-        # Validation # 1
-        # Check that deployment is run in dev only
-        # """
-        # env = globals.getEnvName()
-        # if env.lower() not in ("debug", "dev", "development"):
-        #     raise Exception(
-        #         "Deploy command can only be run in development environments"
-        #     )
-
-        # """
-        # Validation # 2
-        # Check that project toml file exists
-        # """
-        # projectIdFile = f"tips_project.toml"
-        # workingFolder = Path.cwd()
-        # if not Path.joinpath(workingFolder, projectIdFile).exists():
-        #     raise Exception(
-        #         "Not inside project root folder. Please navigate to project's root folder to run commands"
-        #     )
-
-        # """
-        # Validation # 3
-        # If skip database object flag has been passed, then object type and/or object name fields shouldn't be used
-        # """
-        # if self.args.skip_db_objects:
-        #     if (self.args.object_types is not None) or (
-        #         self.args.object_names is not None
-        #     ):
-        #         raise Exception(
-        #             "Object Type or Object Name should not be passed when skip db object flag is used"
-        #         )
-
         return 0
 
     def run(self):

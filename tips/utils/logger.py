@@ -72,12 +72,6 @@ class Logger:
         console.setFormatter(CustomFormatter())
         self.logger.addHandler(console)
 
-        # fileFormatter = logging.Formatter(fmt="%(asctime)s: %(name)s => %(levelname)s :: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-        # self.info_file_handler.setFormatter(fileFormatter)
-        # self.error_file_handler.setFormatter(fileFormatter)
-        # self.logger.addHandler(self.info_file_handler)
-        # self.logger.addHandler(self.error_file_handler)
-
         return self.logger
 
     def addFileHandler(self, processName:str = None):
@@ -114,6 +108,9 @@ class Logger:
         self.logger.removeHandler(self.info_file_handler)
         self.logger.removeHandler(self.warning_file_handler)
         self.logger.removeHandler(self.error_file_handler)
+        self.info_file_handler.close()
+        self.warning_file_handler.close()
+        self.error_file_handler.close()
         
     def getRootLoggerName() -> str:
         return LOGGER_ROOT_NAME

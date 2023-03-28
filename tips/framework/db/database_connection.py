@@ -32,7 +32,7 @@ class DatabaseConnection():
             configFile = os.path.join(os.path.expanduser("~"), ".tips",f"config.toml")
             config = toml.load(configFile)
             if config is None or len(config) <= 0:
-                raise Exception('Config file with connection details not found. Please run command "tips setup" to setup connections file!!')
+                raise ValueError('Config file with connection details not found. Please run command "tips setup" to setup connections file!!')
 
             globals = Globals()
             projectID = globals.getProjectID()
@@ -40,7 +40,7 @@ class DatabaseConnection():
             dbCredentials = config[projectID]
 
             if dbCredentials is None or len(dbCredentials) <= 0:
-                raise Exception('DB Credentials not found in Config file. Please run command "tips setup" to setup connections file!!')
+                raise ValueError('DB Credentials not found in Config file. Please run command "tips setup" to setup connections file!!')
 
             cls._sfAccount = dbCredentials.get('account')
             cls._sfUser = dbCredentials.get('user')
@@ -76,9 +76,9 @@ class DatabaseConnection():
                         
                     logger.info('Connected to SF Database!!')
                 
-            except Exception as ex:
-                err = f"Error (Connect): Couldn't connect to SF Database. {ex}"
-                raise Exception(err)
+            except:
+                logger.error(f"Error (Connect): Couldn't connect to SF Database")
+                raise
 
         return cls.instance
 
@@ -118,9 +118,9 @@ class DatabaseConnection():
                         logger.info(f'(Execute SQL): Status = {val["status"]}')
 
             return results
-        except Exception as ex:
-            err = f"Error (Execute SQL): While executing SQL {ex}"
-            raise Exception(err)
+        except:
+            logger.error(f"Error (Execute SQL): While executing SQL")
+            raise
 
     def executeSQLFile(self, sqlFile:Path):
         conn = self._sfConnection
@@ -130,9 +130,9 @@ class DatabaseConnection():
                 for cur in conn.execute_stream(f):
                     for ret in cur:
                         logger.info(f'(Execute SQLFile):  {sqlFile}\nRows affected = {ret[0]}')
-        except Exception as ex:
-            err = f"Error (Execute SQLFile): {sqlFile}\n{ex}"
-            raise Exception(err)
+        except:
+            logger.error(f"Error (Execute SQLFile): {sqlFile}")
+            raise
 
     def executeSQLReturnQID(self, sqlCommand:str):
         conn = self._sfConnection
@@ -140,14 +140,14 @@ class DatabaseConnection():
         try:
             qid = conn.cursor(DictCursor).execute(sqlCommand).sfqid
             return qid
-        except Exception as ex:
-            err = f"Error (Execute SQL): While executing SQL {ex}"
-            raise Exception(err)
+        except:
+            logger.error(f"Error (Execute SQL): While executing SQL")
+            raise
 
     def closeConnection(self):
         try:
             self._sfConnection.close()
             logger.info('Closed connection to SF Database!!')
-        except Exception as ex:
-            err = f"Error: Couldn't close connecttion to SF Database. {ex}"
-            raise Exception(err)
+        except:
+            logger.error(f"Error: Couldn't close connecttion to SF Database")
+            raise

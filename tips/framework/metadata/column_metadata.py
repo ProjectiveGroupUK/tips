@@ -139,6 +139,6 @@ class ColumnMetadata:
           
             return returnColumnMetaData
 
-        except Exception as ex:
-            err = f"Error: Fetching Column Metadata - {ex}"
-            raise Exception(err)
+        except:
+            logging.error(f"Error: Fetching Column Metadata")
+            raise
