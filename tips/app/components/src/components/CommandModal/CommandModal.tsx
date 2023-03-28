@@ -193,6 +193,10 @@ export default function CommandModal() {
         [OperationType.RUN]: {
             [ExecutionStatus.SUCCESS]: 'Process exection initiated', //TBC add appropriate message to suggest checking logs page
             [ExecutionStatus.FAIL]: 'Failed to execute process'
+        },
+        [OperationType.DOWNLOAD]: {
+            [ExecutionStatus.SUCCESS]: 'DML script downloaded successfully',
+            [ExecutionStatus.FAIL]: 'Failed to download DML script'
         }
     };
 
@@ -205,8 +209,8 @@ export default function CommandModal() {
             <div className={styles.container}>
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>
-                        <h1>{ command?.operation.type === OperationType.CREATE ? 'New command' : `Command ${command?.command?.PROCESS_CMD_ID}` }</h1>
-                        <h2>In the {command?.process.PROCESS_NAME} process</h2>
+                        <h1>{ command?.operation.type === OperationType.CREATE ? 'New command' : `Command ID: ${command?.command?.PROCESS_CMD_ID}` }</h1>
+                        <h2>in process {command?.process.PROCESS_NAME}</h2>
                     </div>
                     <div className={styles.separator} />
                     <div className={styles.headerRight} data-active-status={(isEditing ? editedCommandValues : command?.command)?.ACTIVE == 'Y'}>
@@ -332,6 +336,8 @@ export default function CommandModal() {
                 type={command?.operation.type === OperationType.CREATE ? 'create' : 'edit'}
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
+                isRunFlow={false}
+                isDownloading={false}
                 allowDelete={command?.operation.type === OperationType.EDIT}
                 isSaving={processing}
                 onCancel={handleCancel}

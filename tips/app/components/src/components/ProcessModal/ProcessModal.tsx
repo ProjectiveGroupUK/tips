@@ -290,8 +290,8 @@ export default function ProcessModal() {
                             <br></br>
                             <center>Any existing script with same process name would be overwritten</center>
                             <br></br>
-                            <h4><center>Proceed with Download?</center></h4>
-                            <br></br>
+                            {/* <h4><center>Proceed with Download?</center></h4>
+                            <br></br> */}
                         </div>
                         :
                         <div className={styles.configContainer}>
@@ -346,7 +346,7 @@ export default function ProcessModal() {
                                         disabled={processing}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
+                                        exit={{ opacity: 1 }}
                                     >
                                         {(isRunFlow ? editedProcessValues : process?.process)?.EXECUTE_FLAG == 'Y' ? 'Yes' : 'No'}
                                     </motion.button>

@@ -28,7 +28,7 @@ import StatusPill from '@/components/ProcessTable/StatusPill';
 import ProcessCommandsTable from './ProcessCommandsTable';
 
 // Icons
-import { CirclePlus, DotsVertical, Pencil, PencilPlus, Run, Download } from 'tabler-icons-react';
+import { CirclePlus, DotsVertical, Pencil, PencilPlus, Run, Download, ChevronsRight, ChevronsDown } from 'tabler-icons-react';
 
 type Data = object;
 
@@ -160,40 +160,42 @@ export default function ProcessTable() {
             </thead>
 
             <tbody {...getTableBodyProps()}>
-            {
-                rows.map((row, index) => {
-                    prepareRow(row)
-                    const isSelected = row.id === selectedProcessId?.toString();
-                    const expandedRowExistsAbove = rows.some((row, i) => i < index && row.isExpanded); // Used for styling purposes to determine colour of row (since :even and :odd selectors don't work with expanded rows the way I need them to)
-                    const dynamicIndexIsEven = (index - (Number(expandedRowExistsAbove) * 2)) % 2 === 0;
-                    
-                    return (
-                        <Fragment key={row.id}>
-                            <tr
-                                className={`${isSelected && styles.selected} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`} // If row is expanded, add 'selected' class; and depending on dynamicIndex, add 'dynamicIndex-even' or 'dynamicIndex-odd' class
-                                onClick={() => { // When clicked, update expandedRowId state variable
-                                    setSelectedProcessId((prev) => prev === Number(row.id) ? null : Number(row.id)) // Deslect row if already selected, otherwise select row
-                            }}>
-                                { row.cells.map((cell) => {
-                                    let renderedCell: React.ReactNode;
-                                    if(cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value === 'Active' ? 'active' : 'inactive'} />;
-                                    else renderedCell = cell.render('Cell');
-                                    return (
-                                        <td {...cell.getCellProps()}>
-                                            { renderedCell }
-                                        </td>
-                                    )
-                                })}
-                            </tr>
-                            { row.isExpanded && 
-                                <tr className={`${styles.rowSubComponent} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`}>
-                                    <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
-                                        <div>
-                                            <ProcessCommandsTable selectedProcess={processData.find((iteratedProcess) => iteratedProcess.PROCESS_ID === selectedProcessId)!} />
-                                        </div>
-                                    </td>
+                {
+                    rows.map((row, index) => {
+                        prepareRow(row)
+                        const isSelected = row.id === selectedProcessId?.toString();
+                        const expandedRowExistsAbove = rows.some((row, i) => i < index && row.isExpanded); // Used for styling purposes to determine colour of row (since :even and :odd selectors don't work with expanded rows the way I need them to)
+                        const dynamicIndexIsEven = (index - (Number(expandedRowExistsAbove) * 2)) % 2 === 0;
+
+                        return (
+                            <Fragment key={row.id}>
+                                <tr
+                                    className={`${isSelected && styles.selected} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`} // If row is expanded, add 'selected' class; and depending on dynamicIndex, add 'dynamicIndex-even' or 'dynamicIndex-odd' class
+                                    onClick={() => { // When clicked, update expandedRowId state variable
+                                        setSelectedProcessId((prev) => prev === Number(row.id) ? null : Number(row.id)) // Deslect row if already selected, otherwise select row
+                                    }}>
+                                    {row.cells.map((cell) => {
+                                        let renderedCell: React.ReactNode;
+                                        if (cell.column.id === 'process_id' && row.isExpanded) renderedCell = <ChevronsDown size={20} color='var(--primary)' />;
+                                        else if (cell.column.id === 'process_id' && !row.isExpanded) renderedCell = <ChevronsRight size={20} color='var(--primary)' />;
+                                        else if (cell.column.id === 'process_status') renderedCell = <StatusPill status={cell.value === 'Active' ? 'active' : 'inactive'} />;
+                                        else renderedCell = cell.render('Cell');
+                                        return (
+                                            <td {...cell.getCellProps()}>
+                                                {renderedCell}
+                                            </td>
+                                        )
+                                    })}
                                 </tr>
-                             }
+                                {row.isExpanded &&
+                                    <tr className={`${styles.rowSubComponent} ${dynamicIndexIsEven ? styles.dynamicIndex_even : styles.dynamicIndex_odd}`}>
+                                        <td colSpan={100}> {/* Should be equal to or greater than number of columns in table to span across all columns */}
+                                            <div>
+                                                <ProcessCommandsTable selectedProcess={processData.find((iteratedProcess) => iteratedProcess.PROCESS_ID === selectedProcessId)!} />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             </Fragment>
                         )
                     })
@@ -221,7 +223,7 @@ function generateTableData({ processData, handleNewProcessClick, handleNewComman
 }) {
     const tableColumns = useMemo(() => [
         {
-            Header: 'Id',
+            Header: '',
             accessor: 'process_id'
         },
         {

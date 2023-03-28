@@ -346,11 +346,12 @@ def _downloadProcess(ProcessData: dict):
         with open(scriptFile, "w") as f:
             ## SQL to Delete from Process Command table
             cmd = f"""
+--Delete existing records for {processName}, if any already exist
 DELETE 
   FROM process_cmd 
  WHERE process_id = (SELECT process_id 
                        FROM process
-					  WHERE process_name = '{processName}')
+                      WHERE process_name = '{processName}')
 ;            
             """
             f.write(cmd)
@@ -385,11 +386,19 @@ DELETE
 
                 ## SQL for INSERT into Process table
                 cmd = f"""
+--Add records to process table
 INSERT INTO process ({columnList})
 VALUES ({valList})
 ;            
                 """
                 f.write(cmd)
+
+            ## SQL to set bind variable for process_id, to be used in subsequent commands
+            cmd = f"""
+--set bind variable for generated process_id, to be used in insert statement on process command            
+SET process_id = (SELECT process_id FROM process WHERE process_name = '{processName}');
+"""
+            f.write(cmd)
 
             ##Fetch PROCESS_CMD table columns from database
             sqlCommand = f"select LISTAGG(column_name,',') WITHIN GROUP(order by ordinal_position) AS COLUMN_LIST from information_schema.columns where table_catalog = '{db.getDatabase()}' and table_schema = 'TIPS_MD_SCHEMA' and table_name = 'PROCESS_CMD'"
@@ -399,21 +408,33 @@ VALUES ({valList})
             ##Fetch PROCESS table rows using column list
             sqlCommand = f"select {columnList} from {db.getDatabase()}.tips_md_schema.process_cmd where process_id = (select process_id from {db.getDatabase()}.tips_md_schema.process where process_name = '{processName}') order by process_cmd_id"
             rows = db.executeSQL(sqlCommand=sqlCommand)
+            valuesClause = ''
+            loopCnt = 0
             for row in rows:
-                valList = ""
+                valList = "\n("
                 cnt = 0
-                for value in row.values():
+                for key, value in row.items():
                     if cnt == 0:
-                        valList += "NULL" if value is None else f"'{value}'"
+                        valList += "$process_id" if key=="PROCESS_ID" else "NULL" if value is None else f"'{value}'"
                     else:
-                        valList += ", NULL" if value is None else f", '{value}'"
+                        valList += ", $process_id" if key=="PROCESS_ID" else ", NULL" if value is None else f", '{value}'"
                     cnt += 1
 
+                valList += ")"
 
+                if loopCnt == 0:
+                    valuesClause += valList
+                else:
+                    valuesClause += f", {valList}"
+                
+                loopCnt += 1
+
+            if valuesClause != '':
                 ## SQL for INSERT into Process table
                 cmd = f"""
+--Add records in process_cmd table
 INSERT INTO process_cmd ({columnList})
-VALUES ({valList})
+VALUES {valuesClause}
 ;            
                 """
                 f.write(cmd)
