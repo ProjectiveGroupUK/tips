@@ -21,7 +21,7 @@ import { ExecutionStatus, OperationType } from '@/enums/enums';
 import styles from '@/styles/ProcessModal/ProcessModal.module.css';
 
 // Icons
-import { CircleCheck, AlertCircle, SpacingVertical } from 'tabler-icons-react';
+import { CircleCheck, AlertCircle } from 'tabler-icons-react';
 
 type InputRefs = {
     [K in keyof ProcessDataInterface]: {
@@ -386,9 +386,7 @@ export default function ProcessModal() {
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 isRunFlow={isRunFlow}
-                setIsRunFlow={setIsRunFlow}
                 isDownloading={isDownloading}
-                setIsDownloading={setIsDownloading}
                 allowDelete={process?.operation.type === OperationType.EDIT}
                 isSaving={processing}
                 onCancel={handleCancel}

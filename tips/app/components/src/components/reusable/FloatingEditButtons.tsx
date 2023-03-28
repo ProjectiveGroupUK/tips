@@ -18,9 +18,7 @@ interface PropsInterface {
     isEditing: boolean;
     setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
     isRunFlow: boolean;
-    setIsRunFlow: React.Dispatch<React.SetStateAction<boolean>>;
     isDownloading: boolean;
-    setIsDownloading: React.Dispatch<React.SetStateAction<boolean>>;
     allowDelete?: boolean;
     isSaving?: boolean;
     onCancel?: () => void;
@@ -30,7 +28,7 @@ interface PropsInterface {
     onDownload?: () => void;
 }
 
-export default function FloatingEditButton({ type, isEditing, setIsEditing, isRunFlow, setIsRunFlow, isDownloading, setIsDownloading, allowDelete, isSaving, onCancel, onSave, onDelete, onRun, onDownload }: PropsInterface) {
+export default function FloatingEditButton({ type, isEditing, setIsEditing, isRunFlow, isDownloading, allowDelete, isSaving, onCancel, onSave, onDelete, onRun, onDownload }: PropsInterface) {
 
     const [pendingConfirmDelete, setPendingConfirmDelete] = useState(false);
 
