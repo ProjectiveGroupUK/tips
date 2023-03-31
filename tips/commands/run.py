@@ -23,9 +23,8 @@ class RunTask(BaseTask):
         projectIdFile = f"tips_project.toml"
         workingFolder = Path.cwd()
         if not Path.joinpath(workingFolder, projectIdFile).exists():
-            raise Exception(
-                "Not inside project root folder. Please navigate to project's root folder to run commands"
-            )
+            logger.error("Not inside project root folder. Please navigate to project's root folder to run commands")
+            raise
 
         """
         Validation # 2
@@ -44,7 +43,8 @@ class RunTask(BaseTask):
                 # now check that it is in valid json format
                 json.loads(self.args.variables_dict)
             except Exception as e:
-                raise Exception(f"Error encounted with variable dict, {e}")
+                logger.error(f"Error encountered with variable dict, {e}")
+                raise
 
         return 0
 
@@ -59,7 +59,8 @@ class RunTask(BaseTask):
         if self.validateArgs() == 0:
             logger.debug(f"Validations succeeded")
         else:
-            raise Exception("Validations failed, aborting process!")
+            logger.error("Validations failed, aborting process!")
+            raise
 
         self.args.process_name = self.args.process_name.upper()
 

@@ -16,13 +16,13 @@ logger = logging.getLogger(Logger.getRootLoggerName())
 class SQLRunner(Runner):
     def execute(
         self, action: Action, conn: DatabaseConnection, frameworkRunner
-    ) -> None:
+    ) -> int:
         commandList: List[object] = action.getCommands()
-        ret: int = 0
+        executeReturn: int = 0
         dqTestAbortSignal: bool = False
 
         if commandList is None:
-            pass
+            return 0
         else:
             for command in commandList:
                 if isinstance(command, SQLCommand):
@@ -30,19 +30,23 @@ class SQLRunner(Runner):
                     ##with error and abort
                     ret, dqTestAbort = self.executeSQL(command, conn, frameworkRunner)
                     if ret == 1:
-                        return ret
+                        executeReturn = 1
+                        break
                     if dqTestAbort:
                         dqTestAbortSignal = True
 
                 elif isinstance(command, SqlAction):
-                    self.execute(command, conn, frameworkRunner)
+                    ret = self.execute(command, conn, frameworkRunner)
+                    if ret == 1:
+                        executeReturn = 1
+                        break
 
             ## If any one of the DQ Test had error and about, then we want the process to stop after
             ## runing all the tests in that step, hence returning 1
             if dqTestAbortSignal:
                 return 1
             else:
-                return ret
+                return executeReturn
 
     def executeSQL(
         self, sql: SQLCommand, conn: DatabaseConnection, frameworkRunner
@@ -50,6 +54,8 @@ class SQLRunner(Runner):
         dqTestAbort: bool = False
         sqlCommand: str = sql.getSqlCommand()
         logger.info(sqlCommand)
+        dqLog: dict = {}
+
 
         if sql.getSqlBinds() is not None:
             cnt = 0
@@ -136,7 +142,6 @@ class SQLRunner(Runner):
                 """
                 if sql.getDQCheckDict() is not None:
                     dqCheckDict = sql.getDQCheckDict()
-                    dqLog = {}
                     dqLog["tgt_name"] = dqCheckDict["TGT_NAME"]
                     dqLog["attribute_name"] = dqCheckDict["ATTRIBUTE_NAME"]
                     dqLog["dq_test_name"] = dqCheckDict["PROCESS_DQ_TEST_NAME"]
