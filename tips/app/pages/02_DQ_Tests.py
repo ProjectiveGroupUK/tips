@@ -32,7 +32,7 @@ globals = Globals()
 
 
 def _setUpPageLayout():
-    st.set_page_config(page_title="TIPS", page_icon="✨", layout="wide")
+    st.set_page_config(page_title="TiPS", page_icon="✨", layout="wide")
     st.caption("Home > :blue[DQ Tests]")
 
 

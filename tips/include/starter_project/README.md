@@ -1,8 +1,8 @@
-Welcome to your new **TIPS** project!
+Welcome to your new **TiPS** project!
 
 `Introduction`:
 =============
-**TIPS** enables data engineers to write transformation logic for data pipelines broadly using first class database objects, mostly with Database Views as source and Tables are target for a step within the transformation pipeline. DMLs are all generated dynamically using metadata that's stored in the database. For any non-standard function not achievable through standard sql, is supported through python action which can invoke an external python routine and utilise dataframes to return back results to the pipeline.
+**TiPS** enables data engineers to write transformation logic for data pipelines broadly using first class database objects, mostly with Database Views as source and Tables are target for a step within the transformation pipeline. DMLs are all generated dynamically using metadata that's stored in the database. For any non-standard function not achievable through standard sql, is supported through python action which can invoke an external python routine and utilise dataframes to return back results to the pipeline.
 
 # `Directories`
 ## `db_objects`
@@ -22,10 +22,10 @@ Try running the following commands:
 =================
 
 ### `Commands`
-Commands available in TIPS, along with their usage are given below:
+Commands available in TiPS, along with their usage are given below:
 
 1. Version:
-   You can check the version of TIPS installed by running command 
+   You can check the version of TiPS installed by running command 
     ```
     tips --version
     ```
@@ -40,4 +40,4 @@ You can now execute the command you need to run or run command "tips --help" to 
 
 
 ## Resources:
-- Learn more about tips [in the docs](htts://localhost:3000/introduction)
+- Learn more about TiPS [in the docs](htts://localhost:3000/introduction)

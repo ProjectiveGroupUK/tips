@@ -23,7 +23,7 @@ class AppUtil:
             return 0
         except FileNotFoundError:
             logger.error(
-                "There seems to be some issue with package installation, please re-install tips. If issue persists, log an issue on TIPS Git Repo!"
+                "There seems to be some issue with package installation, please re-install TiPS. If issue persists, log an issue on TiPS Git Repo!"
             )
             return 1
         except KeyboardInterrupt:
@@ -43,7 +43,7 @@ class AppUtil:
             return 0
         except FileNotFoundError:
             logger.error(
-                "There seems to be some issue with package installation, please re-install tips. If issue persists, log an issue on TIPS Git Repo!"
+                "There seems to be some issue with package installation, please re-install TiPS. If issue persists, log an issue on TiPS Git Repo!"
             )
             return 1
         except KeyboardInterrupt:

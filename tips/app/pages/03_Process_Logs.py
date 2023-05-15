@@ -85,7 +85,7 @@ def title_bar(padding="5px 15px 5px 15px", dark_switcher=True):
 
 def _setUpPageLayout():
     st.set_page_config(
-        page_title="TIPS",
+        page_title="TiPS",
         page_icon="✨",
         layout="wide"
     )

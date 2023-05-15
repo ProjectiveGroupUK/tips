@@ -169,7 +169,7 @@ def _build_setup_subparser(subparsers, base_subparser):
         "setup",
         parents=[base_subparser],
         help="""
-        Setup a new TIPS project.
+        Setup a new TiPS project.
         """,
     )
     sub.add_argument(
@@ -177,7 +177,7 @@ def _build_setup_subparser(subparsers, base_subparser):
         nargs="?",
         # default="$1invalid_",
         help="""
-        Name of the new TIPS project.
+        Name of the new TiPS project.
         """,
     )
     sub.add_argument(
@@ -367,7 +367,7 @@ def _build_app_subparser(subparsers, base_subparser):
         "app",
         parents=[base_subparser],
         help="""
-        Start TIPS app server.
+        Start TiPS app server.
         """,
     )
 
@@ -391,7 +391,7 @@ def parse_args(args, cls=TIPSArgumentParser):
     p = cls(
         prog="tips",
         description="""
-        TIPS -> Transformation in Python & SQL:
+        TiPS -> Transformation in Plaiin SQL:
         An ELT framework for managing your SQL transformations datapipelines.
         For more documentation on these commands, visit: http://localhost:8080/documentation
         """,

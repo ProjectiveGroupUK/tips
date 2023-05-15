@@ -1,52 +1,43 @@
-# TIPS -> Transformation In Python & SQL
+# Introduction to TiPS
 
-Introduction:
-=============
-**[TIPS]** enables data engineers to write transformation logic for data pipelines broadly using first class database objects, mostly with Database Views as source and Tables are target for a step within the transformation pipeline. DMLs are all generated dynamically using metadata that's stored in the database. For any non-standard function not achievable through standard sql, is supported through python action which can invoke an external python routine and utilise dataframes to return back results to the pipeline.
+### What is TiPS?
+TiPS is a simple data transformation and data quality framework built for Snowflake.
 
-Getting Started:
-===
-### Installation:
-TIPS can be installed directly from Github. Please follow the below steps to install the package:
+The ideology behind TiPS was to create a framework that an experienced database professional, already adept with SQL, could easily deliver data pipelines with virtually zero learning curve.
 
-1. Python Virtual Environment:
-   - Open terminal (mac/VSCode) / powershell (MS Windows). Bash terminal is preferable on Windows
-   - Check python version (version >= 3.7.2 is required for installation to work):
-        ```
-        python --version
-        ```
-        if you have multiple versions of python installed, then probably you would need to replace "python" with python3 in command above and the next command
+A data pipeline in TiPS is made up multiple steps that run serially, with each step performing it's own operation to move data from source to target or checking data quality. Steps within a data pipeline can perform one of two things:
 
-   - Create virtual environment:
-        ```
-        python -m venv venv
-        ```
-        PS: Above command creates a venv folder in your current working folder. if your current working folder is version controlled in git, make sure to include venv/ in .gitignore file
+* A movement of data from a source to a target. In most cases the sources are database views encapsulating transformation logic in the desired form, while the targets are database tables.
+* A data quality check to make sure data being moved from source to target conforms to the desired form, before getting consumed by the data consumer and thus providing inconsistent results.
 
-   - Active virtual enviroment:
-        <br>On bash terminal
-        ```
-        source ./venv/Scripts/activate
-        ```
-        <br>On windows powershell
-        ```
-        ./venv/Scripts/activate
-        ```
-   - Upgrade pip in activated venv
-        ```
-        pip install --upgrade pip
-        ```
-2. Install TIPS package from git
-   - pip install command
-        ```
-        pip install git+https://github.com/nitindt2/tips.git
-        ```
-   - Check that TIPS is installed successfully
-        ```
-        tips --version
-        ```
+An Example Data Pipeline in TiPS:
+![Process Cmd Table Example](docs/images/process_cmd.png)
 
-if above command displays version information, than that indicates that package has been installed correctly.
+TiPS was built with security in mind. The database credentials used to execute a pipeline do not require read/write access to the underlying data, in this regard TiPS differs from other data transformation tools. We believe that data pipelines should be idempotent, this being the case if pipeline execution credentials were ever leaked the worst-case scenario is that a pipeline could be re-executed (compute costs would increase but data integrity would not be compromised).
 
-You can now execute the command you need to run or run command "tips --help" to check all the options available.
+### What TiPS is not?
+**TiPS is not a scheduler/orchestrator tool:**
+<br>TiPS doesn't have any scheduling or orchestration capabilities built in. Orchestrating or scheduling for execution of data pipelines on a regular interval, can be done through other tools like Airflow, Control-M or Unix Cron for that matter.
 
+**<p>TiPS is not a Data Ingestion tool:**
+<br>TiPS is a transformation framework, and is not placed to be a replacement for data ingestion tools like Fivetran, Matillion etc. With TiPS, usually the starting source of data for the data pipeline is, either data already landed into Snowflake tables from source, or from files stored in a Snowflake accessible stage (external or internal, E.g. S3 on AWS).
+
+### How does TiPS work?
+
+TiPS is a simple to use Metadata driven transformation framework. All the metadata is stored in database tables in Snowflake, which can easily be interrogated using normal SQL commands.
+
+All TiPS objects are first class database objects
+
+When run in Snowpark through stored procedure, TiPS provides an extra security feature where the executing user of the stored procedure doesn't need to have direct read/write privileges on the underlying table/data. User calling the stored procedure only needs privileges to execute the stored procedure.
+
+### TiPS Metadata Tables:
+
+![TiPS ERD](docs/images/tips_erd.png)
+
+## Getting Started
+Refer to the online [documentation](https://projectivegroupuk.github.io/tips/getting-started/) for getting started.
+
+## Reference Guide
+Refer to the online [documentation](https://projectivegroupuk.github.io/tips/reference/) for reference guide.
+
+**Complete documentation is available [here](https://projectivegroupuk.github.io/tips/)**

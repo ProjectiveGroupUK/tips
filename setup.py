@@ -3,7 +3,7 @@ import os
 import sys
 
 if sys.version_info < (3, 7, 2):
-    print("Error: TIPS is not supported for this version of Python.")
+    print("Error: TiPS is not supported for this version of Python.")
     print("Please upgrade to Python 3.7.2 or higher.")
     sys.exit(1)
 
@@ -14,7 +14,7 @@ try:
     from setuptools import find_namespace_packages
 except ImportError:
     # the user has a downlevel version of setuptools.
-    print("Error: tips requires setuptools v40.1.0 or higher.")
+    print("Error: TiPS requires setuptools v40.1.0 or higher.")
     print(
         'Please upgrade setuptools with "pip install --upgrade setuptools" '
         "and try again"
@@ -29,7 +29,7 @@ with open(os.path.join(this_directory, "README.md")) as f:
 
 package_name = "tips"
 package_version = "1.0.1"
-description = """With TIPS, data engineers can build data pipelines \
+description = """With TiPS, data engineers can build data pipelines \
 using first class database objects mainly with Views, Tables and metadata."""
 
 

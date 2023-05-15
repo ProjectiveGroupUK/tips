@@ -400,7 +400,7 @@ CREATE TABLE IF NOT EXISTS tips_md_schema.process_dq_log (
         actionOption = 0
         # check if already in project folder
         if Path.cwd().joinpath("tips_project.toml").exists():
-            click.echo("You are already in TIPS Project folder, what do you want to do?")
+            click.echo("You are already in TiPS Project folder, what do you want to do?")
             click.echo("[1] Reconfigure DB Credentials")
             click.echo("[2] Re-initialise whole project")
             click.echo("[3] Exit")
