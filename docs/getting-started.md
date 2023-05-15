@@ -42,6 +42,7 @@ if above command displays version information, than that indicates that package 
 
 You can now execute the command you need to run or run command "tips --help" to check all the options available.
 
+-----Later
 
 # Getting Started
 Great, now that you have made your mind to give TiPS a try, let's get you started. We are pretty confident that you will find it worth to give it a try. 
