@@ -48,7 +48,7 @@ Great, now that you have made your mind to give TiPS a try, let's get you starte
 
 Python (3.8 or later) is required to run TiPS using the Snowpark Client API or to test the code before uploading it to Snowflake. See the [Python's official website](https://www.python.org/) for installation instructions.
 
-## TiPS Setup
+## TiPS Installation
 Presumably you are currently browsing through the repository on GitHub or perhaps you have already downloaded the repository to your PC. If you haven't yet downloaded the repository, let's get it downloaded first.
 
 ### Downloading Repository
