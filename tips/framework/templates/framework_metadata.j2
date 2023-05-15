@@ -1,3 +1,10 @@
+WITH flatten_cmd_binds AS
+(
+    SELECT a.process_id, ARRAY_UNIQUE_AGG(TRIM(b.value)) bind_var_list
+      FROM process_cmd a,
+      LATERAL split_to_table(a.cmd_binds,'|') b
+    GROUP BY a.process_id
+)
 SELECT p.process_id,
        p.process_name,
        p.process_description,
@@ -19,9 +26,11 @@ SELECT p.process_id,
        c.cmd_pivot_field,
        c.dq_type,
        c.cmd_external_call,
-       NVL(c.active,'N') AS active
+       NVL(c.active,'N') AS active,
+       NVL(fcb.bind_var_list,ARRAY_CONSTRUCT()) AS bind_vars
   FROM tips_md_schema.process P
   LEFT JOIN tips_md_schema.process_cmd c ON p.process_id = c.process_id
+  LEFT JOIN flatten_cmd_binds fcb ON p.process_id = fcb.process_id
   {% if parameters.process_name != "ALL" %}
   WHERE p.process_name = '{{ parameters.process_name }}'
   {% endif %}

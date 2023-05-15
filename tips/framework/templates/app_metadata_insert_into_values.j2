@@ -1,4 +1,4 @@
-INSERT INTO tips_md_schema.process (
+INSERT INTO {{ kwargs['table_name'] }} (
     {% for param_key, param_value in parameters.items() %}
         {% if param_value is not none %}
             {% if not loop.first %}, {% endif %}

@@ -56,7 +56,7 @@ export default function ProcessTable() {
                 PROCESS_DESCRIPTION: '',
                 steps: [],
                 ACTIVE: 'Y',
-                BIND_VARS: null,
+                BIND_VARS: {},
                 EXECUTE_FLAG: 'Y'
             },
             executionStatus: ExecutionStatus.NONE
@@ -117,7 +117,7 @@ export default function ProcessTable() {
                 PROCESS_DESCRIPTION: process.PROCESS_DESCRIPTION,
                 steps: [],
                 ACTIVE: process.ACTIVE,
-                BIND_VARS: null,
+                BIND_VARS: process.BIND_VARS,
                 EXECUTE_FLAG: 'Y'
             },
             executionStatus: ExecutionStatus.NONE
@@ -136,7 +136,7 @@ export default function ProcessTable() {
                 PROCESS_DESCRIPTION: process.PROCESS_DESCRIPTION,
                 steps: [],
                 ACTIVE: process.ACTIVE,
-                BIND_VARS: null,
+                BIND_VARS: {},
                 EXECUTE_FLAG: 'Y'
             },
             executionStatus: ExecutionStatus.NONE

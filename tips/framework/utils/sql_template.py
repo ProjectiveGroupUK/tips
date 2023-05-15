@@ -11,14 +11,14 @@ class SQLTemplate:
         os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "templates"
     )
 
-    def getTemplate(self, sqlAction: str, parameters: Dict) -> str:
+    def getTemplate(self, sqlAction: str, parameters: Dict, **kwargs) -> str:
         templateName = f"{sqlAction.lower().strip()}.j2"
         templateEnv = Environment(
             loader=FileSystemLoader(self._templatePath), trim_blocks=True
         )
         cmd = (
             templateEnv.get_template(templateName)
-            .render(parameters=parameters)
+            .render(parameters=parameters, kwargs=kwargs)
             .strip()
             .replace("\n", " ")
         )

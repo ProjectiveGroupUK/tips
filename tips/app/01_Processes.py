@@ -1,4 +1,5 @@
 # Python
+import json
 import logging
 from pathlib import Path
 
@@ -35,6 +36,7 @@ globals = Globals()
 
 def _setUpPageLayout():
     st.set_page_config(page_title="TIPS", page_icon="✨", layout="wide")
+    st.caption("Home > :blue[Processes]")
 
 
 def _loadCustomCSS():
@@ -103,6 +105,18 @@ def _loadListOfProcesses():
             if (
                 len(indexOfExistingProcess) == 0
             ):  # If process id hasn't been captured yet, load whole record as new process with a command
+                if (
+                    isinstance(row["BIND_VARS"], str)
+                    and row["BIND_VARS"][0].strip() in "{["
+                ):
+                    bindVars = json.loads(row["BIND_VARS"])
+                else:
+                    bindVars = row["BIND_VARS"]
+
+                bindVarsDict = {}
+                for var in bindVars:
+                    bindVarsDict[var] = ""
+
                 processHasCommands = row[CommandDataProperty.PROCESS_CMD_ID] is not None
                 processRecord = {
                     ProcessDataProperty.PROCESS_ID: row[ProcessDataProperty.PROCESS_ID],
@@ -113,6 +127,7 @@ def _loadListOfProcesses():
                         ProcessDataProperty.PROCESS_DESCRIPTION
                     ],
                     ProcessDataProperty.ACTIVE: row["PROCESS_ACTIVE"],
+                    ProcessDataProperty.BIND_VARS: bindVarsDict,
                 }
                 if processHasCommands:
                     processRecord["steps"] = [_stripStepDict(row)]
@@ -159,6 +174,7 @@ def _createProcess(newProcessData: dict):
         if not (
             (propertyKey.startswith("__") and propertyKey.endswith("__"))
             or propertyKey == ProcessDataProperty.PROCESS_ID
+            or propertyKey == ProcessDataProperty.BIND_VARS
         )
     ]
     cleansedProcessData = {
@@ -169,13 +185,15 @@ def _createProcess(newProcessData: dict):
     if len(allowedProperties) == 0:
         logger.error("No valid updates provided")
         return ExecutionStatus.FAIL
-
     # Escape values and store None values as NULL
     formattedCommandData = escapeValuesForSQL(cleansedProcessData)
 
     # Construct SQL command to create process command
+    kwargs = {"table_name": "tips_md_schema.process"}
     cmdStr: str = SQLTemplate().getTemplate(
-        sqlAction="create_process", parameters=formattedCommandData
+        sqlAction="app_metadata_insert_into_values",
+        parameters=formattedCommandData,
+        **kwargs,
     )
 
     # Execute SQL command
@@ -220,7 +238,8 @@ def _updateProcess(processId: int, updatedData: dict):
         for propertyKey in dir(ProcessDataProperty)
         if not (
             (propertyKey.startswith("__") and propertyKey.endswith("__"))
-            or propertyKey == CommandDataProperty.PROCESS_ID
+            or propertyKey == ProcessDataProperty.PROCESS_ID
+            or propertyKey == ProcessDataProperty.BIND_VARS
         )
     ]  # Exclude default properties (__propertyName__) and properties which shouldn't be updated via this command (i.e., process id)
     cleansedUpdates = {
@@ -236,10 +255,16 @@ def _updateProcess(processId: int, updatedData: dict):
     # Construct SQL command to update process command
     updatesWithIdentifiers = {
         **formattedUpdates,
-        CommandDataProperty.PROCESS_ID: processId,
+        ProcessDataProperty.PROCESS_ID: processId,
+    }
+
+    kwargs = {
+        "table_name": "tips_md_schema.process",
+        "where_clause": f"process_id = {processId}",
+        "exclude_keys": "['PROCESS_ID']",
     }
     cmdStr: str = SQLTemplate().getTemplate(
-        sqlAction="update_process", parameters=updatesWithIdentifiers
+        sqlAction="app_metadata_update", parameters=updatesWithIdentifiers, **kwargs
     )
 
     # Execute SQL command
@@ -279,9 +304,12 @@ def _deleteProcess(processId: int):
         return ExecutionStatus.FAIL
 
     # Construct SQL command to delete process
+    kwargs = {
+        "table_name": "tips_md_schema.process",
+        "where_clause": f"process_id = {processId}",
+    }
     cmdStr: str = SQLTemplate().getTemplate(
-        sqlAction="delete_process",
-        parameters={ProcessDataProperty.PROCESS_ID: processId},
+        sqlAction="app_metadata_delete", parameters={}, **kwargs
     )
 
     # Execute SQL command
@@ -308,15 +336,11 @@ def _deleteProcess(processId: int):
 def _runProcess(ProcessData: dict):
 
     v_process_name = ProcessData.get("PROCESS_NAME")
-    v_vars = ProcessData.get("BIND_VARS")
     v_exec = ProcessData.get("EXECUTE_FLAG")
 
-    if v_vars is not None:
-        if v_vars.startswith("{") == False or v_vars.endswith("}") == False:
-            raise ValueError(
-                "Invalid value for argument Bind Variable. Should be in form of Dictionary!"
-            )
-        v_vars = v_vars.replace("'", '"')
+    v_vars = {k: v for k, v in ProcessData.get("BIND_VARS").items() if v}
+    if v_vars == {}:
+        v_vars = None
 
     try:
         app = App(
@@ -335,13 +359,13 @@ def _downloadProcess(ProcessData: dict):
 
     try:
         db = DatabaseConnection()
-        metadataFolder = Path.joinpath(globals.getProjectDir(),'metadata')
+        metadataFolder = Path.joinpath(globals.getProjectDir(), "metadata")
         if not metadataFolder.exists():
             Path.mkdir(metadataFolder)
 
-        processName = ProcessData.get('PROCESS_NAME')
+        processName = ProcessData.get("PROCESS_NAME")
 
-        scriptFile = Path.joinpath(metadataFolder,f"{processName.lower()}.sql")
+        scriptFile = Path.joinpath(metadataFolder, f"{processName.lower()}.sql")
 
         with open(scriptFile, "w") as f:
             ## SQL to Delete from Process Command table
@@ -368,7 +392,7 @@ DELETE
             ##Fetch PROCESS table columns from database
             sqlCommand = f"select LISTAGG(column_name,',') WITHIN GROUP(order by ordinal_position) AS COLUMN_LIST from information_schema.columns where table_catalog = '{db.getDatabase()}' and table_schema = 'TIPS_MD_SCHEMA' and table_name = 'PROCESS' and column_name != 'PROCESS_ID'"
             result = db.executeSQL(sqlCommand=sqlCommand)
-            columnList = result[0].get('COLUMN_LIST')
+            columnList = result[0].get("COLUMN_LIST")
 
             ##Fetch PROCESS table rows using column list
             sqlCommand = f"select {columnList} from {db.getDatabase()}.tips_md_schema.process where process_name = '{processName}'"
@@ -382,7 +406,6 @@ DELETE
                     else:
                         valList += f", '{value}'"
                     cnt += 1
-
 
                 ## SQL for INSERT into Process table
                 cmd = f"""
@@ -403,21 +426,33 @@ SET process_id = (SELECT process_id FROM process WHERE process_name = '{processN
             ##Fetch PROCESS_CMD table columns from database
             sqlCommand = f"select LISTAGG(column_name,',') WITHIN GROUP(order by ordinal_position) AS COLUMN_LIST from information_schema.columns where table_catalog = '{db.getDatabase()}' and table_schema = 'TIPS_MD_SCHEMA' and table_name = 'PROCESS_CMD'"
             result = db.executeSQL(sqlCommand=sqlCommand)
-            columnList = result[0].get('COLUMN_LIST')
+            columnList = result[0].get("COLUMN_LIST")
 
             ##Fetch PROCESS table rows using column list
             sqlCommand = f"select {columnList} from {db.getDatabase()}.tips_md_schema.process_cmd where process_id = (select process_id from {db.getDatabase()}.tips_md_schema.process where process_name = '{processName}') order by process_cmd_id"
             rows = db.executeSQL(sqlCommand=sqlCommand)
-            valuesClause = ''
+            valuesClause = ""
             loopCnt = 0
             for row in rows:
                 valList = "\n("
                 cnt = 0
                 for key, value in row.items():
                     if cnt == 0:
-                        valList += "$process_id" if key=="PROCESS_ID" else "NULL" if value is None else f"'{value}'"
+                        valList += (
+                            "$process_id"
+                            if key == "PROCESS_ID"
+                            else "NULL"
+                            if value is None
+                            else f"'{value}'"
+                        )
                     else:
-                        valList += ", $process_id" if key=="PROCESS_ID" else ", NULL" if value is None else f", '{value}'"
+                        valList += (
+                            ", $process_id"
+                            if key == "PROCESS_ID"
+                            else ", NULL"
+                            if value is None
+                            else f", '{value}'"
+                        )
                     cnt += 1
 
                 valList += ")"
@@ -426,10 +461,10 @@ SET process_id = (SELECT process_id FROM process WHERE process_name = '{processN
                     valuesClause += valList
                 else:
                     valuesClause += f", {valList}"
-                
+
                 loopCnt += 1
 
-            if valuesClause != '':
+            if valuesClause != "":
                 ## SQL for INSERT into Process table
                 cmd = f"""
 --Add records in process_cmd table
@@ -476,8 +511,16 @@ def _createProcessCommand(processId: int, commandData: dict):
         ProcessDataProperty.PROCESS_ID: processId,
         CommandDataProperty.PROCESS_CMD_ID: f"SELECT COALESCE(MAX({CommandDataProperty.PROCESS_CMD_ID}) + 10, 10)",  # Dynamically generate process command ID as highest existing command ID that exists for process (or 0 if none exists yet), + 10
     }
+
+    kwargs = {
+        "table_name": "tips_md_schema.process_cmd",
+        "from_table_name": "tips_md_schema.process_cmd",
+        "where_clause": f"process_id = {processId}",
+    }
     cmdStr: str = SQLTemplate().getTemplate(
-        sqlAction="create_process_command", parameters=commandDataWithIdentifiers
+        sqlAction="app_metadata_insert_as_select",
+        parameters=commandDataWithIdentifiers,
+        **kwargs,
     )
 
     # Execute SQL command
@@ -559,8 +602,14 @@ def _updateProcessCommand(processId: int, commandId: int, updatedData: dict):
         CommandDataProperty.PROCESS_ID: processId,
         CommandDataProperty.PROCESS_CMD_ID: commandId,
     }
+
+    kwargs = {
+        "table_name": "tips_md_schema.process_cmd",
+        "where_clause": f"process_id = {processId} AND PROCESS_CMD_ID = {commandId}",
+        "exclude_keys": "['PROCESS_ID', 'PROCESS_CMD_ID']",
+    }
     cmdStr: str = SQLTemplate().getTemplate(
-        sqlAction="update_process_command", parameters=updatesWithIdentifiers
+        sqlAction="app_metadata_update", parameters=updatesWithIdentifiers, **kwargs
     )
 
     # Execute SQL command
@@ -609,12 +658,19 @@ def _deleteProcessCommand(
         return ExecutionStatus.FAIL
 
     # Construct SQL command to delete process command
+    if commandId == "all":
+        kwargs = {
+            "table_name": "tips_md_schema.process_cmd",
+            "where_clause": f"process_id = {processId}",
+        }
+    else:
+        kwargs = {
+            "table_name": "tips_md_schema.process_cmd",
+            "where_clause": f"process_id = {processId} AND PROCESS_CMD_ID = {commandId}",
+        }
+
     cmdStr: str = SQLTemplate().getTemplate(
-        sqlAction="delete_process_command",
-        parameters={
-            ProcessDataProperty.PROCESS_ID: processId,
-            CommandDataProperty.PROCESS_CMD_ID: commandId,
-        },
+        sqlAction="app_metadata_delete", parameters={}, **kwargs
     )
 
     # Execute SQL command
@@ -698,6 +754,7 @@ def main():
                 else OperationType.EDIT
             )
             preparedProcess = processTableProcess.get("process")
+
             if (
                 st.session_state[
                     ProcessModalInstruction.CHANGE_UPDATE_PROCESS_TO_CREATE_PROCESS
