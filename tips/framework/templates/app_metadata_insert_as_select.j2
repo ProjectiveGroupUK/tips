@@ -1,4 +1,4 @@
-INSERT INTO tips_md_schema.process_cmd (
+INSERT INTO {{ kwargs['table_name'] }} (
     {% for param_key, param_value in parameters.items() %}
         {% if param_value is not none %}
             {% if not loop.first %}, {% endif %}
@@ -12,5 +12,5 @@ INSERT INTO tips_md_schema.process_cmd (
             {{param_value}}
         {% endif %}
     {% endfor %}
-FROM tips_md_schema.process_cmd
-WHERE process_id = {{parameters.PROCESS_ID}};
+FROM {{ kwargs['from_table_name'] }}
+WHERE {{ kwargs['where_clause'] }};

@@ -27,7 +27,7 @@ class App:
 
         self._processName = processName
         self._bindVariables = (
-            dict() if bindVariables is None else json.loads(bindVariables)
+            dict() if bindVariables is None else json.loads(bindVariables) if type(bindVariables) == str else bindVariables
         )
         self._executeFlag = executeFlag
 
@@ -54,6 +54,7 @@ class App:
         logger.debug("Inside framework app main")
         # logInstance = Logger()
         Logger().addFileHandler(processName=self._processName)
+        runFramework: dict = {}  ##Just initialise it
 
         try:
             dbConnection: DatabaseConnection = DatabaseConnection()
@@ -64,9 +65,10 @@ class App:
             frameworkMetaData: List[Dict] = framework.getMetaData(dbConnection)
 
             if len(frameworkMetaData) <= 0:
-                logger.error(
-                    "Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!"
-                )
+                err = "Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!"
+                logger.error(err)
+                runFramework["status"] = "ERROR"
+                runFramework["error_message"] = err
             else:
                 logger.info("Fetched Framework Metadata!")
                 processStartTime = start_dt

@@ -7,7 +7,7 @@ export interface ProcessDataInterface {
     PROCESS_DESCRIPTION: string | null;
     steps: Array<CommandDataInterface>;
     ACTIVE: 'Y' | 'N' ;
-    BIND_VARS: string | null;
+    BIND_VARS: Object;
     EXECUTE_FLAG: 'Y' | 'N' | null;
 };
 
@@ -31,6 +31,26 @@ export interface CommandDataInterface {
     CMD_EXTERNAL_CALL: string | null;
     ACTIVE: 'Y' | 'N' | null;
 }
+
+export interface DQDataInterface {
+    PROCESS_DQ_TEST_ID: number;
+    PROCESS_DQ_TEST_NAME: string;
+    PROCESS_DQ_TEST_DESCRIPTION: string | null;
+    PROCESS_DQ_TEST_QUERY_TEMPLATE: string | null;
+    PROCESS_DQ_TEST_ERROR_MESSAGE: string | null;
+    targets: Array<DQTargetDataInterface>;
+    ACTIVE: 'Y' | 'N';
+};
+
+export interface DQTargetDataInterface {
+    PROCESS_CMD_TGT_DQ_TEST_ID: number;
+    TGT_NAME: string;
+    ATTRIBUTE_NAME: string | null;
+    PROCESS_DQ_TEST_NAME: string;
+    ACCEPTED_VALUES: string | null;
+    ERROR_AND_ABORT: boolean;
+    ACTIVE: 'Y' | 'N';
+};
 
 export type ExecutionStatusInterface = {
     status: ExecutionStatus.RUNNING | ExecutionStatus.SUCCESS | ExecutionStatus.FAIL;

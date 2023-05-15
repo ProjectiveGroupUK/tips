@@ -69,11 +69,11 @@ class FrameworkRunner:
                 binds: List[str] = list()
                 cmdBinds = [] if fwMetaData["CMD_BINDS"] is None else [x.strip() for x in fwMetaData["CMD_BINDS"].split("|")]
                 ##If process accepts bind variables and no bind variables are passed in arguments then raise error
-                if len(cmdBinds) > 0 and (self._bindVariables == {} or len(self._bindVariables) == 0):
+                if len(cmdBinds) > 0 and (self._bindVariables == {} or len(self._bindVariables) == 0 or len(self._bindVariables) < len(cmdBinds)):
                     self.returnJson["status"] = "ERROR"
                     self.returnJson[
                         "error_message"
-                    ] = f"cmd_binds {fwMetaData['CMD_BINDS']} are required, but not passed as variables"
+                    ] = f"Run time values for cmd_binds {fwMetaData['CMD_BINDS']} are expected but not received!!"
                     break
 
                 for bind in cmdBinds:

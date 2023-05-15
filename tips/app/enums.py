@@ -4,6 +4,7 @@ class StateVariable:
     PROCESS_LOG_RESULT_2 = 'process_log_result2'
     FETCH_BUTTON_CLICKED = 'fetchButtonClicked'
     PROCESS_DATA = 'processData'
+    DQ_DATA = 'dqData'
     
 class ProcessTableInstruction:
     RESET_EDIT_PROCESS = 'resetProcessTableProcess'
@@ -18,6 +19,18 @@ class CommandModalInstruction:
     EXECUTION_STATUS = 'commandExecutionStatus'
     CHANGE_UPDATE_COMMAND_TO_CREATE_COMMAND = 'changeUpdateCommandToCreateCommand'
 
+class DQTableInstruction:
+    RESET_EDIT_DQ_TEST = 'resetDQTableDQTest'
+    RESET_DQ_TARGET = 'resetDQTableTarget'
+
+class DQModalInstruction:
+    EXECUTION_STATUS = 'dqExecutionStatus'
+    CHANGE_UPDATE_PROCESS_TO_CREATE_DQ = 'changeUpdateDQToCreateDQTest'
+
+class DQTargetModalInstruction:
+    EXECUTION_STATUS = 'dqTargetExecutionStatus'
+    CHANGE_UPDATE_DQ_TO_CREATE_TARGET = 'changeUpdateDQToCreateTarget'
+
 class ExecutionStatus:
     RUNNING = 'running'
     SUCCESS = 'success'
@@ -29,6 +42,7 @@ class ProcessDataProperty:
     PROCESS_NAME = 'PROCESS_NAME'
     PROCESS_DESCRIPTION = 'PROCESS_DESCRIPTION'
     ACTIVE = 'ACTIVE'
+    BIND_VARS = 'BIND_VARS'
 
 class CommandDataProperty:
     PROCESS_ID = 'PROCESS_ID'
@@ -51,9 +65,27 @@ class CommandDataProperty:
     CMD_EXTERNAL_CALL = 'CMD_EXTERNAL_CALL'
     ACTIVE = 'ACTIVE'
 
+class DQDataProperty:
+    PROCESS_DQ_TEST_ID = 'PROCESS_DQ_TEST_ID'
+    PROCESS_DQ_TEST_NAME = 'PROCESS_DQ_TEST_NAME'
+    PROCESS_DQ_TEST_DESCRIPTION = 'PROCESS_DQ_TEST_DESCRIPTION'
+    PROCESS_DQ_TEST_QUERY_TEMPLATE = 'PROCESS_DQ_TEST_QUERY_TEMPLATE'
+    PROCESS_DQ_TEST_ERROR_MESSAGE = 'PROCESS_DQ_TEST_ERROR_MESSAGE'
+    ACTIVE = 'ACTIVE'
+
+class DQTargetDataProperty:
+    PROCESS_CMD_TGT_DQ_TEST_ID = 'PROCESS_CMD_TGT_DQ_TEST_ID'
+    TGT_NAME = 'TGT_NAME'
+    ATTRIBUTE_NAME = 'ATTRIBUTE_NAME'
+    PROCESS_DQ_TEST_NAME = 'PROCESS_DQ_TEST_NAME'
+    ACCEPTED_VALUES = 'ACCEPTED_VALUES'
+    ERROR_AND_ABORT = 'ERROR_AND_ABORT'
+    ACTIVE = 'ACTIVE'
+
 class OperationType:
     CREATE = 'create'
     EDIT = 'edit'
     DELETE = 'delete'
     RUN = 'run'
     DOWNLOAD = 'download'
+

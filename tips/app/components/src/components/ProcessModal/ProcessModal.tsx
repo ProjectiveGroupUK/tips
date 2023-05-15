@@ -47,7 +47,7 @@ export default function ProcessModal() {
             setTimeout(() => {
                 setShowExecutionStatusMessage({ status: ExecutionStatus.NONE });
                 if ((executionStatus.operationType === OperationType.DELETE || executionStatus.operationType === OperationType.RUN || executionStatus.operationType === OperationType.DOWNLOAD) && executionStatus.status === ExecutionStatus.SUCCESS) handleCloseModal();
-            }, 5000);
+            }, 3000);
         }
     }, [executionStatus]);
 
@@ -64,7 +64,7 @@ export default function ProcessModal() {
                 input.focus();
                 input.setSelectionRange(processValue.caretPosition!, processValue.caretPosition!);
             }
-        }
+        }      
     }, [editedProcessValues]);
 
     function getEditedProperties(modifiedValues: ProcessDataInterface, originalValues: ProcessDataInterface) {
@@ -173,6 +173,28 @@ export default function ProcessModal() {
         }
     }
 
+    function handleTextAreaChange(modifiedProperty: keyof ProcessDataInterface, event: React.ChangeEvent<HTMLTextAreaElement>) {
+
+        // Set isActive attribute within inputRefs state variable to true since input is focused
+        inputRefs.current[modifiedProperty] = {
+            ...inputRefs.current[modifiedProperty],
+            isActive: true
+        };
+
+        // Update caret position within inputRefs state variable
+        inputRefs.current[modifiedProperty] = {
+            ...inputRefs.current[modifiedProperty],
+            caretPosition: event.target.selectionStart!
+        };
+
+        if (modifiedProperty === 'BIND_VARS' && (editedProcessValues?.BIND_VARS && Object.keys(editedProcessValues.BIND_VARS).length > 0)) {
+            setEditedProcessValues((prevState) => {
+                const currBindVars = { ...prevState?.BIND_VARS!, [event.target.id]: event.target.value };
+                return { ...prevState!, ["BIND_VARS"]: currBindVars }
+            })
+        }
+    }
+
     function handleBlur(propertyName: keyof ProcessDataInterface) { // Update isActive attribute within inputRefs state variable to false when an input loses focus
         inputRefs.current[propertyName] = {
             ...inputRefs.current[propertyName],
@@ -210,7 +232,7 @@ export default function ProcessModal() {
             [ExecutionStatus.FAIL]: 'Failed to delete process'
         },
         [OperationType.RUN]: {
-            [ExecutionStatus.SUCCESS]: 'Process execution competed. Please check into logs for any warnings!', //TBC add appropriate message to suggest checking logs page
+            [ExecutionStatus.SUCCESS]: 'Process execution competed. Please check logs for any warnings!', //TBC add appropriate message to suggest checking logs page
             [ExecutionStatus.FAIL]: 'Process execution failed. Please check logs for details!'
         },
         [OperationType.DOWNLOAD]: {
@@ -295,43 +317,51 @@ export default function ProcessModal() {
                         </div>
                         :
                         <div className={styles.configContainer}>
-                            {isRunFlow ?
+                            {isRunFlow && (editedProcessValues?.BIND_VARS && Object.keys(editedProcessValues.BIND_VARS).length > 0) ?
                                 <div className={styles.descriptionContainer}>
                                     <h2>Bind Variables</h2>
-                                    <div>
-                                        {/* Focus indicator bar */}
-                                        <div className={styles.focusIndicatorBar} data-editing={isRunFlow} />
-
-                                        {/* Textarea */}
-                                        <textarea
-                                            value={editedProcessValues?.BIND_VARS ?? ''}
-                                            onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, BIND_VARS: e.target.value }))}
-                                            placeholder='Enter bind variables in JSON Format e.g. {"KEY":"VALUE"}'
-                                            disabled={!isRunFlow || processing}
-                                            data-editing={isRunFlow}
-                                        />
-                                    </div>
-
+                                    {Object.keys(editedProcessValues.BIND_VARS).map((item) => {
+                                        return (
+                                            <div key={item}>
+                                                {/* Focus indicator bar */}
+                                                <div className={styles.focusIndicatorBar} data-editing={isRunFlow} />
+                                                {/* Textarea */}
+                                                <textarea
+                                                    id={item}
+                                                    onChange={(e) => handleTextAreaChange('BIND_VARS', e)}
+                                                    onBlur={() => handleBlur('BIND_VARS')}
+                                                    placeholder={'Enter runtime value for ' + item}
+                                                    disabled={!isRunFlow || processing}
+                                                    data-editing={isRunFlow}
+                                                />
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                                 :
-                                <div className={styles.descriptionContainer}>
-                                    {/* Field title */}
-                                    <h2>Description</h2>
-                                    <div>
-                                        {/* Focus indicator bar */}
-                                        <div className={styles.focusIndicatorBar} data-editing={isEditing} />
+                                <div className={styles.configContainer}>
+                                    {!isRunFlow && !isDownloading ?
+                                        <div className={styles.descriptionContainer}>
+                                            {/* Field title */}
+                                            <h2>Description</h2>
+                                            <div>
+                                                {/* Focus indicator bar */}
+                                                <div className={styles.focusIndicatorBar} data-editing={isEditing} />
 
-                                        {/* Textarea */}
-                                        <textarea
-                                            value={editedProcessValues?.PROCESS_DESCRIPTION ?? ''}
-                                            onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, PROCESS_DESCRIPTION: e.target.value }))}
-                                            placeholder='Enter a process description'
-                                            disabled={!isEditing || processing}
-                                            data-editing={isEditing}
-                                        />
-                                    </div>
+                                                {/* Textarea */}
+                                                <textarea
+                                                    value={editedProcessValues?.PROCESS_DESCRIPTION ?? ''}
+                                                    onBlur={() => handleBlur('BIND_VARS')}
+                                                    onChange={(e) => setEditedProcessValues((prevState) => ({ ...prevState!, PROCESS_DESCRIPTION: e.target.value }))}
+                                                    placeholder='Enter a process description'
+                                                    disabled={!isEditing || processing}
+                                                    data-editing={isEditing}
+                                                />
+                                            </div>
+                                        </div>
+                                        : null
+                                    }
                                 </div>
-
                             }
                         </div>
                     }
