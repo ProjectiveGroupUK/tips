@@ -1,9 +1,9 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+about: Open a Bug for issues encountered in existing functionality
+title: "[BUG]"
+labels: bug
+assignees: nitindt2
 
 ---
 

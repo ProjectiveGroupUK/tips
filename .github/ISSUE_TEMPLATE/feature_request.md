@@ -1,9 +1,9 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+about: Request for new Feature/Enhancement
+title: "[Feature]"
+labels: enhancement
+assignees: nitindt2
 
 ---
 
