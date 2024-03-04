@@ -1,68 +1,78 @@
+import os
+import sys
 import json
-import re
 from typing import Dict, List
-from tips.framework.db.database_connection import DatabaseConnection
+from snowflake.snowpark import Session
 from tips.framework.factories.framework_factory import FrameworkFactory
 from tips.framework.metadata.column_metadata import ColumnMetadata
 from tips.framework.metadata.table_metadata import TableMetaData
 from tips.framework.metadata.framework_metadata import FrameworkMetaData
 from tips.framework.runners.framework_runner import FrameworkRunner
+from tips.framework.utils.globals import Globals
 
 # from tips.framework.utils.logger import Logger
 from datetime import datetime
-import argparse
 
 # Below is to initialise logging
 import logging
 from tips.utils.logger import Logger
 
 logger = logging.getLogger(Logger.getRootLoggerName())
+globalsInstance = Globals()
+globalsInstance.setCallerId(callerId='None')
 
 class App:
     _processName: str
     _bindVariables: Dict
     _executeFlag: str
+    _session: Session
+    _addLogFileHandler: bool
 
-    def __init__(self, processName: str, bindVariables: str, executeFlag: str) -> None:
-
+    def __init__(
+        self,
+        session: Session,
+        processName: str,
+        bindVariables: str,
+        executeFlag: str,
+        addLogFileHandler: bool = False,
+        targetDatabaseName: str = None,
+    ) -> None:
+        self._session = session
         self._processName = processName
         self._bindVariables = (
-            dict() if bindVariables is None else json.loads(bindVariables) if type(bindVariables) == str else bindVariables
+            dict()
+            if bindVariables is None
+            else json.loads(bindVariables)
+            if type(bindVariables) == str
+            else bindVariables
         )
         self._executeFlag = executeFlag
+        self._addLogFileHandler = addLogFileHandler
+        globalsInstance.setSession(session=self._session)
+        if targetDatabaseName is not None:
+            globalsInstance.setTargetDatabase(targetDatabase=targetDatabaseName)
+        else:
+            targetDBName = self._session.sql("SELECT CURRENT_DATABASE() AS CURR_DB").collect()[0]["CURR_DB"]
+            globalsInstance.setTargetDatabase(targetDatabase=targetDBName)
 
-    def clean_dict(self, d:dict):
-        for key, value in d.items():
-            if isinstance(value, list):
-                self.clean_list(value)
-            elif isinstance(value, dict):
-                self.clean_dict(value)
-            else:
-                newvalue = str(value).strip().replace("\n"," ")
-                d[key] = newvalue
-
-    def clean_list(self, l):
-        for index, item in enumerate(l):
-            if isinstance(item, dict):
-                self.clean_dict(item)
-            elif isinstance(item, list):
-                self.clean_list(item)
-            else:
-                l[index] = str(item).strip().replace("\n"," ")
+        # currRole = self._session.sql("SELECT CURRENT_ROLE() AS CURR_ROLE").collect()[0]["CURR_ROLE"]
+        # raise ValueError(currRole)
 
     def main(self) -> None:
         logger.debug("Inside framework app main")
-        # logInstance = Logger()
-        Logger().addFileHandler(processName=self._processName)
+
         runFramework: dict = {}  ##Just initialise it
 
-        try:
-            dbConnection: DatabaseConnection = DatabaseConnection()
-            logger.debug("DB Connection established!")
+        if self._addLogFileHandler:
+            Logger().addFileHandler(processName=self._processName)
 
+        try:
             start_dt = datetime.now()
-            framework: FrameworkMetaData = FrameworkFactory().getProcess(self._processName)
-            frameworkMetaData: List[Dict] = framework.getMetaData(dbConnection)
+
+            framework: FrameworkMetaData = FrameworkFactory().getProcess(
+                self._processName
+            )
+            frameworkMetaData: List[Dict] = framework.getMetaData()
 
             if len(frameworkMetaData) <= 0:
                 err = "Could not fetch Metadata. Please make sure correct process name is passed and metadata setup has been done correctly first!"
@@ -73,11 +83,10 @@ class App:
                 logger.info("Fetched Framework Metadata!")
                 processStartTime = start_dt
 
-                frameworkDQMetaData: List[Dict] = framework.getDQMetaData(dbConnection)
+                frameworkDQMetaData: List[Dict] = framework.getDQMetaData()
 
-                
                 columnMetaData: List[Dict] = ColumnMetadata().getData(
-                    frameworkMetaData=frameworkMetaData, conn=dbConnection
+                    frameworkMetaData=frameworkMetaData
                 )
 
                 tableMetaData: TableMetaData = TableMetaData(columnMetaData)
@@ -89,28 +98,35 @@ class App:
                 )
 
                 runFramework, dqTestLogs = frameworkRunner.run(
-                    conn=dbConnection,
                     tableMetaData=tableMetaData,
                     frameworkMetaData=frameworkMetaData,
                     frameworkDQMetaData=frameworkDQMetaData,
                 )
-                Logger().writeResultJson(runFramework)
+
+                if self._addLogFileHandler:
+                    Logger().writeResultJson(runFramework)
 
                 # Now insert process run log to database
                 processEndTime = datetime.now()
-                results = dbConnection.executeSQL(
-                    sqlCommand="SELECT TIPS_MD_SCHEMA.PROCESS_LOG_SEQ.NEXTVAL AS SEQVAL FROM DUAL"
-                )
+                results = self._session.sql(
+                    "SELECT TIPS_MD_SCHEMA.PROCESS_LOG_SEQ.NEXTVAL AS SEQVAL"
+                ).collect()
                 seqVal = results[0]["SEQVAL"]
 
-                logJsonString = json.dumps(runFramework).replace("'","''").replace("\\n"," ").replace("\\r","")
+                logJsonString = (
+                    json.dumps(runFramework)
+                    .replace("'", "''")
+                    .replace("\\n", " ")
+                    .replace("\\r", "")
+                    .replace('\\"',"''")
+                )
 
                 sqlCommand = f"""
     INSERT INTO tips_md_schema.process_log (process_log_id, process_name, process_start_time, process_end_time, process_elapsed_time_in_seconds, execute_flag, status, error_message, log_json)
     SELECT {seqVal}, '{self._processName}','{processStartTime}','{processEndTime}',{round((processEndTime - processStartTime).total_seconds(),2)},'{self._executeFlag}','{runFramework["status"]}','{runFramework["error_message"]}',PARSE_JSON('{logJsonString}')
                 """
                 # logger.info(sqlCommand)
-                results = dbConnection.executeSQL(sqlCommand=sqlCommand)
+                results = self._session.sql(sqlCommand).collect()
 
                 # Now insert DQ Logs if any
                 if len(dqTestLogs) > 0:
@@ -142,7 +158,7 @@ class App:
             , '{dqTestLog["status"]}'
             , '{dqTestLog["status_message"]}'
                             """
-                            results = dbConnection.executeSQL(sqlCommand=sqlCommand)
+                            results = self._session.sql(sqlCommand).collect()
 
             end_dt = datetime.now()
             logger.info(f"Start DateTime: {start_dt}")
@@ -156,60 +172,67 @@ class App:
             elif runFramework.get("status") == "WARNING":
                 warning_message = runFramework.get("warning_message")
                 logger.warning(warning_message)
-                   
+
+            return runFramework
         except Exception as ex:
+            sys.tracebacklimit = None if os.environ.get("env", "dev") == "dev" else 0 ## Only show error trace in dev environment
             logger.error(ex)
             raise
         finally:
-            Logger().removeFileHandler()
+            if self._addLogFileHandler:
+                Logger().removeFileHandler()
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        usage="python app.py -p Process Name -v Variables in Dictionary Format -e Execute?(Y/N)",
-        description="""E.g.: python app.py -p PUBLISH_CUSTOMER -v "{'MARKET_SEGMENT':'FURNITURE', 'COBID':'20210401'}" -e N""",
+
+def run(
+    session,
+    process_name: str,
+    vars: str,
+    execute_flag: str,
+) -> Dict:
+    globalsInstance.setCallerId(callerId='Snowpark')
+    app = App(
+        session=session,
+        processName=process_name,
+        bindVariables=vars,
+        executeFlag=execute_flag,
+        addLogFileHandler=False,
+        targetDatabaseName=None
     )
+    response: Dict = app.main()
+    return response
 
-    parser.add_argument(
-        "-p",
-        "--process",
-        metavar="Process Name",
-        dest="PROCESS_NAME",
-        required=True,
-        help="Process Name to run",
+def run_sf_native_app(
+    session,
+    process_name: str,
+    vars: str,
+    execute_flag: str,
+    targetDatabaseName: str,
+) -> Dict:
+    globalsInstance.setCallerId(callerId='NativeApp')
+    app = App(
+        session=session,
+        processName=process_name,
+        bindVariables=vars,
+        executeFlag=execute_flag,
+        addLogFileHandler=False,
+        targetDatabaseName=targetDatabaseName
     )
-    parser.add_argument(
-        "-v",
-        "--var",
-        metavar="Bind Variables Dictionary",
-        dest="VARS",
-        help="Bind Variables to use in the run",
+    response: Dict = app.main()
+    return response
+
+def runLocal(
+    session,
+    process_name: str,
+    vars: str,
+    execute_flag: str,
+    addLogFileHandler: bool = False,
+) -> Dict:
+    app = App(
+        session=session,
+        processName=process_name,
+        bindVariables=vars,
+        executeFlag=execute_flag,
+        addLogFileHandler=addLogFileHandler,
     )
-    parser.add_argument(
-        "-e",
-        "--exec",
-        metavar="Execute=Y/N",
-        dest="EXEC",
-        choices=["y", "Y", "n", "N"],
-        required=True,
-        help="Y - Execute pipeline, N - Run in Debug Mode",
-    )
-
-    args = parser.parse_args()
-
-    v_process_name = args.PROCESS_NAME.upper()
-
-    v_vars = args.VARS
-    if v_vars is not None:
-        if v_vars.startswith("{") == False or v_vars.endswith("}") == False:
-            raise ValueError(
-                "Invalid value for argument Bind Variable. Should be in form of Dictionary!"
-            )
-        v_vars = v_vars.replace("'", '"')
-
-    v_exec = args.EXEC.upper()
-
-    app = App(processName=v_process_name, bindVariables=v_vars, executeFlag=v_exec)
-
-    app.main()
-
-    exit(0)
+    response: Dict = app.main()
+    return response

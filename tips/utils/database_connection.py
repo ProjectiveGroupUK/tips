@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import snowflake.connector
 from snowflake.connector import DictCursor
+from snowflake.snowpark import Session
 import toml
 from tips.utils.utils import Globals
 # Below is to initialise logging
@@ -22,6 +23,7 @@ class DatabaseConnection():
     _sfRole: str
     _sfAuthenticator: str
     _sfConnection: snowflake.connector.SnowflakeConnection = None
+    _sfSession: Session
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, 'instance') or not cls.instance:
@@ -63,6 +65,10 @@ class DatabaseConnection():
                             schema=cls._sfSchema,
                             role=cls._sfRole
                             )
+                        
+                        ## Also create a snowpark session from already established connection
+                        cls._sfSession = Session.builder.configs({"connection": cls._sfConnection}).create()
+                        
                     else:
                         cls._sfConnection = snowflake.connector.connect(
                             user=cls._sfUser,
@@ -73,6 +79,8 @@ class DatabaseConnection():
                             schema=cls._sfSchema,
                             role=cls._sfRole
                             )
+                        ## Also create a snowpark session from already established connection
+                        cls._sfSession = Session.builder.configs({"connection": cls._sfConnection}).create()
                         
                     logger.info('Connected to SF Database!!')
                 
@@ -81,6 +89,9 @@ class DatabaseConnection():
                 raise
 
         return cls.instance
+
+    def getSession(self):
+        return self._sfSession
 
     def getConnection(self):
         return self._sfConnection

@@ -77,6 +77,7 @@ export default function ProcessTable() {
                 ATTRIBUTE_NAME: '',
                 PROCESS_DQ_TEST_NAME: dqdata.PROCESS_DQ_TEST_NAME,
                 ACCEPTED_VALUES: '',
+                QUERY_BINDS: '',
                 ERROR_AND_ABORT: false,
                 ACTIVE: 'Y'
             },

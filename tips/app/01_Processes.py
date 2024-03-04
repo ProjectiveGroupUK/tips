@@ -9,7 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 # TIPS
-from tips.framework.db.database_connection import DatabaseConnection
+from tips.utils.database_connection import DatabaseConnection
 from tips.framework.utils.sql_template import SQLTemplate
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals, escapeValuesForSQL
@@ -343,11 +343,24 @@ def _runProcess(ProcessData: dict):
         v_vars = None
 
     try:
+        # Create snowflake snowpark session
+        db = DatabaseConnection()
+        session = db.getSession()
+
+        # Now call framework
         app = App(
+            session=session,
             processName=v_process_name,
             bindVariables=v_vars,
             executeFlag=v_exec,
+            addLogFileHandler=True,
         )
+
+        # app = App(
+        #     processName=v_process_name,
+        #     bindVariables=v_vars,
+        #     executeFlag=v_exec,
+        # )
         app.main()
         return ExecutionStatus.SUCCESS
     except Exception as err:

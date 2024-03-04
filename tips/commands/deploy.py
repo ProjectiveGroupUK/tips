@@ -5,7 +5,7 @@ import os
 from tips.base import BaseTask
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals
-from tips.framework.db.database_connection import DatabaseConnection
+from tips.utils.database_connection import DatabaseConnection
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()

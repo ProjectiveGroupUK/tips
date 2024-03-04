@@ -32,7 +32,7 @@ type InputRefs = {
 }
 
 export default function DQModal() {
-    const inBuiltDQTests = ['UNIQUE','NOT_NULL','ACCEPTED_VALUES'];
+    const inBuiltDQTests = ['UNIQUE','NOT_NULL','ACCEPTED_VALUES','REFERENTIAL_INTEGRITY'];
     const { executionStatus, dqdata, setDQData } = useDQModalData();
     const [showExecutionStatusMessage, setShowExecutionStatusMessage] = useState<ExecutionStatusInterface>({ status: ExecutionStatus.NONE });
     const [editedDQValues, setEditedDQValues] = useState<DQDataInterface | null>(dqdata?.dqdata ?? null);

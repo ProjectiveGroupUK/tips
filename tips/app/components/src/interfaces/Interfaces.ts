@@ -48,6 +48,7 @@ export interface DQTargetDataInterface {
     ATTRIBUTE_NAME: string | null;
     PROCESS_DQ_TEST_NAME: string;
     ACCEPTED_VALUES: string | null;
+    QUERY_BINDS: string | null;
     ERROR_AND_ABORT: boolean;
     ACTIVE: 'Y' | 'N';
 };

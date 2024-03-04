@@ -1,1 +1,1 @@
-recursive-include tips/include *.py *.sql *.yml *.html *.md *.toml .gitkeep .gitignore
+recursive-include tips/include tips/app/frontend *.py *.sql *.yml *.html *.md *.toml *.js *.css *.svg .gitkeep .gitignore

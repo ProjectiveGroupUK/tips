@@ -1,12 +1,13 @@
 import logging
 import json
-import toml
+# import toml
 from pathlib import Path
 
 from tips.base import BaseTask
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals
 from tips.framework.app import App
+from tips.utils.database_connection import DatabaseConnection
 
 
 logger = logging.getLogger(Logger.getRootLoggerName())
@@ -23,7 +24,9 @@ class RunTask(BaseTask):
         projectIdFile = f"tips_project.toml"
         workingFolder = Path.cwd()
         if not Path.joinpath(workingFolder, projectIdFile).exists():
-            logger.error("Not inside project root folder. Please navigate to project's root folder to run commands")
+            logger.error(
+                "Not inside project root folder. Please navigate to project's root folder to run commands"
+            )
             raise
 
         """
@@ -74,16 +77,27 @@ class RunTask(BaseTask):
 
         # Initialise globals
         globals.initGlobals()
-        
+
+        # Create snowflake snowpark session
+        db = DatabaseConnection()
+        session = db.getSession()
+
         # Now call framework
         app = App(
+            session=session,
             processName=self.args.process_name,
             bindVariables=self.args.variables_dict,
             executeFlag=executeFlag,
+            addLogFileHandler=True,
         )
-        
+        # app = App(
+        #     processName=self.args.process_name,
+        #     bindVariables=self.args.variables_dict,
+        #     executeFlag=executeFlag,
+        # )
+
         app.main()
-        
+
         return True
 
     def interpret_results(self, results):
