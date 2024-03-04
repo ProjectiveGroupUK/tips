@@ -7,7 +7,7 @@ import logging
 import streamlit as st
 
 # TIPS
-from tips.framework.db.database_connection import DatabaseConnection
+from tips.utils.database_connection import DatabaseConnection
 from tips.framework.utils.sql_template import SQLTemplate
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals, escapeValuesForSQL
@@ -722,8 +722,6 @@ def main():
     if dqTableData != None:
         dqTableTarget = dqTableData.get("dqTargetData")
 
-        print(f"dqTableTarget=\n{dqTableTarget}")
-
         if dqTableTarget != None:
 
             # Prepare modal parameters
@@ -761,7 +759,6 @@ def main():
                 },
             )
 
-            print(f"dqTargetModalData=\n{dqTargetModalData}")
             # Check for instructions from the modal that require performing activities on the Python side
             if dqTargetModalData != None:
                 dqTargetModalTarget = dqTargetModalData.get("dqtarget")

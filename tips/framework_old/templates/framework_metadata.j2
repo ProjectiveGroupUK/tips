@@ -1,0 +1,39 @@
+WITH flatten_cmd_binds AS
+(
+    SELECT a.process_id, ARRAY_UNIQUE_AGG(TRIM(b.value)) bind_var_list
+      FROM process_cmd a,
+      LATERAL split_to_table(a.cmd_binds,'|') b
+    GROUP BY a.process_id
+)
+SELECT p.process_id,
+       p.process_name,
+       p.process_description,
+       NVL(p.active,'N') AS process_active,
+       c.process_cmd_id,
+       c.cmd_type,
+       c.cmd_src,
+       c.cmd_tgt,
+       c.cmd_where,
+       c.cmd_binds,
+       c.refresh_type,
+       c.business_key,
+       c.merge_on_fields,
+       c.generate_merge_matched_clause,
+       c.generate_merge_non_matched_clause,
+       c.additional_fields,
+       c.TEMP_TABLE,
+       c.cmd_pivot_by,
+       c.cmd_pivot_field,
+       c.dq_type,
+       c.cmd_external_call,
+       c.file_format_name,
+       c.copy_into_file_paritition_by,
+       NVL(c.active,'N') AS active,
+       NVL(fcb.bind_var_list,ARRAY_CONSTRUCT()) AS bind_vars
+  FROM tips_md_schema.process P
+  LEFT JOIN tips_md_schema.process_cmd c ON p.process_id = c.process_id
+  LEFT JOIN flatten_cmd_binds fcb ON p.process_id = fcb.process_id
+  {% if parameters.process_name != "ALL" %}
+  WHERE p.process_name = '{{ parameters.process_name }}'
+  {% endif %}
+ ORDER BY p.process_id, c.process_cmd_id

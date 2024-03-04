@@ -10,7 +10,7 @@ from streamlit_elements import elements, mui, dashboard
 import pandas as pd
 
 # TIPS
-from tips.framework.db.database_connection import DatabaseConnection
+from tips.utils.database_connection import DatabaseConnection
 
 # Enums
 from enums import StateVariable

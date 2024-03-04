@@ -10,7 +10,7 @@ import toml
 
 from tips.base import BaseTask
 from tips.utils.utils import Globals
-from tips.framework.db.database_connection import DatabaseConnection
+from tips.utils.database_connection import DatabaseConnection
 from tips.include.starter_project import PACKAGE_PATH as starterProjectFolder
 
 # Below is to initialise logging
@@ -319,8 +319,18 @@ USING (
        , 'Check that column in the table contains only one of the accepted values' process_dq_test_description
        , 'SELECT {COL_NAME} FROM {TAB_NAME} WHERE {COL_NAME} NOT IN ({ACCEPTED_VALUES})' process_dq_test_query_template
        , 'Values other than {ACCEPTED_VALUES} found in {TAB_NAME}.{COL_NAME}' process_dq_test_error_message
+  UNION ALL
+  SELECT 'REFERENTIAL_INTEGRITY' process_dq_test_name
+       , 'Check that values in a column of target table only contains values existing in referenced table' process_dq_test_description
+       , 'SELECT {COL_NAME} FROM {TAB_NAME}  WHERE {COL_NAME} NOT IN (SELECT DISTINCT {:1} FROM {:2})' process_dq_test_query_template
+       , 'Not all Values from {TAB_NAME}.{COL_NAME} exist in {:2}.{:1}' process_dq_test_error_message
 ) b
 ON a.process_dq_test_name = b.process_dq_test_name
+WHEN MATCHED THEN
+UPDATE 
+   SET process_dq_test_description = b.process_dq_test_description
+     , process_dq_test_query_template = b.process_dq_test_query_template
+     , process_dq_test_error_message = b.process_dq_test_error_message
 WHEN NOT MATCHED THEN
 INSERT (
     process_dq_test_name
@@ -344,6 +354,7 @@ CREATE TABLE IF NOT EXISTS tips_md_schema.process_cmd_tgt_dq_test (
     attribute_name                          VARCHAR(100),
     process_dq_test_name                    VARCHAR(100) NOT NULL FOREIGN KEY REFERENCES tips_md_schema.process_dq_test(process_dq_test_name),
     accepted_values                         VARCHAR,
+    query_binds                             VARCHAR,    
     error_and_abort                         BOOLEAN NOT NULL DEFAULT true,
     active                                  BOOLEAN NOT NULL DEFAULT true
 );
@@ -365,6 +376,74 @@ CREATE TABLE IF NOT EXISTS tips_md_schema.process_dq_log (
     status                                  VARCHAR2(100) NOT NULL,
     status_message                          VARCHAR
 );
+"""
+        results = db.executeSQL(sqlCommand=sqlCommand)
+
+        sqlCommand = """
+CREATE OR REPLACE VIEW tips_md_schema.vw_process_log(
+	process_log_id,
+	process_name,
+	process_start_time,
+	process_end_time,
+	process_elapsed_time_in_seconds,
+	execute_flag,
+	process_status,
+	process_error,
+	command_type,
+	source,
+	target,
+	sql,
+	step_status,
+	rows_inserted,
+	rows_updated,
+	rows_deleted,
+	rows_loaded,
+	rows_unloaded,
+	execution_time_in_secs,
+	command_status,
+	command_warning,
+	command_error
+) AS
+SELECT pl.process_log_id
+, pl.process_name
+, pl.process_start_time
+, pl.process_end_time
+, pl.process_elapsed_time_in_seconds
+, pl.execute_flag
+, pl.status AS process_status
+, pl.error_message AS process_error
+, stps.value:action::varchar AS command_type
+, stps.value:parameters:source::varchar AS source
+, stps.value:parameters:target::varchar AS target
+, cmds.value:sql_cmd::varchar AS sql
+, cmds.value:status::varchar AS step_status
+, cmds.value:cmd_status:ROWS_INSERTED AS ROWS_INSERTED
+, cmds.value:cmd_status:ROWS_UPDATED AS ROWS_UPDATED
+, cmds.value:cmd_status:ROWS_DELETED AS ROWS_DELETED
+, cmds.value:cmd_status:ROWS_LOADED AS ROWS_LOADED
+, cmds.value:cmd_status:ROWS_UNLOADED AS ROWS_UNLOADED
+, cmds.value:cmd_status:EXECUTION_TIME_IN_SECS AS execution_time_in_secs
+, cmds.value:cmd_status:STATUS::varchar AS command_status
+, cmds.value:warning_message::varchar AS command_warning
+, cmds.value:error_message::varchar AS command_error
+FROM process_log pl
+, LATERAL FLATTEN(input => PARSE_JSON(log_json:steps), outer => true) stps
+, LATERAL FLATTEN(input => PARSE_JSON(stps.value:commands), outer => true) cmds;
+"""
+        results = db.executeSQL(sqlCommand=sqlCommand)
+
+        sqlCommand = """
+CREATE OR REPLACE PROCEDURE tips_md_schema.create_temporary_table(target_table_name VARCHAR, source_table_name VARCHAR)
+  RETURNS VARCHAR
+  LANGUAGE JAVASCRIPT
+  EXECUTE AS OWNER
+AS 
+$$
+    var sql_command = "CREATE OR REPLACE TEMPORARY TABLE " + TARGET_TABLE_NAME + " LIKE " + SOURCE_TABLE_NAME ;
+    snowflake.execute({sqlText: sql_command});
+    var success_message = "Table " + TARGET_TABLE_NAME.toUpperCase() + " successfully created.";
+    return success_message;
+$$;
 """
         results = db.executeSQL(sqlCommand=sqlCommand)
 

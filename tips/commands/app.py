@@ -1,9 +1,12 @@
+import sys
 import logging
+import os
+from streamlit.web.cli import main
+from streamlit.web import cli as stcli
 
 from tips.base import BaseTask
 from tips.utils.logger import Logger
 from tips.utils.utils import Globals
-from tips.app.app_util import AppUtil
 
 logger = logging.getLogger(Logger.getRootLoggerName())
 globals = Globals()
@@ -28,12 +31,18 @@ class AppTask(BaseTask):
         # Initialise globals
         globals.initGlobals()
 
-        # Now call framework
-        app = AppUtil()
-
         logger.info('Starting web server powered by Streamlit...')
-        if app.checkStreamlitVersion() == 0:
-            ret = app.startServer(port=self.args.server_port)
+
+        stHomeFilePath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '01_Processes.py')
+        if self.args.server_port is None:
+            cmd = ["streamlit", "run", stHomeFilePath]
+        else:
+            cmd = ["streamlit", "run", stHomeFilePath, "--server.port", self.args.server_port]
+        sys.argv = cmd
+        sys.exit(stcli.main())
+        sys.argv.remove('app')
+        sys.argv.extend(cmd)
+        main(prog_name="streamlit")            
 
         return True
 

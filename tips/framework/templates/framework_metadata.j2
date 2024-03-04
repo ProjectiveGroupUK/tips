@@ -11,8 +11,18 @@ SELECT p.process_id,
        NVL(p.active,'N') AS process_active,
        c.process_cmd_id,
        c.cmd_type,
-       c.cmd_src,
-       c.cmd_tgt,
+       CASE 
+         WHEN c.cmd_type != 'COPY_INTO_TABLE' 
+          AND regexp_count(c.cmd_src,'\\b.\\b',1) = 1 
+          THEN UPPER('{{ parameters.target_database }}'||'.'||c.cmd_src)
+          ELSE c.cmd_src
+       END AS cmd_src,
+       CASE 
+         WHEN c.cmd_type != 'COPY_INTO_FILE' 
+          AND regexp_count(c.cmd_tgt,'\\b.\\b',1) = 1 
+          THEN UPPER('{{ parameters.target_database }}'||'.'||c.cmd_tgt)
+          ELSE c.cmd_tgt
+       END AS cmd_tgt,
        c.cmd_where,
        c.cmd_binds,
        c.refresh_type,
@@ -26,6 +36,8 @@ SELECT p.process_id,
        c.cmd_pivot_field,
        c.dq_type,
        c.cmd_external_call,
+       c.file_format_name,
+       c.copy_into_file_paritition_by,
        NVL(c.active,'N') AS active,
        NVL(fcb.bind_var_list,ARRAY_CONSTRUCT()) AS bind_vars
   FROM tips_md_schema.process P

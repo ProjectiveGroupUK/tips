@@ -14,10 +14,12 @@ def _getComponent(key: str, **kwargs):
             url = "http://localhost:3001"
         )
     else:
+        ## C:\GitHub\tips\tips\app
         parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-        build_dir = os.path.join(parent_dir, "components","dist")
+        build_dir = os.path.join(parent_dir, "frontend")
         _component_func = components.declare_component(
-            f"react_component_{key}", 
+            "tips-ui-reaction-component",
+            # f"react_component_{key}", 
             path=build_dir
         )
     

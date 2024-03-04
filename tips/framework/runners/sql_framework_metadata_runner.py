@@ -1,7 +1,8 @@
 from typing import List, Dict
-from tips.framework.db.database_connection import DatabaseConnection
+# from snowflake.snowpark import Session
 from tips.framework.metadata.framework_metadata import FrameworkMetaData
 from tips.framework.utils.sql_template import SQLTemplate
+from tips.framework.utils.globals import Globals
 # Below is to initialise logging
 import logging
 from tips.utils.logger import Logger
@@ -11,32 +12,37 @@ logger = logging.getLogger(Logger.getRootLoggerName())
 class SQLFrameworkMetaDataRunner(FrameworkMetaData):
 
     _processName: str
+    _globalsInstance: Globals
 
     def __init__(self, processName) -> None:
         self._processName = processName
+        self._globalsInstance = Globals()
 
-    def getMetaData(self, conn: DatabaseConnection) -> List[Dict]:
+    def getMetaData(self) -> List[Dict]:
 
         logger.info('Fetching Framework Metadata...')
+        session = self._globalsInstance.getSession()
+        targetDatabase = self._globalsInstance.getTargetDatabase()
 
         cmdStr: str = SQLTemplate().getTemplate(
             sqlAction="framework_metadata",
-            parameters={"process_name": self._processName},
+            parameters={"process_name": self._processName, "target_database": targetDatabase},
         )
 
-        results: List[Dict] = conn.executeSQL(sqlCommand=cmdStr)
+        results: List[Dict] = session.sql(cmdStr).collect()
         return results
 
-    def getDQMetaData(self, conn: DatabaseConnection) -> Dict:
+    def getDQMetaData(self) -> Dict:
 
         logger.info('Fetching Framework DQ Metadata...')
+        session = self._globalsInstance.getSession()
 
         cmdStr: str = SQLTemplate().getTemplate(
             sqlAction="framework_dq_metadata",
             parameters={"process_name": self._processName},
         )
 
-        results: List[Dict] = conn.executeSQL(sqlCommand=cmdStr)
+        results: List[Dict] = session.sql(cmdStr).collect()
 
         returnDict = {}
         scannedKeys = []
